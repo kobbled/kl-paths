@@ -1,0 +1,51 @@
+PROGRAM paths
+%NOBUSYLAMP
+%COMMENT = 'path functions'
+%NOLOCKGROUP
+%NOPAUSE = COMMAND + TPENABLE + ERROR
+
+%include errors.klt
+%include math.klt
+
+%include errors.klh
+%include math.klh
+
+%include paths.klh
+
+ROUTINE paths__hexagon
+  VAR 
+    i, pthlen : INTEGER
+    status : INTEGER
+    ang : REAL
+    posei : XYZWPR
+    trans : VECTOR
+  BEGIN
+    --get current length of path
+    pthlen = PATH_LEN(out_path)
+    IF (pthlen = 0) OR UNINIT(pthlen) THEN
+      pthlen = 1
+    ENDIF
+
+    --make sure ref position has config
+    IF UNINIT(origin.config_data) THEN
+      karelError('hexagon : origin must have configuration', ER_ABORT)
+    ENDIF
+
+    --make radius vector
+    trans.x = radius ; trans.y = 0 ; trans.z = 0 ;
+
+    FOR i=0 TO (vertex-1) DO
+      ang = (i*2*M_PI/vertex)*M_RAD2DEG
+      posei = math__rotz(math__translate(math__rotz((origin), ang), trans), -ang)
+      --copy configuration
+      posei.config_data = origin.config_data
+
+      APPEND_NODE(out_path, status)
+      out_path[pthlen].node_pos = posei
+      --increment path length as it may not be tha same as i+1
+      pthlen = pthlen + 1
+    ENDFOR
+  END paths__hexagon
+
+BEGIN
+END paths

@@ -1,0 +1,15 @@
+%ifndef paths_h
+%define paths_h
+
+%include namespace.m
+
+%define prog_name paths
+%define prog_name_alias path
+
+-- namespaced members in format <prog_name_alias>__<func_name>
+declare(prog_name,hexagon,prog_name_alias,hexagon)
+
+ROUTINE paths__hexagon(radius : REAL; vertex : INTEGER; origin : XYZWPR; out_path : PATH) FROM paths
+
+
+%endif --paths_h

@@ -1,0 +1,24 @@
+{
+  "manver" : "1",
+  "project" : "paths",
+  "description" : "path functions",
+  "version" : "0.0.1",
+  "license" : "MIT",
+  "author" : "kobbled",
+  "source" : [
+    "src/paths.kl"
+  ],
+  "tests" : [
+    "test/test_paths.kl"
+  ],
+  "includes" : [
+    "include"
+  ],
+  "depends" : [
+    "errors",
+    "display",
+    "math",
+    "KUnit",
+    "ktransw-macros"
+  ]
+}

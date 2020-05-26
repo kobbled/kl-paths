@@ -1,0 +1,62 @@
+PROGRAM test_paths
+%NOLOCKGROUP
+
+VAR
+  expect_path, act_path : PATH
+
+%include paths.klh
+%include display.klh
+%include strings.klh
+%include kunit.klh
+
+ROUTINE t_hexagon : BOOLEAN
+  CONST
+    verticies = 5
+  VAR
+    pose : XYZWPR
+    origin : XYZWPR
+    i, length : INTEGER
+    status : INTEGER
+    b : ARRAY[5] OF BOOLEAN
+  BEGIN
+    
+    length = PATH_LEN(expect_path)
+	WHILE length < verticies DO
+        APPEND_NODE(expect_path,status)
+        length = PATH_LEN(expect_path)
+    ENDWHILE
+
+    --hexagon with a 300mm radius
+    expect_path[1].node_pos = s_to_xyzwpr('300,0,0,0,0,0',',')
+    expect_path[2].node_pos = s_to_xyzwpr('92.705,285.317,0,0,0,0',',')
+    expect_path[3].node_pos = s_to_xyzwpr('-242.705,176.336,0,0,0,0',',')
+    expect_path[4].node_pos = s_to_xyzwpr('-242.705,-176.336,0,0,0,0',',')
+    expect_path[5].node_pos = s_to_xyzwpr('92.705,-285.317,0,0,0,0',',')
+
+    --initialize origin
+    origin.x =0 ; origin.y =0; origin.z =0;
+    origin.w =0 ; origin.p =0; origin.r =0;
+    CNV_STR_CONF('F U T, 0, 0, 0', origin.config_data, status)
+    
+    --make pentagon
+    paths__hexagon(300, 5, origin, act_path)
+
+    FOR i=1 TO ARRAY_LEN(b) DO
+        b[i] = kunit_eq_pos((expect_path[i].node_pos), (act_path[i].node_pos))
+    ENDFOR
+
+    RETURN(b[1] AND b[2] AND b[3] AND b[4] AND b[5])
+
+
+  END t_hexagon
+
+BEGIN
+    --display__clear
+    WRITE TPDISPLAY(CR)
+
+    kunit_test('test make hexagon', t_hexagon)
+
+    --display__show
+
+    kunit_done
+END test_paths
