@@ -1,37 +1,76 @@
 PROGRAM test_paths
 %NOLOCKGROUP
 
+--include path class node type
+%define class_name usrpth
+%include usertypetest.klt
+path_type_define
+%undef path_type_define
+
+--include path class node type
+%include std_pth_node.klt
+
 VAR
   expect_path, act_path : PATH
+  user_path  : PATH nodedata = POS_STRUCT
 
 %include paths.klh
+%include math.klh
 %include display.klh
 %include strings.klh
 %include kunit.klh
+
+--user type path
+%class usrpth('paths.klc','paths_class.klh','usertypetest.klt')
+--standard path type
+%class stdpth('paths.klc','paths_class.klh','std_pth_node.klt')
+
+ROUTINE t_append : BOOLEAN
+  VAR 
+    pose : XYZWPR
+    strct : ARRAY[6] OF POS_STRUCT
+    i, seed : INTEGER
+  BEGIN
+    usrpth__clear(user_path)
+
+    -- get random positions
+    GET_TIME(seed)
+    FOR i=1 TO ARRAY_LEN(strct) DO
+      strct[i].node_pos = math__rand_position(seed*i)
+      -- append to path
+      usrpth__append(strct[i], user_path)
+    ENDFOR
+
+    RETURN(kunit_eq_int(ARRAY_LEN(strct), PATH_LEN(user_path)))
+
+  END t_append
 
 ROUTINE t_hexagon : BOOLEAN
   CONST
     verticies = 5
   VAR
-    pose : XYZWPR
+    pose : STD_PTH_NODE
     origin : XYZWPR
     i, length : INTEGER
     status : INTEGER
     b : ARRAY[5] OF BOOLEAN
   BEGIN
     
-    length = PATH_LEN(expect_path)
-	WHILE length < verticies DO
-        APPEND_NODE(expect_path,status)
-        length = PATH_LEN(expect_path)
-    ENDWHILE
+    -- clear paths
+    stdpth__clear(act_path)
+    stdpth__clear(expect_path)
 
     --hexagon with a 300mm radius
-    expect_path[1].node_pos = s_to_xyzwpr('300,0,0,0,0,0',',')
-    expect_path[2].node_pos = s_to_xyzwpr('92.705,285.317,0,0,0,0',',')
-    expect_path[3].node_pos = s_to_xyzwpr('-242.705,176.336,0,0,0,0',',')
-    expect_path[4].node_pos = s_to_xyzwpr('-242.705,-176.336,0,0,0,0',',')
-    expect_path[5].node_pos = s_to_xyzwpr('92.705,-285.317,0,0,0,0',',')
+    pose.node_pos = s_to_xyzwpr('300,0,0,0,0,0',',')
+    stdpth__append(pose, expect_path)
+    pose.node_pos =  s_to_xyzwpr('92.705,285.317,0,0,0,0',',')
+    stdpth__append(pose, expect_path)
+    pose.node_pos =  s_to_xyzwpr('-242.705,176.336,0,0,0,0',',')
+    stdpth__append(pose, expect_path)
+    pose.node_pos =  s_to_xyzwpr('-242.705,-176.336,0,0,0,0',',')
+    stdpth__append(pose, expect_path)
+    pose.node_pos =  s_to_xyzwpr('92.705,-285.317,0,0,0,0',',')
+    stdpth__append(pose, expect_path)
 
     --initialize origin
     origin.x =0 ; origin.y =0; origin.z =0;
@@ -47,13 +86,13 @@ ROUTINE t_hexagon : BOOLEAN
 
     RETURN(b[1] AND b[2] AND b[3] AND b[4] AND b[5])
 
-
   END t_hexagon
 
 BEGIN
     --display__clear
     WRITE TPDISPLAY(CR)
 
+    kunit_test('test appending to path', t_append)
     kunit_test('test make hexagon', t_hexagon)
 
     --display__show

@@ -12,6 +12,7 @@ PROGRAM paths
 
 %include paths.klh
 
+--toolpaths
 ROUTINE paths__hexagon
   VAR 
     i, pthlen : INTEGER

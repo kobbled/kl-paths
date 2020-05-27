@@ -9,6 +9,7 @@
 -- namespaced members in format <prog_name_alias>__<func_name>
 declare(prog_name,hexagon,prog_name_alias,hexagon)
 
+--toolpaths
 ROUTINE paths__hexagon(radius : REAL; vertex : INTEGER; origin : XYZWPR; out_path : PATH) FROM paths
 
 

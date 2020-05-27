@@ -1,0 +1,47 @@
+PROGRAM class_name
+%NOBUSYLAMP
+%COMMENT = 'path class'
+%NOLOCKGROUP
+%UNINITVARS
+
+%include namespace.m
+
+-- declare type
+%include define_type.m
+
+--print user defined struct
+%ifdef path_type_define
+path_type_define
+%endif
+
+%include errors.klh
+%include paths_class.klh
+
+--define local classes
+-- ********************
+%defeval clear classfunc(clear)
+%defeval append classfunc(apnd)
+
+ROUTINE clear
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    WHILE PATH_LEN(out_path) > 0 DO
+		  DELETE_NODE(out_path,1,status)
+	  ENDWHILE
+  END clear
+
+ROUTINE append
+  VAR
+    length : INTEGER
+    status : INTEGER
+  BEGIN
+    APPEND_NODE(out_path,status)
+    CHK_STAT(status)
+		length = PATH_LEN(out_path)
+    out_path[length] = n
+  END append
+
+BEGIN
+END class_name

@@ -1,0 +1,19 @@
+--header
+%include header_guard.m
+--oop
+%include namespace.m
+
+--start header file
+header_if -- ifndef class
+header_def -- define class
+
+-- namespaced members in format <prog_name_alias>__<func_name>
+declare(class_name,clear,class_name,clear)
+declare(class_name,append,class_name,apnd)
+
+--path functions
+ROUTINE classfunc(clear) (out_path : PATH nodedata = t_node ) FROM class_name
+ROUTINE classfunc(apnd) (n : t_node ; out_path : PATH nodedata = t_node) FROM class_name
+
+
+%endif --end header
