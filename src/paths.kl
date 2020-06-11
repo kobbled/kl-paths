@@ -29,7 +29,7 @@ ROUTINE paths__hexagon
 
     --make sure ref position has config
     IF UNINIT(origin.config_data) THEN
-      karelError('hexagon : origin must have configuration', ER_ABORT)
+      karelError(INVALID_CONFIG,'hexagon : origin must have configuration', ER_ABORT)
     ENDIF
 
     --make radius vector
