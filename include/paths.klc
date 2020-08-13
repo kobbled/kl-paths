@@ -17,10 +17,6 @@ path_type_define
 %include errors.klh
 %include paths_class.klh
 
---define local classes
--- ********************
-%defeval clear classfunc(clear)
-%defeval append classfunc(apnd)
 
 ROUTINE clear
   VAR

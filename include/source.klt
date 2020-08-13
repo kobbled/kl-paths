@@ -1,8 +1,0 @@
-%ifndef source_t
-%define source_t
-
-CONST
-
-VAR
-
-%endif --source_t
