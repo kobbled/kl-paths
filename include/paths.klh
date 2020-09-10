@@ -6,10 +6,8 @@
 %define prog_name paths
 %define prog_name_alias path
 
-
 --toolpaths
 declare_function(prog_name,hexagon,prog_name_alias,hexagon)
 ROUTINE paths__hexagon(radius : REAL; vertex : INTEGER; origin : XYZWPR; out_path : PATH) FROM paths
-
 
 %endif --paths_h

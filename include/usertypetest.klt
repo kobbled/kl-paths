@@ -1,4 +1,3 @@
-%include define_type.m
 
 %mode push
 %mode string QQQ "`" "`" "\\"

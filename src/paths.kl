@@ -7,8 +7,8 @@ PROGRAM paths
 %include errors.klt
 %include math.klt
 
-%include errors.klh
-%include math.klh
+%from errors.klh %import karelError
+%from math.klh %import translate, rotz
 
 %include paths.klh
 

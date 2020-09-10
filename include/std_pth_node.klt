@@ -1,3 +1,2 @@
-%include define_type.m
 
 %defeval t_node STD_PTH_NODE

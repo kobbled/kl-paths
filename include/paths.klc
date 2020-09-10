@@ -14,7 +14,7 @@ PROGRAM class_name
 path_type_define
 %endif
 
-%include errors.klh
+%from errors.klh %import CHK_STAT
 %include paths_class.klh
 
 

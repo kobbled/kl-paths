@@ -15,9 +15,9 @@ VAR
   user_path  : PATH nodedata = POS_STRUCT
 
 %include paths.klh
-%include math.klh
-%include display.klh
-%include strings.klh
+%from math.klh %import rand_position
+%from display.klh %import clear, show
+%from strings.klh %import s_to_xyzwpr
 %include kunit.klh
 
 --user type path
