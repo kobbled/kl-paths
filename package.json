@@ -12,12 +12,14 @@
     "test/test_paths.kl"
   ],
   "includes" : [
-    "include"
+    "include",
+    "include/turntable"
   ],
   "depends" : [
     "errors",
     "display",
     "math",
+    "pose",
     "KUnit",
     "ktransw-macros"
   ]

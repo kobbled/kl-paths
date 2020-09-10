@@ -7,12 +7,22 @@ PROGRAM test_paths
 path_type_define
 %undef path_type_define
 
---include path class node type
+--turntable type
+%define class_name rotpth
+%include rottypetest.klt
+path_type_define
+%undef path_type_define
+
+-- turntable path structs
+%include turntable.klt
+
+--include standard path node type
 %include std_pth_node.klt
 
 VAR
   expect_path, act_path : PATH
-  user_path  : PATH nodedata = POS_STRUCT
+  user_path  : PATH nodedata = POS_STRUCT  --define custom user path
+  rot_path   : PATH nodedata = ROT_STRUCT  --define turntable path
 
 %include paths.klh
 %from math.klh %import rand_position
@@ -24,6 +34,9 @@ VAR
 %class usrpth('paths.klc','paths_class.klh','usertypetest.klt')
 --standard path type
 %class stdpth('paths.klc','paths_class.klh','std_pth_node.klt')
+
+--access to turntable paths
+%class rotpth('turntable_paths.klc','turntable_paths.klh','rottypetest.klt')
 
 ROUTINE t_append : BOOLEAN
   VAR 
@@ -88,12 +101,44 @@ ROUTINE t_hexagon : BOOLEAN
 
   END t_hexagon
 
+ROUTINE t_rot_pad : BOOLEAN
+  VAR
+    pose : tPAD
+    index : tINDEX
+    origin : XYZWPR
+    status : INTEGER
+  BEGIN
+    --clear path
+    WHILE PATH_LEN(rot_path) > 0 DO
+		  DELETE_NODE(rot_path,1,status)
+	  ENDWHILE
+
+    --initialize origin
+    origin.x =0 ; origin.y =0; origin.z =0;
+    origin.w =0 ; origin.p =0; origin.r =0;
+    CNV_STR_CONF('F U T, 0, 0, 0', origin.config_data, status)
+
+    --set parameters
+    pose.radius = 50
+    pose.start_z = 150
+    pose.start_deg = 0
+    pose.passes = 1
+    pose.width_rot = 360
+
+    --make band
+    rotpth__npad(pose, index, origin, rot_path)
+
+    RETURN(TRUE)
+
+  END t_rot_pad
+
 BEGIN
     --display__clear
     WRITE TPDISPLAY(CR)
 
     kunit_test('test appending to path', t_append)
     kunit_test('test make hexagon', t_hexagon)
+    kunit_test('test rotary pad path', t_rot_pad)
 
     --display__show
 

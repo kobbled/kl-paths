@@ -1,0 +1,18 @@
+--group/joint configurations
+%define RBT_GRP 1
+%define ROT_GRP 2
+-- total number of joints in turntable group
+%define ROT_AXES 1
+-- rotary axis of the turntable
+%define ROTARY_JNT 1
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define path_type_define `TYPE
+  ROT_STRUCT FROM class_name = STRUCTURE
+		robot   		: 	 XYZWPR IN GROUP[RBT_GRP]
+    rotary      :  JOINTPOS IN GROUP[ROT_GRP]
+	ENDSTRUCTURE`
+%mode pop
+
+%defeval t_node ROT_STRUCT

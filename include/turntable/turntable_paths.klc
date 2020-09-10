@@ -1,0 +1,150 @@
+PROGRAM class_name
+%NOBUSYLAMP
+%COMMENT = 'turntable paths'
+%NOLOCKGROUP
+%UNINITVARS
+
+%include namespace.m
+
+-- declare type
+%include define_type.m
+
+%include errors.klt
+%include math.klt
+%include pose.klt
+%include turntable.klt
+
+--print user defined struct
+%ifdef path_type_define
+path_type_define
+%endif
+
+%from errors.klh %import karelError
+%from math.klh %import translate, rotz
+%from pose.klh %import set_jointpos
+%include turntable_paths.private.klh
+%include turntable_paths.klh
+
+-- ** private **
+ROUTINE check_tidx
+  BEGIN
+    IF UNINIT(idx.j) THEN idx.j = 0 ; ENDIF
+    IF UNINIT(idx.k) THEN idx.k = 0 ; ENDIF
+    IF UNINIT(idx.l) THEN idx.l = 0 ; ENDIF
+  END check_tidx
+
+ROUTINE check_tpad
+ BEGIN
+  IF UNINIT(p.radius) OR (p.radius = 0) THEN
+    karelError(VAR_UNINIT,'in tPad type: radius must be set', ER_ABORT)
+  ENDIF
+  IF UNINIT(p.idod) THEN
+    p.idod = 1
+  ENDIF
+  IF (p.idod <> -1) AND (p.idod <> 1) THEN
+    karelError(VAR_UNINIT,'in tPad type: idod must be set to 1, or -1', ER_ABORT)
+  ENDIF
+  IF UNINIT(p.ccw) THEN
+    p.ccw = 1
+  ENDIF 
+  IF (p.ccw <> -1) AND (p.ccw <> 1) THEN
+    karelError(VAR_UNINIT,'in tPad type: ccw must be set to 1, or -1', ER_ABORT)
+  ENDIF
+  IF UNINIT(p.start_z) THEN
+    karelError(VAR_UNINIT,'in tPad type: start_z must be set', ER_ABORT)
+  ENDIF
+  IF UNINIT(p.start_deg) THEN
+    karelError(VAR_UNINIT,'in tPad type: start_deg must be set', ER_ABORT)
+  ENDIF
+  -- must set overlap if passes > 1
+  IF UNINIT(p.overlap) AND (p.passes > 1) THEN
+    karelError(VAR_UNINIT,'in tPad type: overlap must be set', ER_ABORT)
+  ENDIF
+  IF UNINIT(p.overlap) AND (p.passes <= 1) THEN
+    p.overlap = 0
+  ENDIF
+
+  IF UNINIT(p.width_rot) OR (p.width_rot = 0) THEN
+    karelError(VAR_UNINIT,'in tPad type: width_rot must be set', ER_ABORT)
+  ENDIF
+  --default increments is 4
+  IF UNINIT(p.increments) OR (p.increments = 0)  THEN
+    p.increments = 4
+  ENDIF
+  IF UNINIT(p.passes) OR (p.passes = 0)  THEN
+    p.passes = 1
+  ENDIF
+  IF UNINIT(p.pockets) OR (p.pockets = 0)  THEN
+    p.pockets = 1
+  ENDIF
+  IF UNINIT(p.pad_offset)  THEN
+    p.pad_offset = 0
+  ENDIF
+  IF UNINIT(p.pass_offset)  THEN
+    p.pass_offset = 0
+  ENDIF
+
+ END check_tpad
+
+-- ** public **
+
+ROUTINE npad
+  VAR 
+    i, j, k : INTEGER
+    pthlen : INTEGER
+    status : INTEGER
+    ang : REAL
+    rotary : ARRAY[ROT_AXES] OF REAL
+    posei : t_node
+    trans : VECTOR
+  BEGIN
+    --get current length of path
+    pthlen = PATH_LEN(out_path)
+    IF (pthlen = 0) OR UNINIT(pthlen) THEN
+      pthlen = 1
+    ENDIF
+
+    --make sure ref position has config
+    IF UNINIT(origin.config_data) THEN
+      karelError(INVALID_CONFIG,'npad : origin must have configuration', ER_ABORT)
+    ENDIF
+
+    --check start indicies
+    check_tidx(startInd)
+
+    --check params type
+    check_tpad(params)
+
+    --make radius vector
+    params.radius = ABS(params.radius)
+    trans.x = 0 ; trans.y = params.radius*params.idod ; trans.z = params.start_z ;
+    ang = 0
+    
+    FOR k=startInd.k TO (params.pockets-1) DO
+      FOR j=startInd.j TO (params.passes-1) DO
+        --update pass
+        trans.z = params.start_z + j*params.overlap
+
+        FOR i=0 TO (params.increments) DO
+          --calcuate increment angle
+          ang = params.start_deg + (params.width_rot*i/params.increments+params.pad_offset*k+params.pass_offset*j)*params.ccw
+          --update robot position
+          posei.robot = math__translate(math__rotz((origin), ang), trans)
+          --copy configuration
+          posei.robot.config_data = origin.config_data
+          -- update turntable
+          rotary[ROTARY_JNT] = ang*params.idod*(-1)
+          posei.rotary = pose__set_jointpos(rotary)
+          --add pose to path
+          APPEND_NODE(out_path, status)
+          out_path[pthlen] = posei
+          --increment path length
+          pthlen = pthlen + 1
+        ENDFOR
+      ENDFOR
+    ENDFOR
+
+  END npad
+
+BEGIN
+END class_name

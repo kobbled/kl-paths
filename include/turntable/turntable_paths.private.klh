@@ -1,0 +1,16 @@
+%ifndef turntable_private_h
+%define turntable_private_h
+
+--oop
+%include namespace.m
+
+%include turntable.klt
+
+-- ** private **
+--type checks
+declare_member(class_name,check_tidx,class_name,ckidx)
+ROUTINE check_tidx(idx : tINDEX) FROM class_name
+declare_member(class_name,check_tpad,class_name,ckpad)
+ROUTINE check_tpad(p : tPAD) FROM class_name
+
+%endif --turntable_private_h

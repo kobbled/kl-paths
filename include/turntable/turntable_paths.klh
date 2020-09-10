@@ -1,0 +1,14 @@
+--header
+%include header_guard.m
+--oop
+%include namespace.m
+
+--start header file
+header_if -- ifndef class
+header_def -- define class
+
+--toolpaths
+declare_member(class_name,npad,class_name,npad)
+ROUTINE npad(params : tPAD; startInd : tINDEX; origin : XYZWPR; out_path : PATH nodedata = t_node) FROM class_name
+
+%endif --end header

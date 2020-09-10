@@ -1,0 +1,26 @@
+%ifndef turntable_t
+%define turntable_t
+
+TYPE
+  tPAD FROM class_name = STRUCTURE
+		radius : REAL
+    idod : SHORT
+    ccw : SHORT
+    start_z  : REAL
+    start_deg : REAL
+    overlap : REAL
+    width_rot : REAL
+    increments : SHORT 
+    passes : SHORT
+    pockets : BYTE
+    pad_offset : REAL
+    pass_offset : REAL
+	ENDSTRUCTURE
+
+  tINDEX FROM class_name = STRUCTURE
+    j : SHORT
+    k : BYTE
+    l : BYTE
+  ENDSTRUCTURE
+
+%endif --turntable_t
