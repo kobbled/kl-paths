@@ -8,10 +8,10 @@
 
 %mode push
 %mode string QQQ "`" "`" "\\"
-%define path_type_define `TYPE
-  ROT_STRUCT FROM class_name = STRUCTURE
+%define path_type_define(object_name) `TYPE
+  ROT_STRUCT FROM object_name = STRUCTURE
 		robot   		: 	 XYZWPR IN GROUP[RBT_GRP]
-    rotary      :  JOINTPOS IN GROUP[ROT_GRP]
+    rotary      :  JOINTPOS`ROT_AXES` IN GROUP[ROT_GRP]
 	ENDSTRUCTURE`
 %mode pop
 

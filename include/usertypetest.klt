@@ -1,8 +1,8 @@
 
 %mode push
 %mode string QQQ "`" "`" "\\"
-%define path_type_define `TYPE
-  POS_STRUCT FROM class_name = STRUCTURE
+%define path_type_define(object_name) `TYPE
+  POS_STRUCT FROM object_name = STRUCTURE
 		node_pos		: 	 XYZWPR IN GROUP[1]
 	ENDSTRUCTURE`
 %mode pop
