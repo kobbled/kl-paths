@@ -2,18 +2,17 @@ PROGRAM test_paths
 %NOLOCKGROUP
 
 --include path class node type
-%define class_name usrpth
 %include usertypetest.klt
-path_type_define
+path_type_define(usrpth)
 %undef path_type_define
 
 --turntable type
-%define class_name rotpth
 %include rottypetest.klt
-path_type_define
+path_type_define(tstrot)
 %undef path_type_define
 
 -- turntable path structs
+%define class_name tstrot
 %include turntable.klt
 
 --include standard path node type
@@ -22,12 +21,12 @@ path_type_define
 VAR
   expect_path, act_path : PATH
   user_path  : PATH nodedata = POS_STRUCT  --define custom user path
-  rot_path   : PATH nodedata = ROT_STRUCT  --define turntable path
+  rot_path, rot_exp_path : PATH nodedata = ROT_STRUCT  --define turntable path
 
 %include paths.klh
 %from math.klh %import rand_position
 %from display.klh %import clear, show
-%from strings.klh %import s_to_xyzwpr
+%from strings.klh %import s_to_xyzwpr, pose_to_s, joint_to_s, s_to_joint
 %include kunit.klh
 
 --user type path
@@ -36,7 +35,7 @@ VAR
 %class stdpth('paths.klc','paths_class.klh','std_pth_node.klt')
 
 --access to turntable paths
-%class rotpth('turntable_paths.klc','turntable_paths.klh','rottypetest.klt')
+%class tstrot('turntable_paths.klc','turntable_paths.klh','rottypetest.klt')
 
 ROUTINE t_append : BOOLEAN
   VAR 
@@ -94,6 +93,7 @@ ROUTINE t_hexagon : BOOLEAN
     paths__hexagon(300, 5, origin, act_path)
 
     FOR i=1 TO ARRAY_LEN(b) DO
+        --WRITE TPDISPLAY(CR,pose_to_s((act_path[i].node_pos), ','))
         b[i] = kunit_eq_pos((expect_path[i].node_pos), (act_path[i].node_pos))
     ENDFOR
 
@@ -103,15 +103,39 @@ ROUTINE t_hexagon : BOOLEAN
 
 ROUTINE t_rot_pad : BOOLEAN
   VAR
-    pose : tPAD
+    pose : ROT_STRUCT
+    param : tPAD
     index : tINDEX
     origin : XYZWPR
+    i : INTEGER
     status : INTEGER
+    br,bt : ARRAY[4] OF BOOLEAN
   BEGIN
     --clear path
     WHILE PATH_LEN(rot_path) > 0 DO
 		  DELETE_NODE(rot_path,1,status)
 	  ENDWHILE
+    WHILE PATH_LEN(rot_exp_path) > 0 DO
+		  DELETE_NODE(rot_exp_path,1,status)
+	  ENDWHILE
+
+    --band with a 50mm radius, 150mm z+ from the origin
+    pose.robot = s_to_xyzwpr('0.0,50.0,150.0,0.0,0.0,0.0',',')
+    pose.rotary = s_to_joint('0.0,0.0,0.0,0.0,0.0,0.0',',')
+    APPEND_NODE(rot_exp_path, status)
+    rot_exp_path[1] = pose
+    pose.robot = s_to_xyzwpr('50.0,-0.0,150.0,0.0,0.0,-90.0',',')
+    pose.rotary = s_to_joint('90.0,0.0,0.0,0.0,0.0,0.0',',')
+    APPEND_NODE(rot_exp_path, status)
+    rot_exp_path[2] = pose
+    pose.robot = s_to_xyzwpr('0.0,-50.0,150.0,0.0,0.0,-180.0',',')
+    pose.rotary = s_to_joint('180.0,0.0,0.0,0.0,0.0,0.0',',')
+    APPEND_NODE(rot_exp_path, status)
+    rot_exp_path[3] = pose
+    pose.robot = s_to_xyzwpr('-50.0,-0.0,150.0,0.0,0.0,90.0',',')
+    pose.rotary = s_to_joint('270.0,0.0,0.0,0.0,0.0,0.0',',')
+    APPEND_NODE(rot_exp_path, status)
+    rot_exp_path[4] = pose
 
     --initialize origin
     origin.x =0 ; origin.y =0; origin.z =0;
@@ -119,26 +143,34 @@ ROUTINE t_rot_pad : BOOLEAN
     CNV_STR_CONF('F U T, 0, 0, 0', origin.config_data, status)
 
     --set parameters
-    pose.radius = 50
-    pose.start_z = 150
-    pose.start_deg = 0
-    pose.passes = 1
-    pose.width_rot = 360
+    param.radius = 50
+    param.start_z = 150
+    param.start_deg = 0
+    param.passes = 1
+    param.width_rot = 360
 
     --make band
-    rotpth__npad(pose, index, origin, rot_path)
+    tstrot__npad(param, index, origin, rot_path)
 
-    RETURN(TRUE)
+    FOR i=1 TO PATH_LEN(rot_path) DO
+      --WRITE TPDISPLAY(CR,pose_to_s((act_path[i].node_pos), ','))
+        br[i] = kunit_eq_pos((rot_path[i].robot), (rot_exp_path[i].robot))
+        bt[i] = kunit_eq_pos((rot_path[i].rotary), (rot_exp_path[i].rotary))
+    ENDFOR
+
+    RETURN(br[1] AND br[2] AND br[3] AND br[4] AND &
+           bt[1] AND bt[2] AND bt[3] AND bt[4])
 
   END t_rot_pad
 
 BEGIN
     --display__clear
-    WRITE TPDISPLAY(CR)
+    --WRITE TPDISPLAY(CR)
 
-    kunit_test('test appending to path', t_append)
-    kunit_test('test make hexagon', t_hexagon)
-    kunit_test('test rotary pad path', t_rot_pad)
+    -- total assersions 14
+    kunit_test('test appending to path', t_append) -- assersions 1
+    kunit_test('test make hexagon', t_hexagon) -- assersions 5
+    kunit_test('test rotary pad path', t_rot_pad) -- assersions 8
 
     --display__show
 
