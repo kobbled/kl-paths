@@ -19,8 +19,9 @@ PROGRAM class_name
 path_type_define(class_name)
 %endif
 
-%from errors.klh %import karelError
+%from errors.klh %import karelError, CHK_STAT
 %from math.klh %import translate, rotz
+%from matrix.klh %import add_1D
 %from pose.klh %import set_jointpos
 %from strings.klh %import vec_to_s, r_to_s, rarr_to_s
 %include turntable_paths.private.klh
@@ -110,6 +111,27 @@ ROUTINE check_tpad
 
 -- ** public **
 
+ROUTINE clear
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    WHILE PATH_LEN(out_path) > 0 DO
+		  DELETE_NODE(out_path,1,status)
+	  ENDWHILE
+  END clear
+
+ROUTINE append
+  VAR
+    length : INTEGER
+    status : INTEGER
+  BEGIN
+    APPEND_NODE(out_path,status)
+    CHK_STAT(status)
+		length = PATH_LEN(out_path)
+    out_path[length] = n
+  END append
+
 ROUTINE npad
   VAR 
     i, j, k : INTEGER
@@ -117,6 +139,7 @@ ROUTINE npad
     status : INTEGER
     ang : REAL
     rotary : ARRAY[ROT_AXES] OF REAL
+    origin_rot : ARRAY[ROT_AXES] OF REAL
     posei : t_node
     trans : VECTOR
   BEGIN
@@ -127,7 +150,7 @@ ROUTINE npad
     ENDIF
 
     --make sure ref position has config
-    IF UNINIT(origin.config_data) THEN
+    IF UNINIT(origin.t_xyz.config_data) THEN
       karelError(INVALID_CONFIG,'npad : origin must have configuration', ER_ABORT)
     ENDIF
 
@@ -156,12 +179,16 @@ ROUTINE npad
           --update robot position
           --multiply angle by -1 to keep head stationary as rotary
           --axis rotates
-          posei.robot = math__translate(math__rotz((origin), (ang)*(-1)), trans)
+          posei.t_xyz = math__translate(math__rotz((origin.t_xyz), (ang)*(-1)), trans)
           --copy configuration
-          posei.robot.config_data = origin.config_data
+          posei.t_xyz.config_data = origin.t_xyz.config_data
           -- update turntable
           rotary[ROTARY_JNT] = ang*params.ccw
-          posei.rotary = pose__set_jointpos(rotary)
+          --convert and add to origin jointpos
+          CNV_JPOS_REL(origin.t_joint, origin_rot, status)
+          CHK_STAT(status)
+          matrix__add_1D(rotary, origin_rot, rotary)
+          posei.t_joint = pose__set_jointpos(rotary)
           --add pose to path
           APPEND_NODE(out_path, status)
           out_path[pthlen] = posei

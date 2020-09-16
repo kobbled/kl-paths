@@ -19,6 +19,7 @@
     "errors",
     "display",
     "math",
+    "matrix",
     "pose",
     "KUnit",
     "ktransw-macros"

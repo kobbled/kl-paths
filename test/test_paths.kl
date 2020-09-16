@@ -23,11 +23,12 @@ VAR
   user_path  : PATH nodedata = POS_STRUCT  --define custom user path
   rot_path, rot_exp_path : PATH nodedata = ROT_STRUCT  --define turntable path
 
-%include paths.klh
 %from math.klh %import rand_position
 %from display.klh %import clear, show
 %from strings.klh %import s_to_xyzwpr, pose_to_s, joint_to_s, s_to_joint
 %include kunit.klh
+%from pose.klh %import set_xyzwpr_str, set_jointpos_str
+%include paths.klh
 
 --user type path
 %class usrpth('paths.klc','paths_class.klh','usertypetest.klt')
@@ -64,7 +65,6 @@ ROUTINE t_hexagon : BOOLEAN
     pose : STD_PTH_NODE
     origin : XYZWPR
     i, length : INTEGER
-    status : INTEGER
     b : ARRAY[5] OF BOOLEAN
   BEGIN
     
@@ -85,12 +85,10 @@ ROUTINE t_hexagon : BOOLEAN
     stdpth__append(pose, expect_path)
 
     --initialize origin
-    origin.x =0 ; origin.y =0; origin.z =0;
-    origin.w =0 ; origin.p =0; origin.r =0;
-    CNV_STR_CONF('F U T, 0, 0, 0', origin.config_data, status)
+    origin = pose__set_xyzwpr_str('0,0,0,0,0,0', 'F U T, 0, 0, 0')
     
     --make pentagon
-    paths__hexagon(300, 5, origin, act_path)
+    paths__hexagon(300.0, 5, origin, act_path)
 
     FOR i=1 TO ARRAY_LEN(b) DO
         --WRITE TPDISPLAY(CR,pose_to_s((act_path[i].node_pos), ','))
@@ -106,41 +104,33 @@ ROUTINE t_rot_pad : BOOLEAN
     pose : ROT_STRUCT
     param : tPAD
     index : tINDEX
-    origin : XYZWPR
+    origin : ROT_STRUCT
     i : INTEGER
     status : INTEGER
     br,bt : ARRAY[4] OF BOOLEAN
   BEGIN
     --clear path
-    WHILE PATH_LEN(rot_path) > 0 DO
-		  DELETE_NODE(rot_path,1,status)
-	  ENDWHILE
-    WHILE PATH_LEN(rot_exp_path) > 0 DO
-		  DELETE_NODE(rot_exp_path,1,status)
-	  ENDWHILE
+    tstrot__clear(rot_path)
+    tstrot__clear(rot_exp_path)
 
     --band with a 50mm radius, 150mm z+ from the origin
-    pose.robot = s_to_xyzwpr('0.0,50.0,150.0,0.0,0.0,0.0',',')
-    pose.rotary = s_to_joint('0.0,0.0,0.0,0.0,0.0,0.0',',')
-    APPEND_NODE(rot_exp_path, status)
-    rot_exp_path[1] = pose
-    pose.robot = s_to_xyzwpr('50.0,-0.0,150.0,0.0,0.0,-90.0',',')
-    pose.rotary = s_to_joint('90.0,0.0,0.0,0.0,0.0,0.0',',')
-    APPEND_NODE(rot_exp_path, status)
-    rot_exp_path[2] = pose
-    pose.robot = s_to_xyzwpr('0.0,-50.0,150.0,0.0,0.0,-180.0',',')
-    pose.rotary = s_to_joint('180.0,0.0,0.0,0.0,0.0,0.0',',')
-    APPEND_NODE(rot_exp_path, status)
-    rot_exp_path[3] = pose
-    pose.robot = s_to_xyzwpr('-50.0,-0.0,150.0,0.0,0.0,90.0',',')
-    pose.rotary = s_to_joint('270.0,0.0,0.0,0.0,0.0,0.0',',')
-    APPEND_NODE(rot_exp_path, status)
-    rot_exp_path[4] = pose
+    pose.t_xyz = s_to_xyzwpr('0.0,50.0,150.0,0.0,0.0,0.0',',')
+    pose.t_joint = s_to_joint('0.0,0.0,0.0,0.0,0.0,0.0',',')
+    tstrot__append(pose, rot_exp_path)
+    pose.t_xyz = s_to_xyzwpr('50.0,-0.0,150.0,0.0,0.0,-90.0',',')
+    pose.t_joint = s_to_joint('90.0,0.0,0.0,0.0,0.0,0.0',',')
+    tstrot__append(pose, rot_exp_path)
+    pose.t_xyz = s_to_xyzwpr('0.0,-50.0,150.0,0.0,0.0,-180.0',',')
+    pose.t_joint = s_to_joint('180.0,0.0,0.0,0.0,0.0,0.0',',')
+    tstrot__append(pose, rot_exp_path)
+    pose.t_xyz = s_to_xyzwpr('-50.0,-0.0,150.0,0.0,0.0,90.0',',')
+    pose.t_joint = s_to_joint('270.0,0.0,0.0,0.0,0.0,0.0',',')
+    tstrot__append(pose, rot_exp_path)
 
     --initialize origin
-    origin.x =0 ; origin.y =0; origin.z =0;
-    origin.w =0 ; origin.p =0; origin.r =0;
-    CNV_STR_CONF('F U T, 0, 0, 0', origin.config_data, status)
+    origin.t_xyz = pose__set_xyzwpr_str('0,0,0,0,0,0', 'F U T, 0, 0, 0')
+    origin.t_joint = pose__set_jointpos_str('0.0')
+
 
     --set parameters
     param.radius = 50
