@@ -8,11 +8,11 @@ path_type_define(usrpth)
 
 --turntable type
 %include rottypetest.klt
-path_type_define(tstrot)
+path_type_define(trot)
 %undef path_type_define
 
 -- turntable path structs
-%define class_name tstrot
+%define class_name trot
 %include turntable.klt
 
 --include standard path node type
@@ -36,7 +36,7 @@ VAR
 %class stdpth('paths.klc','paths_class.klh','std_pth_node.klt')
 
 --access to turntable paths
-%class tstrot('turntable_paths.klc','turntable_paths.klh','rottypetest.klt')
+%class trot('turntable_paths.klc','turntable_paths.klh','rottypetest.klt')
 
 ROUTINE t_append : BOOLEAN
   VAR 
@@ -110,22 +110,22 @@ ROUTINE t_rot_pad : BOOLEAN
     br,bt : ARRAY[4] OF BOOLEAN
   BEGIN
     --clear path
-    tstrot__clear(rot_path)
-    tstrot__clear(rot_exp_path)
+    trot__clear(rot_path)
+    trot__clear(rot_exp_path)
 
     --band with a 50mm radius, 150mm z+ from the origin
     pose.t_xyz = s_to_xyzwpr('0.0,50.0,150.0,0.0,0.0,0.0',',')
     pose.t_joint = s_to_joint('0.0,0.0,0.0,0.0,0.0,0.0',',')
-    tstrot__append(pose, rot_exp_path)
+    trot__append(pose, rot_exp_path)
     pose.t_xyz = s_to_xyzwpr('50.0,-0.0,150.0,0.0,0.0,-90.0',',')
     pose.t_joint = s_to_joint('90.0,0.0,0.0,0.0,0.0,0.0',',')
-    tstrot__append(pose, rot_exp_path)
+    trot__append(pose, rot_exp_path)
     pose.t_xyz = s_to_xyzwpr('0.0,-50.0,150.0,0.0,0.0,-180.0',',')
     pose.t_joint = s_to_joint('180.0,0.0,0.0,0.0,0.0,0.0',',')
-    tstrot__append(pose, rot_exp_path)
+    trot__append(pose, rot_exp_path)
     pose.t_xyz = s_to_xyzwpr('-50.0,-0.0,150.0,0.0,0.0,90.0',',')
     pose.t_joint = s_to_joint('270.0,0.0,0.0,0.0,0.0,0.0',',')
-    tstrot__append(pose, rot_exp_path)
+    trot__append(pose, rot_exp_path)
 
     --initialize origin
     origin.t_xyz = pose__set_xyzwpr_str('0,0,0,0,0,0', 'F U T, 0, 0, 0')
@@ -139,8 +139,9 @@ ROUTINE t_rot_pad : BOOLEAN
     param.passes = 1
     param.width_rot = 360
 
+
     --make band
-    tstrot__npad(param, index, origin, rot_path)
+    trot__npad(param, index, origin, rot_path)
 
     FOR i=1 TO PATH_LEN(rot_path) DO
       --WRITE TPDISPLAY(CR,pose_to_s((act_path[i].node_pos), ','))

@@ -22,7 +22,7 @@ path_type_define(class_name)
 %from errors.klh %import karelError, CHK_STAT
 %from math.klh %import translate, rotz
 %from matrix.klh %import add_1D
-%from pose.klh %import set_jointpos
+%from pose.klh %import set_jointpos, cylindrical_to_cartesian
 %from strings.klh %import vec_to_s, r_to_s, rarr_to_s
 %include turntable_paths.private.klh
 %include turntable_paths.klh
@@ -111,6 +111,8 @@ ROUTINE check_tpad
 
 -- ** public **
 
+-- *** path handlers
+
 ROUTINE clear
   VAR
     i : INTEGER
@@ -131,6 +133,8 @@ ROUTINE append
 		length = PATH_LEN(out_path)
     out_path[length] = n
   END append
+
+-- *** paths
 
 ROUTINE npad
   VAR 
@@ -179,7 +183,7 @@ ROUTINE npad
           --update robot position
           --multiply angle by -1 to keep head stationary as rotary
           --axis rotates
-          posei.t_xyz = math__translate(math__rotz((origin.t_xyz), (ang)*(-1)), trans)
+          posei.t_xyz = pose__cylindrical_to_cartesian(origin.t_xyz, (-1*ang), trans.y, trans.z)
           --copy configuration
           posei.t_xyz.config_data = origin.t_xyz.config_data
           -- update turntable
