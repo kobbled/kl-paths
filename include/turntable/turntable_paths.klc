@@ -21,7 +21,7 @@ path_type_define(class_name)
 
 %from errors.klh %import karelError, CHK_STAT
 %from math.klh %import translate, rotz
-%from matrix.klh %import add_1D
+%from matrix.klh %import add_1D, zeros_1D
 %from pose.klh %import set_jointpos, cylindrical_to_cartesian
 %from strings.klh %import vec_to_s, r_to_s, rarr_to_s
 %include turntable_paths.private.klh
@@ -115,7 +115,6 @@ ROUTINE check_tpad
 
 ROUTINE clear
   VAR
-    i : INTEGER
     status : INTEGER
   BEGIN
     WHILE PATH_LEN(out_path) > 0 DO
@@ -133,6 +132,22 @@ ROUTINE append
 		length = PATH_LEN(out_path)
     out_path[length] = n
   END append
+
+
+ROUTINE mask_rotary_axis
+  VAR
+    status : INTEGER
+    start_arr : ARRAY[ROT_AXES] OF REAL
+    offset_arr : ARRAY[ROT_AXES] OF REAL
+  BEGIN
+    CNV_JPOS_REL(start_pos, start_arr, status)
+    matrix__zeros_1D(offset_arr)
+    offset_arr[ROTARY_JNT] = offset
+    matrix__add_1D(start_arr, offset_arr, offset_arr)
+
+    RETURN(pose__set_jointpos(offset_arr))
+
+  END mask_rotary_axis
 
 -- *** paths
 
@@ -168,6 +183,12 @@ ROUTINE npad
     params.radius = ABS(params.radius)
     trans.x = 0 ; trans.y = params.radius*params.idod ; trans.z = params.start_z ;
     ang = 0
+
+    --initialize rotary
+    matrix__zeros_1D(rotary)
+    --convert origin rotary position to array
+    CNV_JPOS_REL(origin.t_joint, origin_rot, status)
+    CHK_STAT(status)
     
     k=startInd.k
     WHILE k < params.pockets DO
@@ -189,8 +210,6 @@ ROUTINE npad
           -- update turntable
           rotary[ROTARY_JNT] = ang*params.ccw
           --convert and add to origin jointpos
-          CNV_JPOS_REL(origin.t_joint, origin_rot, status)
-          CHK_STAT(status)
           matrix__add_1D(rotary, origin_rot, rotary)
           posei.t_joint = pose__set_jointpos(rotary)
           --add pose to path
