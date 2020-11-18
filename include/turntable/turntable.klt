@@ -3,18 +3,19 @@
 
 TYPE
   tPAD FROM class_name = STRUCTURE
-		radius : REAL
-    idod : SHORT
-    ccw : SHORT
+		overlap : REAL
+    pad_offset : REAL
+    pass_offset : REAL
+    radius : REAL
     start_z  : REAL
     start_deg : REAL
-    overlap : REAL
     width_rot : REAL
+    ccw : SHORT
+    dir : SHORT
+    idod : SHORT
     increments : SHORT 
     passes : SHORT
     pockets : BYTE
-    pad_offset : REAL
-    pass_offset : REAL
 	ENDSTRUCTURE
 
   tINDEX FROM class_name = STRUCTURE

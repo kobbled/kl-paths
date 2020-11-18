@@ -58,6 +58,12 @@ ROUTINE check_tpad
   IF (p.ccw <> -1) AND (p.ccw <> 1) THEN
     karelError(VAR_UNINIT,'in tPad type: ccw must be set to 1, or -1', ER_ABORT)
   ENDIF
+  IF UNINIT(p.dir) THEN
+    p.dir = 1
+  ENDIF
+  IF (p.dir <> -1) AND (p.dir <> 1) THEN
+    karelError(VAR_UNINIT,'in tPad type: dir must be set to 1, or -1', ER_ABORT)
+  ENDIF
   --default increments is 4
   IF UNINIT(p.increments) THEN
     p.increments = 4
@@ -206,9 +212,11 @@ ROUTINE npad
           --calcuate increment angle
           ang = params.start_deg + (params.width_rot*i/params.increments+params.pad_offset*k+params.pass_offset*j)*params.ccw
           --update robot position
-          --multiply angle by -1 to keep head stationary as rotary
+          --multiply angle by -1 (p.dir) if tool z is antiparallel to user z
+          --and 1 (p.dir) tool z is parallel to user z
+          --this is used to keep the head stationary as the rotary turns
           --axis rotates
-          posei.t_xyz = pose__cylindrical_to_cartesian(origin.t_xyz, (-1*ang), trans.y, trans.z)
+          posei.t_xyz = pose__cylindrical_to_cartesian(origin.t_xyz, (params.dir*ang), trans.y, trans.z)
           --copy configuration
           posei.t_xyz.config_data = origin.t_xyz.config_data
           -- update turntable
