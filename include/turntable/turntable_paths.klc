@@ -208,7 +208,7 @@ ROUTINE npad
         trans.z = params.start_z + j*params.overlap
 
         i = 0
-        WHILE i < params.increments DO
+        WHILE i <= params.increments DO
           --calcuate increment angle
           ang = params.start_deg + (params.width_rot*i/params.increments+params.pad_offset*k+params.pass_offset*j)*params.ccw
           --update robot position
