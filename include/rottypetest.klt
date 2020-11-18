@@ -11,8 +11,8 @@
 
 %mode push
 %mode string QQQ "`" "`" "\\"
-%define path_type_define(object_name) `TYPE
-  ROT_STRUCT FROM object_name = STRUCTURE
+%define path_type_define(type_name, object_name) `TYPE
+  type_name FROM object_name = STRUCTURE
 		t_xyz   		: 	 XYZWPR IN GROUP[RBT_GRP]
     t_joint      :  JOINTPOS`ROT_AXES` IN GROUP[ROT_GRP]
 	ENDSTRUCTURE`

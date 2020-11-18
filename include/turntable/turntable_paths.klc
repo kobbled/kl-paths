@@ -16,7 +16,7 @@ PROGRAM class_name
 
 --print user defined struct
 %ifdef path_type_define
-path_type_define(class_name)
+path_type_define(t_node, class_name)
 %endif
 
 %from errors.klh %import karelError, CHK_STAT
@@ -148,6 +148,10 @@ ROUTINE mask_rotary_axis
     RETURN(pose__set_jointpos(offset_arr))
 
   END mask_rotary_axis
+
+%endif
+    RETURN(origin)
+  END set_path_origin
 
 -- *** paths
 
