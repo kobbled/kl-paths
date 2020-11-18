@@ -22,7 +22,7 @@ path_type_define(t_node, class_name)
 %from errors.klh %import karelError, CHK_STAT
 %from math.klh %import translate, rotz
 %from matrix.klh %import add_1D, zeros_1D
-%from pose.klh %import set_jointpos, cylindrical_to_cartesian
+%from pose.klh %import set_jointpos, cylindrical_to_cartesian, set_xyzwpr_str, set_jointpos_str
 %from strings.klh %import vec_to_s, r_to_s, rarr_to_s
 %include turntable_paths.private.klh
 %include turntable_paths.klh
@@ -155,6 +155,14 @@ ROUTINE mask_rotary_axis
 
   END mask_rotary_axis
 
+ROUTINE set_path_origin
+  VAR
+    origin : t_node
+  BEGIN
+    origin.robot = pose__set_xyzwpr_str(rbt_origin, RBT_CONFIG)
+    origin.rotary = pose__set_jointpos_str(rot_origin)
+%if TRACK_GRP>0
+    origin.track = pose__set_jointpos_str(track_origin)
 %endif
     RETURN(origin)
   END set_path_origin

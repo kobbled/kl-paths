@@ -15,6 +15,8 @@ ROUTINE append(n : t_node ; out_path : PATH nodedata = t_node) FROM class_name
 
 declare_member(class_name,mask_rotary_axis,class_name,mskr)
 ROUTINE mask_rotary_axis(start_pos : JOINTPOS; offset : REAL) : JOINTPOS FROM class_name
+declare_member(class_name,set_path_origin,class_name,ptor)
+ROUTINE set_path_origin(rbt_origin : STRING ; rot_origin : STRING; track_origin : STRING) : t_node FROM class_name
 
 -- paths
 declare_member(class_name,npad,class_name,npad)
