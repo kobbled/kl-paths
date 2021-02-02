@@ -4,10 +4,11 @@
 %include namespace.m
 
 %define prog_name paths
-%define prog_name_alias path
+%define prog_name_alias paths
 
---toolpaths
-declare_function(prog_name,hexagon,prog_name_alias,hexagon)
-ROUTINE paths__hexagon(radius : REAL; vertex : INTEGER; origin : XYZWPR; out_path : PATH) FROM paths
+declare_function(prog_name,vec_nextPoly,prog_name_alias,vnply)
+ROUTINE paths__vec_nextPoly(pth : PATH nodedata = t_VEC_PATH) FROM paths
+declare_function(prog_name,pos_nextPoly,prog_name_alias,pnply)
+ROUTINE paths__pos_nextPoly(pth : PATH nodedata = t_POS_PATH) FROM paths
 
 %endif --paths_h

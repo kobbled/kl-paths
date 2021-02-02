@@ -5,48 +5,52 @@ PROGRAM paths
 %NOPAUSE = COMMAND + TPENABLE + ERROR
 
 %include errors.klt
-%include math.klt
+%include paths.klt
 
-%from errors.klh %import karelError
-%from math.klh %import translate, rotz
-
+%include errors.klh
 %include paths.klh
 
---toolpaths
-ROUTINE paths__hexagon
-  VAR 
-    i, pthlen : INTEGER
-    status : INTEGER
-    ang : REAL
-    posei : XYZWPR
-    trans : VECTOR
+ROUTINE paths__vec_nextPoly
+  VAR
+    first_vert : INTEGER
+    prev_poly : INTEGER
+    i, j : INTEGER
   BEGIN
-    --get current length of path
-    pthlen = PATH_LEN(out_path)
-    IF (pthlen = 0) OR UNINIT(pthlen) THEN
-      pthlen = 1
+    IF NOT UNINIT(pth[1].polygon) THEN
+      IF pth[1].polygon <> pth[PATH_LEN(pth)].polygon THEN
+        first_vert = 1
+        FOR i=1 TO PATH_LEN(pth)-1 DO
+          IF (pth[i].polygon <> pth[i+1].polygon) THEN
+            FOR j=i DOWNTO first_vert DO
+              pth[j].nextpoly = i+1
+            ENDFOR
+            first_vert = i+1
+          ENDIF
+        ENDFOR
+      ENDIF
     ENDIF
+  END paths__vec_nextPoly
 
-    --make sure ref position has config
-    IF UNINIT(origin.config_data) THEN
-      karelError(INVALID_CONFIG,'hexagon : origin must have configuration', ER_ABORT)
+ROUTINE paths__pos_nextPoly
+  VAR
+    first_vert : INTEGER
+    prev_poly : INTEGER
+    i, j : INTEGER
+  BEGIN
+    IF NOT UNINIT(pth[1].polygon) THEN
+      IF pth[1].polygon <> pth[PATH_LEN(pth)].polygon THEN
+        first_vert = 1
+        FOR i=1 TO PATH_LEN(pth)-1 DO
+          IF (pth[i].polygon <> pth[i+1].polygon) THEN
+            FOR j=i DOWNTO first_vert DO
+              pth[j].nextpoly = i+1
+            ENDFOR
+            first_vert = i+1
+          ENDIF
+        ENDFOR
+      ENDIF
     ENDIF
-
-    --make radius vector
-    trans.x = radius ; trans.y = 0 ; trans.z = 0 ;
-
-    FOR i=0 TO (vertex) DO
-      ang = (i*2*M_PI/vertex)*M_RAD2DEG
-      posei = math__rotz(math__translate(math__rotz((origin), ang), trans), -ang)
-      --copy configuration
-      posei.config_data = origin.config_data
-
-      APPEND_NODE(out_path, status)
-      out_path[pthlen].node_pos = posei
-      --increment path length as it may not be tha same as i+1
-      pthlen = pthlen + 1
-    ENDFOR
-  END paths__hexagon
+  END paths__pos_nextPoly
 
 BEGIN
 END paths

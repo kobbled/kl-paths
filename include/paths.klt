@@ -15,11 +15,15 @@ TYPE
   t_VEC_PATH FROM paths = STRUCTURE
     v : VECTOR
     code : INTEGER
+    nextPoly : SHORT
+    polygon : SHORT
   ENDSTRUCTURE
 
   t_POS_PATH FROM paths = STRUCTURE
     v : XYZWPR
     code : INTEGER
+    nextPoly : SHORT
+    polygon : SHORT
   ENDSTRUCTURE
 
 %endif --paths_t
