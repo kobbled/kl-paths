@@ -9,19 +9,24 @@
     "src/paths.kl"
   ],
   "tests" : [
-    "test/test_paths.kl"
+    "test/test_pplan.kl"
   ],
   "includes" : [
     "include",
-    "include/turntable"
+    "include/turntable",
+    "include/pathplan"
   ],
   "depends" : [
     "errors",
-    "display",
     "math",
-    "matrix",
+    "graph",
     "pose",
-    "KUnit",
     "ktransw-macros"
+  ],
+  "tests-depends" : [
+    "display",
+    "draw",
+    "Strings",
+    "KUnit"
   ]
 }
