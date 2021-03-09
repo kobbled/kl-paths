@@ -1,0 +1,52 @@
+%define PATHPLAN_CONFIG_FILENAME vecpathplan.klt
+
+%define PATH_DATA_TYPE t_VEC_PATH
+%define PATH_DATA_NAME v
+%define PATH_NODE_TYPE VECTOR
+
+--minimum cost for an edge in the path graph
+%define PATH_MIN_COST 1
+--weighting for linking segments
+%define PATH_LINK_ADJ_COST 2
+%define PATH_LINK_DIAG_COST 3
+%define PATH_LINK_POLY_COST 4
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define define_pplan_headers(parent) `declare_member(parent,dist_to_weight,parent,d2wt)
+ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE FROM parent
+`
+%define define_pplan_members(parent) `declare_member(parent,dist_to_weight,parent,d2wt)
+ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE
+  BEGIN
+    RETURN(TRUNC(dist))
+  END dist_to_weight
+`
+%mode pop
+
+
+--kd tree
+------------------
+%defeval KD_CLASS_NAME pthkd
+%include kd_vec_raster.klt
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define define_kdtree(object_name,cnfg_file) `%class object_name('kd_tree.klc','kd_tree.klh','cnfg_file')`
+%mode pop
+------------------
+
+--graph
+------------------
+%defeval GRAPH_CLASS_NAME pthgh
+%include default_graph_weight2.klt
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define define_graph_class(object_name,cnfg_file) `%class object_name('graph.klc','graph.klh','cnfg_file')`
+%mode pop
+------------------
+
+--maximum number of adjacencies per node
+%define MAX_NEIGHBORS 7

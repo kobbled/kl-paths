@@ -1,0 +1,13 @@
+%ifndef pathplan_t
+%define pathplan_t
+
+CONST
+  --raster types
+  ONEWAY = 1
+  ZIGZAG = 2
+    --..warning:: not implemented
+  BOTTOMFILL = 3
+  CASCADEFILL = 4
+
+
+%endif --pathplan_t

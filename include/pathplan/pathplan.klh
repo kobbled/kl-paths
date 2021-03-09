@@ -1,0 +1,34 @@
+--header
+%include header_guard.m
+--oop
+%include namespace.m
+
+--start header file
+header_if -- ifndef class
+header_def -- define class
+
+--path functions
+declare_member(class_name,init,class_name,init)
+ROUTINE init(p : PATH nodedata = PATH_DATA_TYPE ; coord_frame : XYZWPR) FROM class_name
+declare_member(class_name,destructor,class_name,dstr)
+ROUTINE destructor FROM class_name
+declare_member(class_name,append_line,class_name,apdl)
+ROUTINE append_line(line : PATH nodedata = PATH_DATA_TYPE) FROM class_name
+declare_member(class_name,append_line_arr,class_name,apdar)
+ROUTINE append_line_arr(line : ARRAY OF PATH_DATA_TYPE) FROM class_name
+declare_member(class_name,get_path,class_name,gpth)
+ROUTINE get_path(out_path : PATH nodedata = PATH_DATA_TYPE) FROM class_name
+declare_member(class_name,next_path,class_name,npth)
+ROUTINE next_path(idx : INTEGER) : INTEGER FROM class_name
+declare_member(class_name,prev_path,class_name,ppth)
+ROUTINE prev_path(idx : INTEGER) : INTEGER FROM class_name
+declare_member(class_name,closest_point,class_name,cpnt)
+ROUTINE closest_point(point : PATH_DATA_TYPE) : INTEGER FROM class_name
+declare_member(class_name,MST,class_name,mst)
+ROUTINE MST(start_node : INTEGER; out_pth : PATH nodedata = t_INTEGER) FROM class_name
+declare_member(class_name,NN_graph,class_name,nng)
+ROUTINE NN_graph FROM class_name
+declare_member(class_name,raster_graph,class_name,rgrp)
+ROUTINE raster_graph(raster_type : INTEGER; poly_depend : BOOLEAN; strict_dir : BOOLEAN) FROM class_name
+
+%endif --end header

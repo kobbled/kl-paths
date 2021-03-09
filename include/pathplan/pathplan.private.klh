@@ -1,0 +1,25 @@
+%ifndef paths_class_private_h
+%define paths_class_private_h
+
+--oop
+%include namespace.m
+
+-- ** private **
+declare_member(class_name,clear_path,class_name,cpth)
+ROUTINE clear_path FROM class_name
+declare_member(class_name,clear_visited,class_name,cvis)
+ROUTINE clear_visited FROM class_name
+declare_member(class_name,reset_visited,class_name,rvis)
+ROUTINE reset_visited FROM class_name
+declare_member(class_name,clear_tracked,class_name,ctrk)
+ROUTINE clear_tracked FROM class_name
+declare_member(class_name,init_tracked,class_name,itrk)
+ROUTINE init_tracked FROM class_name
+declare_member(class_name,update_unvisited,class_name,utrk)
+ROUTINE update_unvisited(nde : PATH_DATA_TYPE) FROM class_name
+declare_member(class_name,min_tracked,class_name,mtrk)
+ROUTINE min_tracked(nde_i : INTEGER) : INTEGER FROM class_name
+declare_member(class_name,graph_path_lines,class_name,gphl)
+ROUTINE graph_path_lines FROM class_name
+
+%endif --paths_class_private_h
