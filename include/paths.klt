@@ -14,16 +14,16 @@ CONST
 TYPE
   t_VEC_PATH FROM paths = STRUCTURE
     v : VECTOR
-    code : INTEGER
-    nextPoly : SHORT
+    code : SHORT
     polygon : SHORT
+    approach : VECTOR
   ENDSTRUCTURE
 
   t_POS_PATH FROM paths = STRUCTURE
     v : XYZWPR
-    code : INTEGER
-    nextPoly : SHORT
+    code : SHORT
     polygon : SHORT
+    approach : VECTOR
   ENDSTRUCTURE
 
 %endif --paths_t
