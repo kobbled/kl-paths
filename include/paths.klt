@@ -26,4 +26,13 @@ TYPE
     approach : VECTOR
   ENDSTRUCTURE
 
+  T_PTHQUERY FROM paths = STRUCTURE
+    idx : INTEGER
+    value : REAL
+  ENDSTRUCTURE
+  
+  --node order
+  -- up,down,right,left,diag_up, diag_down, poly_right, poly_left
+  T_RASTQUERY FROM paths = ARRAY[6] OF T_PTHQUERY
+
 %endif --paths_t

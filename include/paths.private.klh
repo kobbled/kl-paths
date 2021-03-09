@@ -1,0 +1,16 @@
+%ifndef paths_private_h
+%define paths_private_h
+
+%include namespace.m
+
+%define prog_name paths
+%define prog_name_alias paths
+
+declare_function(prog_name,opposite_code,prog_name_alias,ocde)
+ROUTINE paths__opposite_code(code : INTEGER) : INTEGER FROM paths
+declare_function(prog_name,compute_diagonals,prog_name_alias,cdag)
+ROUTINE paths__compute_diagonals(point : t_VEC_PATH ; raster_dir : VECTOR ; polygon_dep : BOOLEAN ; &
+                                 data : PATH nodedata = t_VEC_PATH ; query : T_RASTQUERY) FROM paths
+declare_function(prog_name,get_path_vector,prog_name_alias,gtpv)
+ROUTINE paths__get_path_vector(start_idx : INTEGER ; data : PATH nodedata = t_VEC_PATH) : VECTOR FROM paths
+%endif --paths_private_h

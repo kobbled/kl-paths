@@ -4,53 +4,383 @@ PROGRAM paths
 %NOLOCKGROUP
 %NOPAUSE = COMMAND + TPENABLE + ERROR
 
+%ifdef DEBUG_BUILD
+%include display.c.klt
+%endif
+
+%define QUERY_MAX_DIST 1.E6
+--Make RASTER_EPSILON very large to account for 
+--rounding issues in perpendicular and 
+--horizontal values
+%define RASTER_EPSILON 1
+%define EPSILON 0.01
+
 %include errors.klt
 %include paths.klt
+%include pathplan.klt
 
 %include errors.klh
+%ifdef DEBUG_BUILD
+%include strings.klh
+%endif
+%from math.klh %import rotz_vec, norm, norm2
+%from systemlib.klh %import VEC2D
+
 %include paths.klh
+%include paths.private.klh
 
-ROUTINE paths__vec_nextPoly
-  VAR
-    first_vert : INTEGER
-    prev_poly : INTEGER
-    i, j : INTEGER
-  BEGIN
-    IF NOT UNINIT(pth[1].polygon) THEN
-      IF pth[1].polygon <> pth[PATH_LEN(pth)].polygon THEN
-        first_vert = 1
-        FOR i=1 TO PATH_LEN(pth)-1 DO
-          IF (pth[i].polygon <> pth[i+1].polygon) THEN
-            FOR j=i DOWNTO first_vert DO
-              pth[j].nextpoly = i+1
-            ENDFOR
-            first_vert = i+1
-          ENDIF
-        ENDFOR
-      ENDIF
-    ENDIF
-  END paths__vec_nextPoly
+%ifdef DEBUG_BUILD
+-- user display log
+%class usrdis('dispclass.klc','dispclass.klh')
+%endif
 
-ROUTINE paths__pos_nextPoly
-  VAR
-    first_vert : INTEGER
-    prev_poly : INTEGER
-    i, j : INTEGER
+--private
+
+ROUTINE paths__opposite_code
   BEGIN
-    IF NOT UNINIT(pth[1].polygon) THEN
-      IF pth[1].polygon <> pth[PATH_LEN(pth)].polygon THEN
-        first_vert = 1
-        FOR i=1 TO PATH_LEN(pth)-1 DO
-          IF (pth[i].polygon <> pth[i+1].polygon) THEN
-            FOR j=i DOWNTO first_vert DO
-              pth[j].nextpoly = i+1
-            ENDFOR
-            first_vert = i+1
-          ENDIF
-        ENDFOR
-      ENDIF
+    SELECT code OF
+      CASE(PTH_CLOSE):
+        RETURN(PTH_MOVETO)
+      CASE(PTH_MOVETO):
+        RETURN(PTH_CLOSE)
+      CASE(PTH_STOP):
+        RETURN(PTH_MOVETO)
+      ELSE:
+    ENDSELECT
+
+    RETURN(code)
+    
+  END paths__opposite_code
+
+ROUTINE paths__compute_diagonals
+  VAR
+    i,j : INTEGER
+    parallel_dir : VECTOR
+    long, lat : REAL
+    b : BOOLEAN
+  BEGIN
+    --do not compute diagonals if up index and down index are uninitialized
+    IF UNINIT(query[1].idx) AND UNINIT(query[2].idx) THEN RETURN ; ENDIF
+ 
+    -- initialize query
+    IF NOT UNINIT(query[1].idx) THEN
+      query[5].value = 0
     ENDIF
-  END paths__pos_nextPoly
+    IF NOT UNINIT(query[2].idx) THEN
+      query[6].value = 0
+    ENDIF
+
+    --get parallel direction
+    parallel_dir = math__rotz_vec((raster_dir), -90)
+    
+    FOR i=1 TO PATH_LEN(data) DO
+      IF (data[i].code = PTH_CLOSE) OR (data[i].code = PTH_MOVETO) THEN
+        
+        --CHECK UP DIAGONAL
+        IF NOT UNINIT(query[1].idx) THEN
+          long = raster_dir@(data[i].v - data[query[1].idx].v)
+          lat = parallel_dir@(data[i].v - data[query[1].idx].v)
+
+          --if polygon independent check diagonals over full drawing
+          --if polygon dependent check points only on the polygon.
+          b = FALSE
+          IF polygon_dep THEN
+            IF (data[query[1].idx].polygon = data[i].polygon) AND (data[query[1].idx].polygon = point.polygon) THEN
+              b = TRUE
+            ELSE
+              b = FALSE
+            ENDIF
+          ELSE
+            b = TRUE
+          ENDIF
+
+          IF b THEN
+            -- if colinear with up point find the furthest point away from this point
+            -- long = 0 and lat <> 0
+            IF (ABS(long) < RASTER_EPSILON) AND (ABS(lat) > RASTER_EPSILON) THEN
+              --pick furthest point
+              IF (ABS(lat) > query[5].value) AND (data[i].code = paths__opposite_code((point.code)) ) THEN
+                query[5].idx = i ; query[5].value = ABS(lat)
+              ENDIF
+            ENDIF
+          ENDIF
+        ENDIF
+
+        --CHECK DOWN DIAGONAL
+        IF NOT UNINIT(query[2].idx) THEN
+          long = raster_dir@(data[i].v - data[query[2].idx].v)
+          lat = parallel_dir@(data[i].v - data[query[2].idx].v)
+
+          --if polygon independent check diagonals over full drawing
+          --if polygon dependent check points only on the polygon.
+          b = FALSE
+          IF polygon_dep THEN
+            IF (data[query[2].idx].polygon = data[i].polygon) AND (data[query[2].idx].polygon = point.polygon) THEN
+              b = TRUE
+            ELSE
+              b = FALSE
+            ENDIF
+          ELSE
+            b = TRUE
+          ENDIF
+
+          IF b THEN
+            -- if colinear with down point find furthest point from this node
+            -- long = 0 and lat <> 0
+            IF (ABS(long) < RASTER_EPSILON) AND (ABS(lat) > RASTER_EPSILON) THEN
+              --pick furthest point
+              IF (ABS(lat) > query[6].value) AND (data[i].code = paths__opposite_code((point.code)) ) THEN
+                query[6].idx = i ; query[6].value = ABS(lat)
+              ENDIF
+            ENDIF
+          ENDIF
+
+        ENDIF
+
+      ENDIF
+    ENDFOR
+
+    --return query
+  END paths__compute_diagonals
+
+ROUTINE paths__get_path_vector
+  VAR
+    i, n, m : INTEGER
+    strt, emd : VECTOR
+  BEGIN
+    IF (NOT (data[start_idx].code = PTH_MOVETO)) AND (NOT (data[start_idx].code = PTH_CLOSE)) THEN
+      --find start or end of path if in between
+      i = 0
+      REPEAT
+        i = i + 1
+        n = ((start_idx+i-1) MOD PATH_LEN(data)) + 1
+      UNTIL((data[n].code = PTH_CLOSE) OR (data[n].code = PTH_MOVETO))
+    ELSE
+      n = start_idx
+    ENDIF
+
+    strt = data[n].v
+    --loop through until first complete curve is
+    --found
+    i = 0
+    REPEAT
+      -- assume line is moving in positive direction
+      IF (data[n].code = PTH_MOVETO) THEN
+        i = i + 1
+      ENDIF
+      -- assume line is moving in negative direction
+      IF (data[n].code = PTH_CLOSE) THEN
+        i = i - 1
+      ENDIF
+      m = n + i
+    UNTIL((data[m].code = PTH_CLOSE) OR (data[m].code = PTH_MOVETO))
+
+    emd = data[m].v
+
+    --assume PTH_MOVETO -> PTH_CLOSE creates a line,
+    --get unit vector of line
+    --raster direction is perpendicular to the line
+    RETURN ( (emd - strt)/math__norm(emd - strt) )
+
+  END paths__get_path_vector
+
+--public
+
+-- query order : up,down,right,left,diag_up,diag_down
+ROUTINE paths__raster_neighbors
+  VAR
+    i : INTEGER
+    status : INTEGER
+    query : T_RASTQUERY
+    parallel_dir, perp_dir : VECTOR
+    det : VECTOR
+    long, lat : REAL
+%ifdef DEBUG_BUILD
+    str_arr : ARRAY[6] OF STRING[5]
+%endif
+  BEGIN
+    -- initialize query
+    --follows unit circle around origin
+    FOR i=1 TO ARRAY_LEN(query) DO
+      --starts on i=1 MOD 2 is odd
+      IF (i MOD 2 = 0) THEN
+        --down/left/diag_down
+        query[i].value = -QUERY_MAX_DIST
+      ELSE
+        --up/right/diag_up
+        query[i].value = QUERY_MAX_DIST
+      ENDIF
+    ENDFOR
+
+    --get parallel direction
+    --loop throuhg until first complete curve is
+    --found
+    parallel_dir = paths__get_path_vector(1, data)
+
+-- %ifdef DEBUG_BUILD
+--     usrdis__print(DEBUG,'Finding NN for :' + vec_to_s(point.v, ','))
+-- %endif
+
+    FOR i=1 TO PATH_LEN(data) DO
+      --only do for line endpoints
+      SELECT data[i].code OF
+        CASE(PTH_CLOSE,PTH_MOVETO):
+
+-- %ifdef DEBUG_BUILD
+--         usrdis__print(DEBUG,'checking point:' + i_to_s(i) + ' ' + vec_to_s(data[i].v, ','))
+-- %endif
+
+        --get perpendicular vector
+        perp_dir = data[i].approach/math__norm(data[i].approach)
+
+-- %ifdef DEBUG_BUILD
+--         usrdis__print(DEBUG,'perp dir:' + vec_to_s(perp_dir, ','))
+--         usrdis__print(DEBUG,'parallel dir:' + vec_to_s(parallel_dir, ','))
+-- %endif
+
+        -- ..note:: use determinate instead of dot product. It is
+        --          faster, and more accurate due to not having to
+        --          calculate the perpendicular vectors for each.
+        det = perp_dir#(data[i].v - point.v)
+        lat = det.z
+        det = parallel_dir#(data[i].v - point.v)
+        long = det.z
+
+-- %ifdef DEBUG_BUILD
+--         usrdis__print(DEBUG,'long:' + r_to_s(long) + ' lat:' + r_to_s(lat))
+-- %endif
+
+        -- append node to query list
+        -- skip if long and lat = 0
+        IF (ABS(long) > RASTER_EPSILON) OR (ABS(lat) > RASTER_EPSILON) THEN
+
+          -- if colinear with parallel vector. long = 0
+          IF (ABS(long) < RASTER_EPSILON) THEN
+            --pick closer point
+            --left of point if lat is negative
+            IF (lat < -RASTER_EPSILON) THEN
+              IF (lat > query[4].value) AND (data[i].code = paths__opposite_code((point.code)) ) THEN
+                query[4].idx = i ; query[4].value = lat
+              ENDIF
+            --right of point if lat is positive
+            ELSE
+              IF (lat < query[3].value) AND (data[i].code = paths__opposite_code((point.code)) ) THEN
+                query[3].idx = i ; query[3].value = lat
+              ENDIF
+            ENDIF
+          ENDIF
+
+          --if colinear with raster direction. lat = 0
+          IF (ABS(lat) < RASTER_EPSILON) THEN
+            --down point if long is negative
+            IF (long < -RASTER_EPSILON) THEN
+              IF (long > query[2].value) AND (data[i].code = point.code) THEN
+                query[2].idx = i ; query[2].value = long
+              ENDIF
+            --up points if long is positive
+            ELSE
+              IF (long < query[1].value) AND (data[i].code = point.code) THEN
+                query[1].idx = i ; query[1].value = long
+              ENDIF
+            ENDIF --
+          ENDIF --colinear with rater dir
+        -- if long and lat = 0, points are the same. check if right or left point
+        -- is filled. fill the empty slot with the duplicate point
+        ELSE
+          IF UNINIT(query[3].idx) AND (data[i].code = paths__opposite_code((point.code)) ) THEN
+            query[3].idx = i ; query[3].value = lat
+          ELSE IF UNINIT(query[4].idx) AND (data[i].code = paths__opposite_code((point.code)) ) THEN
+            query[4].idx = i ; query[4].value = lat
+          ENDIF
+          ENDIF
+        ENDIF -- long and lat = 0
+
+        ELSE:
+      ENDSELECT
+    ENDFOR
+
+    --compute diagonals
+    -- raster_dir is the vector of raster lines
+    paths__compute_diagonals(point, math__rotz_vec((parallel_dir), 90), polygon_dep, data, query)
+
+%ifdef DEBUG_BUILD
+    s_to_arr('up,down,right,left,dup,ddown',',',str_arr)
+    usrdis__print(INFO, ' ')
+    usrdis__print(INFO,'Neighbors for Point: ' + vec_to_s(point.v, ','))
+    FOR i=1 TO ARRAY_LEN(str_arr) DO
+      IF NOT UNINIT(query[i].idx) THEN
+        usrdis__print(INFO,str_arr[i] + ' NN' + i_to_s(query[i].idx) +':' + vec_to_s(data[query[i].idx].v, ',') + ' dist: ' + r_to_s(query[i].value))
+      ENDIF
+    ENDFOR
+%endif
+
+    RETURN(query)
+  END paths__raster_neighbors
+
+ROUTINE paths__get_opposite_polygon_corner
+  VAR
+    i : INTEGER
+    opp_code : INTEGER
+    long, lat : REAL
+    raster_dir, pth_dir : VECTOR
+    costs : ARRAY[2] OF T_PTHQUERY
+  BEGIN
+
+    pth_dir = paths__get_path_vector(point_idx, data)
+    raster_dir = math__rotz_vec( pth_dir, -90)
+
+    IF stackedtop THEN
+      opp_code = paths__opposite_code((data[point_idx].code))
+    ELSE
+      opp_code = data[point_idx].code
+    ENDIF
+
+    --lat cost. want closest to zero.
+    costs[1].value = QUERY_MAX_DIST
+    --long cost. want max
+    costs[2].value = 0
+    
+    FOR i=1 TO PATH_LEN(data) DO
+      -- filter points on same polygon with same path code
+      IF (data[i].polygon = data[point_idx].polygon) AND (data[i].code = opp_code ) THEN
+        
+        lat = ABS(pth_dir@(data[i].v - data[point_idx].v))
+        long = ABS(raster_dir@(data[i].v - data[point_idx].v))
+
+        IF stackedtop THEN
+          --pick point closest to point_idx in raster direction
+          IF (lat < costs[1].value) THEN
+            costs[2].idx = i ; costs[2].value = long ;
+            costs[1].idx = i ; costs[1].value = lat ;
+          -- if point are equal choose point closest to point_idx 
+          ELSE IF (ABS(lat - costs[1].value) < EPSILON) THEN
+            IF (long < costs[2].value) THEN
+              costs[2].idx = i ; costs[2].value = long ;
+              costs[1].idx = i ; costs[1].value = lat ;
+            ENDIF
+          ENDIF
+          ENDIF
+        ELSE
+          --pick point furthest from point_idx in raster direction
+          IF (long > costs[2].value) THEN
+            costs[2].idx = i ; costs[2].value = long ;
+            costs[1].idx = i ; costs[1].value = lat ;
+          -- if point are equal choose point closest to point_idx 
+          ELSE IF (ABS(long - costs[2].value) < EPSILON) THEN
+            IF (lat < costs[1].value) THEN
+              costs[2].idx = i ; costs[2].value = long ;
+              costs[1].idx = i ; costs[1].value = lat ;
+            ENDIF
+          ENDIF
+          ENDIF
+        ENDIF
+
+      ENDIF
+    ENDFOR
+    
+    RETURN(costs[1].idx)
+
+  END paths__get_opposite_polygon_corner
 
 BEGIN
 END paths
