@@ -1,5 +1,5 @@
-%ifndef paths_class_private_h
-%define paths_class_private_h
+%ifndef pathplan_private_h
+%define pathplan_private_h
 
 --oop
 %include namespace.m
@@ -20,6 +20,6 @@ ROUTINE update_unvisited(nde : PATH_DATA_TYPE) FROM class_name
 declare_member(class_name,min_tracked,class_name,mtrk)
 ROUTINE min_tracked(nde_i : INTEGER) : INTEGER FROM class_name
 declare_member(class_name,graph_path_lines,class_name,gphl)
-ROUTINE graph_path_lines FROM class_name
+ROUTINE graph_path_lines(start, emd : INTEGER) FROM class_name
 
-%endif --paths_class_private_h
+%endif --pathplan_private_h

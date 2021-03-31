@@ -1,6 +1,6 @@
 PROGRAM class_name
 %NOBUSYLAMP
-%COMMENT = 'path class'
+%COMMENT = 'planning class'
 %NOLOCKGROUP
 %UNINITVARS
 
@@ -25,6 +25,7 @@ VAR
   pth : PATH nodedata = PATH_DATA_TYPE
   tracked : PATH nodedata = TRACKED_TYPE
   visited : PATH nodedata = t_BOOL
+  plan : PATH nodedata = t_INTEGER
 
 %include errors.klh
 %include paths.klh
@@ -151,11 +152,16 @@ ROUTINE min_tracked
       update_unvisited(pth[nde_i])
 
       FOR i=1 TO PATH_LEN(tracked) DO
-        IF (visited[i].v = FALSE) AND (tracked[i].cost_so_far < min_val) THEN
+        IF (visited[i].v = FALSE) AND (tracked[i].cost_so_far < min_val) AND &
+           ((pth[i].code = PTH_MOVETO) OR (pth[i].code = PTH_CLOSE)) THEN
           min_val = tracked[i].cost_so_far
           min_idx = i
         ENDIF
       ENDFOR
+      -- add nearest neighbor to adjacency list
+      IF min_idx > 0 THEN
+        `GRAPH_CLASS_NAME`__addEdge(nde_i, min_idx, min_val)
+      ENDIF
     ENDIF
 
     RETURN(min_idx)
@@ -169,7 +175,7 @@ ROUTINE graph_path_lines
     --connect endpoints of pth together in path
     --by forcing and edge between them in the graph
     --with the lowest cost.
-    FOR i=1 TO PATH_LEN(pth) DO
+    FOR i=start TO emd DO
       --find opposite end of line
       IF (pth[i].code = PTH_MOVETO) THEN
         j = i
@@ -295,10 +301,11 @@ ROUTINE MST
 
     reset_visited
     init_tracked
+    clear_plan
 
     --add start node to path and mark as visited
-    APPEND_NODE(out_pth, status)
-    out_pth[PATH_LEN(out_pth)].v = start_node
+    APPEND_NODE(plan, status)
+    plan[PATH_LEN(plan)].v = start_node
     visited[start_node].v = TRUE
 
     u = start_node
@@ -313,8 +320,8 @@ ROUTINE MST
         visited[u].v = TRUE
 
         --add to path list
-        APPEND_NODE(out_pth, status)
-        out_pth[PATH_LEN(out_pth)].v = u
+        APPEND_NODE(plan, status)
+        plan[PATH_LEN(plan)].v = u
       ENDIF
     ENDFOR
 
@@ -329,7 +336,7 @@ ROUTINE NN_graph
   BEGIN
     --graph edges through paths. This uses PATH_MIN_COST to force
     --MST or a-star through these routes first.
-    graph_path_lines
+    graph_path_lines(1, PATH_LEN(pth))
     
     --Find kth nearest neighbors for all nodes and build out graph
     FOR i=1 TO PATH_LEN(pth) DO
@@ -348,6 +355,9 @@ ROUTINE NN_graph
 
   END NN_graph
 
+--.. warning:: currently `raster_graph` only works for t_VEC_PATH
+--             need to implement for t_POS_PATH
+%ifeq PATH_DATA_TYPE t_VEC_PATH
 ROUTINE raster_graph
   VAR
     neigh : T_RASTQUERY
@@ -357,7 +367,7 @@ ROUTINE raster_graph
   BEGIN
     --graph edges through paths. This uses PATH_MIN_COST to force
     --MST or a-star through these routes first.
-    graph_path_lines
+    graph_path_lines(1, PATH_LEN(pth))
 
     --change to directional graph
     `GRAPH_CLASS_NAME`__change_directional(TRUE)
@@ -476,7 +486,11 @@ ROUTINE raster_graph
 
     ENDFOR
 
+    --change graph back to bidirectional
+    `GRAPH_CLASS_NAME`__change_directional(FALSE)
+
   END raster_graph
+%endif
 
 BEGIN
 END class_name

@@ -25,10 +25,14 @@ ROUTINE prev_path(idx : INTEGER) : INTEGER FROM class_name
 declare_member(class_name,closest_point,class_name,cpnt)
 ROUTINE closest_point(point : PATH_DATA_TYPE) : INTEGER FROM class_name
 declare_member(class_name,MST,class_name,mst)
-ROUTINE MST(start_node : INTEGER; out_pth : PATH nodedata = t_INTEGER) FROM class_name
+ROUTINE MST(start_node : INTEGER) FROM class_name
 declare_member(class_name,NN_graph,class_name,nng)
 ROUTINE NN_graph FROM class_name
+--.. warning:: currently only works for t_VEC_PATH
+--             need to implement for t_POS_PATH
+%ifeq PATH_DATA_TYPE t_VEC_PATH
 declare_member(class_name,raster_graph,class_name,rgrp)
 ROUTINE raster_graph(raster_type : INTEGER; poly_depend : BOOLEAN; strict_dir : BOOLEAN) FROM class_name
+%endif
 
 %endif --end header

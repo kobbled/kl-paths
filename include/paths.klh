@@ -6,8 +6,13 @@
 %define prog_name paths
 %define prog_name_alias paths
 
+--planning functions
+declare_function(prog_name,opposite_code,prog_name_alias,ocde)
+ROUTINE paths__opposite_code(code : INTEGER) : INTEGER FROM paths
 declare_function(prog_name,raster_neighbors,prog_name_alias,rstnn)
 ROUTINE paths__raster_neighbors(point : t_VEC_PATH ;  polygon_dep : BOOLEAN ; data : PATH nodedata = t_VEC_PATH) : T_RASTQUERY FROM paths
+declare_function(prog_name,raster_neighbors_ppath,prog_name_alias,rstnp)
+ROUTINE paths__raster_neighbors_ppath(point : t_POS_PATH ;  polygon_dep : BOOLEAN ; data : PATH nodedata = t_POS_PATH) : T_RASTQUERY FROM paths
 declare_function(prog_name,get_opposite_polygon_corner,prog_name_alias,gopc)
 ROUTINE paths__get_opposite_polygon_corner(point_idx : INTEGER ; data : PATH nodedata = t_VEC_PATH; stackedtop : BOOLEAN) : INTEGER FROM paths
 %endif --paths_h

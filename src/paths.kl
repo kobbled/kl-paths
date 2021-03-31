@@ -14,17 +14,21 @@ PROGRAM paths
 --horizontal values
 %define RASTER_EPSILON 1
 %define EPSILON 0.01
+%define M_PI 3.1415926535
 
 %include errors.klt
-%include paths.klt
+%include systemlib.klt
 %include pathplan.klt
+%include paths.klt
 
 %include errors.klh
 %ifdef DEBUG_BUILD
 %include strings.klh
 %endif
+
+%include pose.klh
 %from math.klh %import rotz_vec, norm, norm2
-%from systemlib.klh %import VEC2D
+%from systemlib.klh %import VEC, VEC2D
 
 %include paths.klh
 %include paths.private.klh
@@ -35,22 +39,6 @@ PROGRAM paths
 %endif
 
 --private
-
-ROUTINE paths__opposite_code
-  BEGIN
-    SELECT code OF
-      CASE(PTH_CLOSE):
-        RETURN(PTH_MOVETO)
-      CASE(PTH_MOVETO):
-        RETURN(PTH_CLOSE)
-      CASE(PTH_STOP):
-        RETURN(PTH_MOVETO)
-      ELSE:
-    ENDSELECT
-
-    RETURN(code)
-    
-  END paths__opposite_code
 
 ROUTINE paths__compute_diagonals
   VAR
@@ -186,6 +174,21 @@ ROUTINE paths__get_path_vector
 
 --public
 
+ROUTINE paths__opposite_code
+  BEGIN
+    SELECT code OF
+      CASE(PTH_CLOSE):
+        RETURN(PTH_MOVETO)
+      CASE(PTH_MOVETO):
+        RETURN(PTH_CLOSE)
+      CASE(PTH_STOP):
+        RETURN(PTH_MOVETO)
+      ELSE:
+    ENDSELECT
+
+    RETURN(code)
+    
+  END paths__opposite_code
 -- query order : up,down,right,left,diag_up,diag_down
 ROUTINE paths__raster_neighbors
   VAR
@@ -194,7 +197,8 @@ ROUTINE paths__raster_neighbors
     query : T_RASTQUERY
     parallel_dir, perp_dir : VECTOR
     det : VECTOR
-    long, lat : REAL
+    long, lat, lat2 : REAL
+    dist : REAL
 %ifdef DEBUG_BUILD
     str_arr : ARRAY[6] OF STRING[5]
 %endif
@@ -212,10 +216,18 @@ ROUTINE paths__raster_neighbors
       ENDIF
     ENDFOR
 
+    query[2].value = QUERY_MAX_DIST
+
     --get parallel direction
-    --loop throuhg until first complete curve is
+    --loop through until first complete curve is
     --found
     parallel_dir = paths__get_path_vector(1, data)
+    --get perpendicular vector
+    perp_dir = math__rotz_vec((parallel_dir), 90)
+-- %ifdef DEBUG_BUILD
+--     usrdis__print(DEBUG,'perp dir:' + vec_to_s(perp_dir, ','))
+--     usrdis__print(DEBUG,'parallel dir:' + vec_to_s(parallel_dir, ','))
+-- %endif
 
 -- %ifdef DEBUG_BUILD
 --     usrdis__print(DEBUG,'Finding NN for :' + vec_to_s(point.v, ','))
@@ -230,14 +242,6 @@ ROUTINE paths__raster_neighbors
 --         usrdis__print(DEBUG,'checking point:' + i_to_s(i) + ' ' + vec_to_s(data[i].v, ','))
 -- %endif
 
-        --get perpendicular vector
-        perp_dir = data[i].approach/math__norm(data[i].approach)
-
--- %ifdef DEBUG_BUILD
---         usrdis__print(DEBUG,'perp dir:' + vec_to_s(perp_dir, ','))
---         usrdis__print(DEBUG,'parallel dir:' + vec_to_s(parallel_dir, ','))
--- %endif
-
         -- ..note:: use determinate instead of dot product. It is
         --          faster, and more accurate due to not having to
         --          calculate the perpendicular vectors for each.
@@ -245,17 +249,20 @@ ROUTINE paths__raster_neighbors
         lat = det.z
         det = parallel_dir#(data[i].v - point.v)
         long = det.z
+        -- get vector of polygon line query point is on
+        det = (data[i].approach/math__norm(data[i].approach))#(data[i].v - point.v)
+        lat2 = det.z
+
+        dist = math__norm(data[i].v - point.v)
 
 -- %ifdef DEBUG_BUILD
 --         usrdis__print(DEBUG,'long:' + r_to_s(long) + ' lat:' + r_to_s(lat))
 -- %endif
 
-        -- append node to query list
-        -- skip if long and lat = 0
-        IF (ABS(long) > RASTER_EPSILON) OR (ABS(lat) > RASTER_EPSILON) THEN
-
-          -- if colinear with parallel vector. long = 0
-          IF (ABS(long) < RASTER_EPSILON) THEN
+        --left and right nodes will be parallel with queried node
+        -- if colinear with parallel vector. long = 0
+        IF (ABS(long) < RASTER_EPSILON) THEN
+          IF (ABS(lat) > RASTER_EPSILON) THEN
             --pick closer point
             --left of point if lat is negative
             IF (lat < -RASTER_EPSILON) THEN
@@ -268,32 +275,36 @@ ROUTINE paths__raster_neighbors
                 query[3].idx = i ; query[3].value = lat
               ENDIF
             ENDIF
+          ELSE
+            -- if long and lat = 0, points are the same. check if right or left point
+            -- is filled. fill the empty slot with the duplicate point
+            IF (data[i].code = paths__opposite_code((point.code)) ) THEN
+              query[3].idx = i ; query[3].value = lat
+            ENDIF
+            IF (data[i].code = paths__opposite_code((point.code)) ) THEN
+              query[4].idx = i ; query[4].value = lat
+            ENDIF
           ENDIF
+        ENDIF
 
-          --if colinear with raster direction. lat = 0
+        --up and down nodes will not be parallel with queried node
+        --Find closest ABS lateral point in each half plane
+        IF (ABS(long) > RASTER_EPSILON) THEN
           IF (ABS(lat) < RASTER_EPSILON) THEN
-            --down point if long is negative
-            IF (long < -RASTER_EPSILON) THEN
-              IF (long > query[2].value) AND (data[i].code = point.code) THEN
-                query[2].idx = i ; query[2].value = long
-              ENDIF
-            --up points if long is positive
-            ELSE
-              IF (long < query[1].value) AND (data[i].code = point.code) THEN
-                query[1].idx = i ; query[1].value = long
-              ENDIF
-            ENDIF --
-          ENDIF --colinear with rater dir
-        -- if long and lat = 0, points are the same. check if right or left point
-        -- is filled. fill the empty slot with the duplicate point
-        ELSE
-          IF UNINIT(query[3].idx) AND (data[i].code = paths__opposite_code((point.code)) ) THEN
-            query[3].idx = i ; query[3].value = lat
-          ELSE IF UNINIT(query[4].idx) AND (data[i].code = paths__opposite_code((point.code)) ) THEN
-            query[4].idx = i ; query[4].value = lat
+            dist = 0
           ENDIF
+          --down point if long is negative
+          IF (long < -RASTER_EPSILON) THEN
+            IF ((ABS(long) + dist) < query[2].value) AND (data[i].code = point.code) THEN
+              query[2].idx = i ; query[2].value = ABS(long) + dist
+            ENDIF
+          --up points if long is positive
+          ELSE
+            IF ((ABS(long) + dist) < query[1].value) AND (data[i].code = point.code) THEN
+              query[1].idx = i ; query[1].value = ABS(long) + dist
+            ENDIF
           ENDIF
-        ENDIF -- long and lat = 0
+        ENDIF
 
         ELSE:
       ENDSELECT
@@ -301,7 +312,7 @@ ROUTINE paths__raster_neighbors
 
     --compute diagonals
     -- raster_dir is the vector of raster lines
-    paths__compute_diagonals(point, math__rotz_vec((parallel_dir), 90), polygon_dep, data, query)
+    paths__compute_diagonals(point, perp_dir, polygon_dep, data, query)
 
 %ifdef DEBUG_BUILD
     s_to_arr('up,down,right,left,dup,ddown',',',str_arr)
@@ -316,6 +327,15 @@ ROUTINE paths__raster_neighbors
 
     RETURN(query)
   END paths__raster_neighbors
+
+ROUTINE paths__raster_neighbors_ppath
+  VAR
+    query : T_RASTQUERY
+  BEGIN
+    --.. danger::
+    --routine needs to be implemented
+    RETURN(query)
+  END paths__raster_neighbors_ppath
 
 ROUTINE paths__get_opposite_polygon_corner
   VAR

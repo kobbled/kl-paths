@@ -2,6 +2,9 @@ PROGRAM test_pplan
 %NOLOCKGROUP
 %STACKSIZE = 600
 
+%define TOOLING_STEP 6
+%define LINKING_STEP 10
+
 %ifdef DEBUG_BUILD
 %define SHOW_DEBUG FALSE
 %define LOG_NAME 'RD:path_debug.DT'
@@ -19,10 +22,11 @@ VAR
   lines : PATH nodedata = t_VEC_PATH
   polygon : PATH nodedata = t_VERTEX
   path_plan : PATH nodedata = t_INTEGER
+  pth : PATH nodedata = t_TOOLPATH
 
 %include kunit.klh
 %from strings.klh %import s_to_iarr
-%from systemlib.klh %import VEC2D
+%from systemlib.klh %import VEC, VEC2D
 %include paths.klh
 
 --tsp object
@@ -46,17 +50,6 @@ ROUTINE clear_poly(p : PATH nodedata = t_VERTEX)
 	  ENDWHILE
   END clear_poly
 
-ROUTINE clear_path(p : PATH nodedata = t_VEC_PATH)
-  VAR
-    i, status : INTEGER
-  BEGIN
-    i = PATH_LEN(p)
-    WHILE PATH_LEN(p) > 0 DO
-		  DELETE_NODE(p,i,status)
-      i = i - 1
-	  ENDWHILE
-  END clear_path
-
 ROUTINE clear_list(p : PATH nodedata = t_INTEGER)
   VAR
     i, status : INTEGER
@@ -77,7 +70,7 @@ ROUTINE append_nodes(p : PATH nodedata = t_VERTEX; nodes : INTEGER)
     ENDFOR
   END append_nodes
 
-ROUTINE draw_delta(rast_ang : REAL ; frm : XYZWPR ; pitch : REAL)
+ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL)
   BEGIN
     --create polygon
     clear_poly(polygon)
@@ -93,7 +86,7 @@ ROUTINE draw_delta(rast_ang : REAL ; frm : XYZWPR ; pitch : REAL)
 
     --initialize polygon object
     tstpoly__clear
-    tstpoly__set_canvas((frm))
+    tstpoly__set_canvas((ZEROPOS(1)))
     tstpoly__append_polygon(polygon)
 
     --raster polygon
@@ -102,10 +95,10 @@ ROUTINE draw_delta(rast_ang : REAL ; frm : XYZWPR ; pitch : REAL)
 
   END draw_delta
 
-ROUTINE draw_multi(rast_ang : REAL ; frm : XYZWPR; pitch : REAL)
+ROUTINE draw_multi(rast_ang : REAL ; pitch : REAL)
   BEGIN
     tstpoly__clear
-    tstpoly__set_canvas((frm))
+    tstpoly__set_canvas((ZEROPOS(1)))
 
     --create polygon
     clear_poly(polygon)
@@ -150,22 +143,22 @@ ROUTINE t_NN : BOOLEAN
     rast_ang = 0
     start_corner = 1
 
-    draw_delta(rast_ang, (ZEROPOS(1)), 10)
+    draw_delta(rast_ang, 10)
 
       --get bounding box
     bbox = tstpoly__get_bounding_box
       --get contours
-    clear_path(lines)
+    paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
 
     --generate path
     tstpln__init(lines, POS(0,0,0,0,0,rast_ang, (ZEROPOS(1).config_data)))
     tstpln__NN_graph
      --get start node
-    apprch_pnt.v = bbox.verts[start_corner]
-    apprch_pnt.code = PTH_STOP ; apprch_pnt.polygon = 0 ;
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
     start_nde = tstpln__closest_point(apprch_pnt)
-    tstpln__MST(start_nde, path_plan)
+    tstpln__MST(start_nde)
+    tstpln__get_plan(path_plan)
 
     FOR i=1 TO ARRAY_LEN(act) DO
       act[i] =  path_plan[i].v
@@ -195,10 +188,10 @@ ROUTINE t_rast_neigh : BOOLEAN
     start_corner = 1
 
     -- draw_delta(rast_ang, (ZEROPOS(1)), 10)
-    draw_multi(rast_ang, (ZEROPOS(1)), 3)
+    draw_multi(rast_ang, 3)
 
       --get contours
-    clear_path(lines)
+    paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
 
     query = paths__raster_neighbors(lines[45], TRUE, lines)
@@ -268,12 +261,12 @@ ROUTINE t_rast_path : BOOLEAN
     --set raster angle
     rast_ang = 0
 
-    draw_delta(rast_ang, (ZEROPOS(1)), 10)
+    draw_delta(rast_ang, 10)
 
       --get bounding box
     bbox = tstpoly__get_bounding_box
       --get contours
-    clear_path(lines)
+    paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
 
     --generate path
@@ -282,10 +275,10 @@ ROUTINE t_rast_path : BOOLEAN
     tstpln__raster_graph(ONEWAY, FALSE, FALSE)
      --get start node
     start_corner = 1
-    apprch_pnt.v = bbox.verts[start_corner]
-    apprch_pnt.code = PTH_STOP ; apprch_pnt.polygon = 0 ;
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
     start_nde = tstpln__closest_point(apprch_pnt)
-    tstpln__MST(start_nde, path_plan)
+    tstpln__MST(start_nde)
+    tstpln__get_plan(path_plan)
 
     FOR i=1 TO ARRAY_LEN(act1) DO
       act1[i] =  path_plan[i].v
@@ -300,10 +293,10 @@ ROUTINE t_rast_path : BOOLEAN
     tstpln__raster_graph(ZIGZAG, FALSE, FALSE)
      --get start node
     start_corner = 2
-    apprch_pnt.v = bbox.verts[start_corner]
-    apprch_pnt.code = PTH_STOP ; apprch_pnt.polygon = 0 ;
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
     start_nde = tstpln__closest_point(apprch_pnt)
-    tstpln__MST(start_nde, path_plan)
+    tstpln__MST(start_nde)
+    tstpln__get_plan(path_plan)
 
     FOR i=1 TO ARRAY_LEN(act2) DO
       act2[i] =  path_plan[i].v
@@ -312,6 +305,7 @@ ROUTINE t_rast_path : BOOLEAN
     s_to_iarr('8,7,6,5,4,3,9,10,11,12,13,14,20,19,18,17,16,15,21,22', ',', exp2)
     
     RETURN(kunit_eq_ari(exp1, act1) AND kunit_eq_ari(exp2, act2) )
+
 
   END t_rast_path
 
@@ -329,24 +323,24 @@ ROUTINE t_rast_multi : BOOLEAN
 
     rast_ang = 0
     start_corner = 1
-    draw_multi(rast_ang, (ZEROPOS(1)), 3)
+    draw_multi(rast_ang, 3)
 
       --get bounding box
     bbox = tstpoly__get_bounding_box
       --get contours
-    clear_path(lines)
+    paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
 
     --generate path
     clear_list(path_plan)
-    tstpln__init(lines, POS(0,0,0,0,0,rast_ang, (ZEROPOS(1).config_data)))
+    tstpln__init(lines, POS(0,0,0,0,0,0, (ZEROPOS(1).config_data)))
     tstpln__raster_graph(ONEWAY, TRUE, TRUE)
 
      --get start node
-    apprch_pnt.v = bbox.verts[start_corner]
-    apprch_pnt.code = PTH_STOP ; apprch_pnt.polygon = 0 ;
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
     start_nde = tstpln__closest_point(apprch_pnt)
-    tstpln__MST(start_nde, path_plan)
+    tstpln__MST(start_nde)
+    tstpln__get_plan(path_plan)
 
     FOR i=1 TO ARRAY_LEN(act1) DO
       act1[i] =  path_plan[i].v
@@ -357,24 +351,24 @@ ROUTINE t_rast_multi : BOOLEAN
     --generate path
     rast_ang = 90
     start_corner = 1
-    draw_multi(rast_ang, (ZEROPOS(1)), 3)
+    draw_multi(rast_ang, 3)
 
       --get bounding box
     bbox = tstpoly__get_bounding_box
       --get contours
-    clear_path(lines)
+    paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
 
     tstpln__destructor
     clear_list(path_plan)
-    tstpln__init(lines, POS(0,0,0,0,0,rast_ang, (ZEROPOS(1).config_data)))
+    tstpln__init(lines, POS(0,0,0,0,0,0, (ZEROPOS(1).config_data)))
     tstpln__raster_graph(ONEWAY, TRUE, TRUE)
 
      --get start node
-    apprch_pnt.v = bbox.verts[start_corner]
-    apprch_pnt.code = PTH_STOP ; apprch_pnt.polygon = 0 ;
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
     start_nde = tstpln__closest_point(apprch_pnt)
-    tstpln__MST(start_nde, path_plan)
+    tstpln__MST(start_nde)
+    tstpln__get_plan(path_plan)
 
 
     FOR i=1 TO ARRAY_LEN(act2) DO
@@ -385,6 +379,96 @@ ROUTINE t_rast_multi : BOOLEAN
 
     RETURN(kunit_eq_ari(exp1, act1) AND kunit_eq_ari(exp2, act2) )
   END t_rast_multi
+
+ROUTINE t_rast_mult2 : BOOLEAN
+  VAR
+    rast_ang : REAL
+    start_corner : INTEGER
+    start_nde : INTEGER
+    i : INTEGER
+    act1, exp1 : ARRAY[20] OF INTEGER
+    bbox : t_RECT
+    apprch_pnt : t_VEC_PATH 
+  BEGIN
+
+    rast_ang = 0
+    start_corner = 1
+    draw_multi(rast_ang, 3)
+
+      --get bounding box
+    bbox = tstpoly__get_bounding_box
+      --get contours
+    paths__clear_vecpath(lines)
+    tstpoly__lines_to_vec_path(lines)
+
+    --generate path
+    clear_list(path_plan)
+    tstpln__init(lines, POS(0,0,0,0,0,0, (ZEROPOS(1).config_data)))
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
+
+     --get start node
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
+    start_nde = tstpln__closest_point(apprch_pnt)
+    tstpln__MST(start_nde)
+    tstpln__get_plan(path_plan)
+
+    FOR i=1 TO ARRAY_LEN(act1) DO
+      act1[i] =  path_plan[i].v
+    ENDFOR
+
+    s_to_iarr('1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20', ',', exp1)
+
+    RETURN(kunit_eq_ari(exp1, act1))
+
+  END t_rast_mult2
+
+
+ROUTINE t_hexagon : BOOLEAN
+  VAR
+%define hex_radius 50
+%define num_of_points 5
+    rast_ang : REAL
+    overlap : REAL
+    wall_lines : INTEGER
+    i : INTEGER
+    act1, exp1 : ARRAY[20] OF INTEGER
+    bbox : t_RECT
+  BEGIN
+
+    --set raster angle
+    rast_ang = 0
+    overlap = 6
+    wall_lines = 0
+
+    --draw hexagon
+    tstpoly__new
+    tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 0)
+    tstpoly__set_params(rast_ang, -1, wall_lines, 0, overlap)
+    tstpoly__raster(PTH_LINETO)
+
+      --get bounding box
+    bbox = tstpoly__get_bounding_box
+      --get contours
+    paths__clear_vecpath(lines)
+    tstpoly__lines_to_vec_path(lines)
+
+    --generate path
+    clear_list(path_plan)
+    tstpln__init(lines, (ZEROPOS(1)))
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
+     --get start node
+    tstpln__MST(tstpln__closest_bounding_box(bbox, 2))
+    tstpln__get_plan(path_plan)
+
+    FOR i=1 TO ARRAY_LEN(act1) DO
+      act1[i] =  path_plan[i+12].v
+    ENDFOR
+
+    s_to_iarr('13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32', ',', exp1)
+    
+    RETURN(kunit_eq_ari(exp1, act1))
+
+  END t_hexagon
 
 BEGIN
 
@@ -398,15 +482,18 @@ BEGIN
   kunit_test('test raster query', t_rast_neigh)
   kunit_test('test raster path', t_rast_path)
   kunit_test('test raster multi polygons', t_rast_multi)
+  kunit_test('test raster multi polygon indep', t_rast_mult2)
+  kunit_test('test raster heagon poly', t_hexagon)
   kunit_done
 
   --clean up
-  tstpoly__clear
-  tstpln__destructor
+  -- tstpoly__clear
+  -- tstpln__destructor
 
 %ifdef DEBUG_BUILD
   usrdis__write_pipe
   usrdis__destructor
 %endif
+
 
 END test_pplan
