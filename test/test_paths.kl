@@ -1,0 +1,795 @@
+PROGRAM test_paths
+%NOBUSYLAMP
+%COMMENT = 'test paths'
+%NOPAUSE = COMMAND + TPENABLE + ERROR
+%STACKSIZE = 1000
+
+%define TOOLING_STEP 6
+%define LINKING_STEP 10
+
+--robot config parameters
+%define RBT_CONFIG 'F U T, 0, 0, 0'
+
+%ifdef DEBUG_BUILD
+%define SHOW_DEBUG FALSE
+%define LOG_NAME 'RD:path_debug.DT'
+%include display.c.klt
+%endif
+
+%include systemlib.klt
+%include systemvars.klt
+%include paths.klt
+%include pathplan.klt
+%include draw.klt
+
+VAR
+  contours : PATH nodedata = t_VEC_PATH
+  lines : PATH nodedata = t_VEC_PATH
+  polygon : PATH nodedata = t_VERTEX
+  ppath : PATH nodedata = t_POS_PATH
+  path_plan : PATH nodedata = t_INTEGER
+  pth : PATH nodedata = t_TOOLPATH
+
+%include kunit.klh
+%from systemlib.klh %import VEC, VEC2D
+%include pose.klh
+%from strings.klh %import i_to_s, p_to_s, pose_to_s
+%from registers.klh %import set_real, set_int
+%include paths.klh
+
+--planning object
+%class tstpln('pathplan.klc','pathplan.klh','vecpathplan.klt')
+--polygon object
+%class tstpoly('polygon.klc', 'polygon.klh')
+
+%ifdef DEBUG_BUILD
+-- user display log
+%class usrdis('dispclass.klc','dispclass.klh')
+%endif
+
+ROUTINE clear_poly(p : PATH nodedata = t_VERTEX)
+  VAR
+    i, status : INTEGER
+  BEGIN
+    i = PATH_LEN(p)
+    WHILE PATH_LEN(p) > 0 DO
+		  DELETE_NODE(p,i,status)
+      i = i - 1
+	  ENDWHILE
+  END clear_poly
+
+ROUTINE clear_list(p : PATH nodedata = t_INTEGER)
+  VAR
+    i, status : INTEGER
+  BEGIN
+    i = PATH_LEN(p)
+    WHILE PATH_LEN(p) > 0 DO
+		  DELETE_NODE(p,i,status)
+      i = i - 1
+	  ENDWHILE
+  END clear_list
+
+ROUTINE append_nodes(p : PATH nodedata = t_VERTEX; nodes : INTEGER)
+  VAR
+    i, status : INTEGER
+  BEGIN
+    FOR i=1 TO nodes DO
+      APPEND_NODE(p,status)
+    ENDFOR
+  END append_nodes
+
+ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
+  BEGIN
+    --create polygon
+    clear_poly(polygon)
+    append_nodes(polygon, 8)   
+    polygon[1].coords = VEC2D(-40,10)   
+    polygon[2].coords = VEC2D(-10,40)   
+    polygon[3].coords = VEC2D(0,0)
+    polygon[4].coords = VEC2D(10,40)
+    polygon[5].coords = VEC2D(40,10)
+    polygon[6].coords = VEC2D(20,60)  
+    polygon[7].coords = VEC2D(0,120)
+    polygon[8].coords = VEC2D(-20,60)
+
+    --initialize polygon object
+    tstpoly__clear
+    tstpoly__set_canvas((ZEROPOS(1)))
+    tstpoly__append_polygon(polygon)
+
+    --raster polygon
+    tstpoly__set_params(rast_ang, 1, wall_lines, 0, pitch)
+    tstpoly__raster(PTH_LINETO)
+
+  END draw_delta
+
+ROUTINE t_flat_pnts : BOOLEAN
+  VAR
+    i, j : INTEGER
+    origin : XYZWPR
+    bbox : t_RECT
+    apprch_pnt : t_VEC_PATH
+%define SAMPLE_START 50
+%define SAMPLE_END 70
+    act_path, exp_path : ARRAY[11] OF XYZWPR
+  BEGIN
+    
+    --user frame
+    origin = POS(130,100,30,0,0,0, (ZEROPOS(1).config_data))
+
+    --draw polygon
+    -- (raster angle, pitch, wall_lines)
+    draw_delta(0, 10, 1)
+    
+      --get bounding box
+    bbox = tstpoly__get_bounding_box
+      --get contours
+    paths__clear_vecpath(lines)
+    tstpoly__lines_to_vec_path(lines)
+    tstpoly__contours_to_vec_path(contours)
+
+    --generate path
+    tstpln__init(lines, origin)
+    --(poly_depend, strict_dir)
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
+    -- (add to kd tree)
+    tstpln__append_path(contours, FALSE)
+     --get start node
+    apprch_pnt = paths__new_vpath(bbox.verts[1], PTH_STOP, 0)
+    tstpln__MST(tstpln__closest_point(apprch_pnt))
+    
+    -- clear_list(path_plan)
+    -- tstpln__get_plan(path_plan)
+
+    paths__clear_toolpath(pth)
+
+    --set point orientation
+    tstpln__set_orientation(DOWN_NORMAL)
+
+    REPEAT
+      SELECT (tstpln__next_toolpath) OF
+        CASE(PTH_TOOLING):
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+        CASE(PTH_LINKING):
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+      ENDSELECT
+    UNTIL( tstpln__is_path_end )
+
+    j = 1
+    i=SAMPLE_START
+    WHILE i <= SAMPLE_END DO
+      act_path[j] = pth[i].v
+      i = i + 2
+      j = j + 1
+    ENDWHILE
+
+    exp_path[1] = POS(140,140,30,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(146,140,30,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(158,140,30,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(147,142,30,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(126,146,30,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(106,150,30,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(112,150,30,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(124,150,30,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(136,150,30,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(148,150,30,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(154,150,30,-180,0,0, (ZEROPOS(1).config_data))
+
+    RETURN(kunit_eq_arp(exp_path, act_path))
+
+  END t_flat_pnts
+
+ROUTINE t_hex_pnts : BOOLEAN
+  VAR
+%define hex_radius 50
+%define num_of_points 5
+    i, j : INTEGER
+    origin : XYZWPR
+    bbox : t_RECT
+    rast_ang : INTEGER
+    wall_lines : INTEGER
+    overlap : REAL
+%define SAMPLE_START 30
+%define SAMPLE_END 40
+    act_path, exp_path : ARRAY[11] OF XYZWPR
+  BEGIN
+    origin = POS(0,0,0,0,0,0, pose__set_config(RBT_CONFIG))
+
+    --parameters
+    rast_ang = 0
+    overlap = 6
+    wall_lines = 1
+
+    --draw hexagon
+    tstpoly__new
+    tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 0)
+    --get raster lines
+    --     (start_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__set_params(rast_ang, -1, wall_lines, 0, overlap)
+    tstpoly__raster(PTH_LINETO)
+    
+    paths__clear_vecpath(lines)
+    paths__clear_vecpath(contours)
+    tstpoly__lines_to_vec_path(lines)
+    tstpoly__contours_to_vec_path(contours)
+
+    --generate path
+    tstpln__init(lines, origin)
+    --(poly_depend, strict_dir)
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
+    -- (add to kd tree)
+    tstpln__append_path(contours, FALSE)
+     --get start node
+    bbox = tstpoly__get_bounding_box
+    tstpln__MST(tstpln__closest_bounding_box(bbox, 2))
+    
+    -- clear_list(path_plan)
+    -- tstpln__get_plan(path_plan)
+
+    --set point orientation
+    tstpln__set_orientation(DOWN_NORMAL)
+    paths__clear_toolpath(pth)
+
+    REPEAT
+      SELECT (tstpln__next_toolpath) OF
+        CASE(PTH_TOOLING):
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+        CASE(PTH_LINKING):
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+      ENDSELECT
+    UNTIL( tstpln__is_path_end )
+
+    j = 1
+    i=SAMPLE_START
+    WHILE i <= SAMPLE_END DO
+      act_path[j] = pth[i].v
+      i = i + 1
+      j = j + 1
+    ENDWHILE
+
+    exp_path[1] = POS(29.432,16.549,0,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(40.204,17.549,0,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(50.975,18.549,0,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(61.746,19.549,0,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(72.517,20.549,0,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(83.288,21.549,0,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(83.288,21.549,0,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(77.236,21.549,0,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(71.183,21.549,0,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(65.131,21.549,0,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(59.079,21.549,0,-180,0,0, (ZEROPOS(1).config_data))
+
+    RETURN(kunit_eq_arp(exp_path, act_path))
+
+  END t_hex_pnts
+
+ROUTINE t_cyld_pnts : BOOLEAN
+  VAR
+    i, j : INTEGER
+    origin : XYZWPR
+    radius : REAL
+    bbox : t_RECT
+    apprch_pnt : t_VEC_PATH
+%define SAMPLE_START 50
+%define SAMPLE_END 70
+    act_path, exp_path : ARRAY[11] OF XYZWPR
+  BEGIN
+    
+    --user frame
+    --origin = POS(130,190,140,-90,0,0, (ZEROPOS(1).config_data))
+    origin = POS(130,100,0,0,0,0, (ZEROPOS(1).config_data))
+
+    --draw polygon
+    draw_delta(0, 10, 1)
+    
+      --get bounding box
+    bbox = tstpoly__get_bounding_box
+      --get contours
+    paths__clear_vecpath(lines)
+    tstpoly__lines_to_vec_path(lines)
+    tstpoly__contours_to_vec_path(contours)
+
+    --generate path
+    radius = 50
+    -- (theta, z, r)
+    tstpln__init(lines, POS(0,0,radius,0,0,0, (ZEROPOS(1).config_data)))
+    --(poly_depend, strict_dir)
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
+      --append contours after to not include in rastering process
+      -- (add to kd tree)
+    tstpln__append_path(contours, FALSE)
+     --get start node
+    apprch_pnt = paths__new_vpath(bbox.verts[1], PTH_STOP, 0)
+    tstpln__MST(tstpln__closest_point(apprch_pnt))
+
+    paths__clear_toolpath(pth)
+
+    --set point orientation
+    tstpln__set_orientation(DOWN_NORMAL)
+
+    REPEAT
+      SELECT tstpln__next_toolpath OF
+        CASE(PTH_TOOLING):
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+        CASE(PTH_LINKING):
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+      ENDSELECT
+
+    UNTIL( tstpln__is_path_end )
+
+    --convert coordinate systems
+    paths__cylindrical_to_cartesian_mm(pth, origin, radius, 2)
+
+    j = 1
+    i=SAMPLE_START
+    WHILE i <= SAMPLE_END DO
+      act_path[j] = pth[i].v
+      i = i + 2
+      j = j + 1
+    ENDWHILE
+
+    exp_path[1] = POS(139.933,140,49.003,-180,11.459,0, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(145.728,140,47.462,-180,18.335,0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(156.559,140,42.363,-180,32.086,0, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(147.239,142,46.934,-180,20.168,0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(126.802,146,49.898,-180,-3.667,0, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(106.911,150,44.350,-180,-27.502,0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(112.386,150,46.795,-180,-20.626,0, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(124.014,150,49.640,-180,-6.875,0, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(135.986,150,49.640,-180,6.875,0, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(147.614,150,46.795,-180,20.626,0, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(153.089,150,44.350,-180,27.502,0, (ZEROPOS(1).config_data))
+
+    RETURN(kunit_eq_arp(exp_path, act_path))
+
+  END t_cyld_pnts
+
+ROUTINE t_cyld_vert : BOOLEAN
+  VAR
+    i, j : INTEGER
+    origin : XYZWPR
+    radius : REAL
+    bbox : t_RECT
+    apprch_pnt : t_VEC_PATH
+%define SAMPLE_START 50
+%define SAMPLE_END 70
+    act_path, exp_path : ARRAY[11] OF XYZWPR
+  BEGIN
+    
+    --user frame
+    origin = POS(130,190,140,-90,0,0, (ZEROPOS(1).config_data))
+
+    --draw polygon
+    draw_delta(0, 10, 1)
+    
+      --get bounding box
+    bbox = tstpoly__get_bounding_box
+      --get contours
+    paths__clear_vecpath(lines)
+    tstpoly__lines_to_vec_path(lines)
+    tstpoly__contours_to_vec_path(contours)
+
+    --generate path
+    radius = 50
+    -- (theta, z, r)
+    tstpln__init(lines, POS(0,0,radius,0,0,0, (ZEROPOS(1).config_data)))
+    --(poly_depend, strict_dir)
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
+      --append contours after to not include in rastering process
+      -- (add to kd tree)
+    tstpln__append_path(contours, FALSE)
+     --get start node
+    apprch_pnt = paths__new_vpath(bbox.verts[1], PTH_STOP, 0)
+    tstpln__MST(tstpln__closest_point(apprch_pnt))
+
+    paths__clear_toolpath(pth)
+
+    --set point orientation
+    tstpln__set_orientation(DOWN_NORMAL)
+
+    REPEAT
+      SELECT tstpln__next_toolpath OF
+        CASE(PTH_TOOLING):
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+        CASE(PTH_LINKING):
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+      ENDSELECT
+
+    UNTIL( tstpln__is_path_end )
+
+    --convert coordinate systems
+    paths__cylindrical_to_cartesian_mm(pth, origin, radius, 2)
+
+    j = 1
+    i=SAMPLE_START
+    WHILE i <= SAMPLE_END DO
+      act_path[j] = pth[i].v
+      i = i + 2
+      j = j + 1
+    ENDWHILE
+
+    exp_path[1] = POS(139.933,140,49.003,-180,11.459,0, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(145.728,140,47.462,-180,18.335,0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(156.559,140,42.363,-180,32.086,0, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(147.239,142,46.934,-180,20.168,0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(126.802,146,49.898,-180,-3.667,0, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(106.911,150,44.350,-180,-27.502,0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(112.386,150,46.795,-180,-20.626,0, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(124.014,150,49.640,-180,-6.875,0, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(135.986,150,49.640,-180,6.875,0, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(147.614,150,46.795,-180,20.626,0, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(153.089,150,44.350,-180,27.502,0, (ZEROPOS(1).config_data))
+
+    RETURN(kunit_eq_arp(exp_path, act_path))
+
+  END t_cyld_vert
+
+
+ROUTINE t_pol_pnts : BOOLEAN
+  VAR
+    i, j : INTEGER
+    origin : XYZWPR
+    bbox : t_RECT
+    apprch_pnt : t_VEC_PATH
+%define SAMPLE_START 50
+%define SAMPLE_END 70
+    act_path, exp_path : ARRAY[11] OF XYZWPR
+  BEGIN
+    
+    --user frame
+    origin = POS(130,100,50,0,0,0, (ZEROPOS(1).config_data))
+
+    --draw polygon
+    draw_delta(0, 10, 1)
+    
+      --get bounding box
+    bbox = tstpoly__get_bounding_box
+      --get contours
+    paths__clear_vecpath(lines)
+    tstpoly__lines_to_vec_path(lines)
+    tstpoly__contours_to_vec_path(contours)
+
+    --generate path
+    -- 50 = radius
+    -- (theta, z, r)
+    tstpln__init(lines, POS(0,0,50,0,0,0, (ZEROPOS(1).config_data))) --cylindrical
+    --(poly_depend, strict_dir)
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
+      --append contours after to not include in rastering process
+      -- (add to kd tree)
+    tstpln__append_path(contours, FALSE)
+     --get start node
+    apprch_pnt = paths__new_vpath(bbox.verts[1], PTH_STOP, 0)
+    tstpln__MST(tstpln__closest_point(apprch_pnt))
+
+    paths__clear_toolpath(pth)
+
+    --set point orientation
+    tstpln__set_orientation(POLAR_DOWN_NORMAL)
+
+    REPEAT
+      SELECT tstpln__next_toolpath OF
+        CASE(PTH_TOOLING):
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+        CASE(PTH_LINKING):
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+      ENDSELECT
+
+    UNTIL( tstpln__is_path_end )
+
+    --convert coordinate systems
+    paths__polar_to_cartesian_mm(pth, origin, 3)
+
+    j = 1
+    i=SAMPLE_START
+    WHILE i <= SAMPLE_END DO
+      act_path[j] = pth[i].v
+      i = i + 2
+      j = j + 1
+    ENDWHILE
+
+    exp_path[1] = POS(137.126,134.835,85.153,135.837,11.459,0, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(141.283,134.835,84.047,135.837,18.335,0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(149.052,134.835,80.389,135.837,32.086,0, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(142.837,133.373,84.949,138.128,20.168,0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(127.456,130.291,89.699,142.712,-3.667,0, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(110.571,127.015,87.319,147.296,-27.502,0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(115.179,127.015,89.377,147.296,-20.626,0, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(124.963,127.015,91.771,147.296,-6.875,0, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(135.037,127.015,91.771,147.296,6.875,0, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(144.821,127.015,89.377,147.296,20.626,0, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(149.429,127.015,87.319,147.296,27.502,0, (ZEROPOS(1).config_data))
+
+    RETURN(kunit_eq_arp(exp_path, act_path))
+
+  END t_pol_pnts
+
+ROUTINE t_pads : BOOLEAN
+  VAR
+%define PAD_WIDTH 60
+%define PAD_LENGTH 150
+%defeval PAD_SEPERATION (30+PAD_WIDTH)
+%define NO_OF_PADS 3
+
+%define RASTER_ANGLE 0
+%define PASS_OVERLAP 10
+%define CONTOUR_LINES 1
+%define TOOLING_STEP 20
+%define LINKING_STEP 50
+    origin : XYZWPR
+    bbox : t_RECT
+%define SAMPLE_START 99
+%define SAMPLE_END 119
+    i, j : INTEGER
+    act_path, exp_path : ARRAY[11] OF XYZWPR
+  BEGIN
+    -- ** drawing **
+    --draw pads
+    tstpoly__clear
+    tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
+    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(50,0) )
+
+    --get raster lines
+    -- (start_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__set_params(RASTER_ANGLE, -1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstpoly__raster(PTH_LINETO)
+    --get lines and contours
+    paths__clear_vecpath(lines)
+    paths__clear_vecpath(contours)
+    tstpoly__lines_to_vec_path(lines)
+    tstpoly__contours_to_vec_path(contours)
+
+    -- ** planning **
+    origin = POS(0,0,0,-30,0,0, pose__set_config(RBT_CONFIG))
+    --generate path
+    tstpln__init(lines, origin)
+    --(poly_depend, strict_dir)
+    tstpln__raster_graph(ONEWAY, TRUE, TRUE)
+    -- (add to kd tree)
+    tstpln__append_path(contours, FALSE)
+     --get start node
+    bbox = tstpoly__get_bounding_box
+    tstpln__MST(tstpln__closest_bounding_box(bbox, 2))
+    --set point orientation
+    tstpln__set_orientation(DOWN_NORMAL)
+
+    paths__clear_toolpath(pth)
+    REPEAT
+      SELECT (tstpln__next_toolpath) OF
+        CASE(PTH_TOOLING):
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+        CASE(PTH_LINKING):
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+      ENDSELECT
+    UNTIL( tstpln__is_path_end )
+
+    j = 1
+    i=SAMPLE_START
+    WHILE i <= SAMPLE_END DO
+      act_path[j] = pth[i].v
+      i = i + 2
+      j = j + 1
+    ENDWHILE
+
+    exp_path[1] = POS(200,0,0,150,0,0,(ZEROPOS(1).config_data))
+    exp_path[2] = POS(160,0,0,150,0,0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(140,0,0,150,0,0, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(200,8.66,-5,150,0,0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(160,8.66,-5,150,0,0, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(140,8.66,-5,150,0,0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(200,17.321,-10,150,0,0, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(160,17.321,-10,150,0,0, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(140,17.321,-10,150,0,0, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(200,25.981,-15,150,0,0, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(160,25.981,-15,150,0,0, (ZEROPOS(1).config_data))
+
+    RETURN(kunit_eq_arp(exp_path, act_path))
+  END t_pads
+
+ROUTINE t_pvert_OD : BOOLEAN
+  VAR
+%define PAD_RADIUS 100
+%define PAD_WIDTH 60
+%define PAD_LENGTH 150
+%defeval PAD_SEPERATION (30+PAD_WIDTH)
+%define NO_OF_PADS 3
+%defeval RETRACT_HEIGHT 20
+
+%define RASTER_ANGLE 0
+%define PASS_OVERLAP 10
+%define CONTOUR_LINES 1
+%define TOOLING_STEP 10
+%define LINKING_STEP 10
+    origin : XYZWPR
+    bbox : t_RECT
+    apprch_pnt : t_VEC_PATH
+%define SAMPLE_START 234
+%define SAMPLE_END 254
+    i, j : INTEGER
+    act_path, exp_path : ARRAY[11] OF XYZWPR
+  BEGIN
+    -- ** drawing **
+    --draw pads
+    tstpoly__new
+    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0) )
+
+    --get raster lines
+    -- (start_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__set_params(RASTER_ANGLE, -1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstpoly__raster(PTH_LINETO)
+    --get lines and contours
+    paths__clear_vecpath(lines)
+    paths__clear_vecpath(contours)
+    tstpoly__lines_to_vec_path(lines)
+    tstpoly__contours_to_vec_path(contours)
+
+    -- ** planning **
+    --generate path
+    tstpln__init(lines, POS(0,0,PAD_RADIUS,0,0,0, (ZEROPOS(1).config_data)))
+    --(poly_depend, strict_dir)
+    tstpln__raster_graph(ONEWAY, TRUE, TRUE)
+    -- (add to kd tree)
+    tstpln__append_path(contours, FALSE)
+     --get start node
+    bbox = tstpoly__get_bounding_box
+    tstpln__MST(tstpln__closest_bounding_box(bbox, 2))
+    -- apprch_pnt = paths__new_vpath(bbox.verts[2], PTH_STOP, 0)
+    -- tstpln__MST(tstpln__closest_point(apprch_pnt))
+    --set point orientation
+    tstpln__set_orientation(DOWN_NORMAL_VERT)
+
+    paths__clear_toolpath(pth)
+    REPEAT
+      SELECT (tstpln__next_toolpath) OF
+        CASE(PTH_TOOLING):
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+        CASE(PTH_LINKING):
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+      ENDSELECT
+    UNTIL( tstpln__is_path_end )
+
+    --raise linking path
+    paths__offset_toolpath(pth, POS(0,0,RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
+    --convert coordinate systems
+    origin = POS(100,100,0,0,0,0, pose__set_config(RBT_CONFIG))
+    paths__cylindrical_to_cartesian(pth, origin, 3)
+
+    j = 1
+    i=SAMPLE_START
+    WHILE i <= SAMPLE_END DO
+      act_path[j] = pth[i].v
+      i = i + 2
+      j = j + 1
+    ENDWHILE
+
+    exp_path[1] = POS(50,13.397,0,-90,0,330,(ZEROPOS(1).config_data))
+    exp_path[2] = POS(23.396,35.721,0,-90,0,310, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(6.031,65.798,0,-90,0,290, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(0,100,0,-90,0,270, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(-18.177,79.162,1.667,-90,0,-80, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(-3.923,40,5,-90,0,-60, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(22.865,8.075,8.333,-90,0,-40, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(50,13.397,10,-90,0,330, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(23.396,35.721,10,-90,0,310, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(6.031,65.798,10,-90,0,290, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(0,100,10,-90,0,270, (ZEROPOS(1).config_data))
+
+    RETURN(kunit_eq_arp(exp_path, act_path))
+  END t_pvert_OD
+
+ROUTINE t_pvert_ID : BOOLEAN
+  VAR
+%define PAD_RADIUS 100
+%define PAD_WIDTH 60
+%define PAD_LENGTH 150
+%defeval PAD_SEPERATION (30+PAD_WIDTH)
+%define NO_OF_PADS 3
+%defeval RETRACT_HEIGHT (40-PAD_RADIUS)
+
+%define RASTER_ANGLE 0
+%define PASS_OVERLAP 10
+%define CONTOUR_LINES 1
+%define TOOLING_STEP 10
+%define LINKING_STEP 10
+    origin : XYZWPR
+    bbox : t_RECT
+%define SAMPLE_START 200
+%define SAMPLE_END 220
+    i, j : INTEGER
+    act_path, exp_path : ARRAY[11] OF XYZWPR
+  BEGIN
+    -- ** drawing **
+    --draw pads
+    tstpoly__clear
+    tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
+    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0) )
+
+    --get raster lines
+    -- (start_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstpoly__raster(PTH_LINETO)
+    --get lines and contours
+    paths__clear_vecpath(lines)
+    paths__clear_vecpath(contours)
+    tstpoly__lines_to_vec_path(lines)
+    tstpoly__contours_to_vec_path(contours)
+
+    -- ** planning **
+    --generate path
+    tstpln__init(lines, POS(0,0,PAD_RADIUS,0,0,0, (ZEROPOS(1).config_data)))
+    --(poly_depend, strict_dir)
+    tstpln__raster_graph(ONEWAY, TRUE, TRUE)
+    -- (add to kd tree)
+    tstpln__append_path(contours, FALSE)
+     --get start node
+    bbox = tstpoly__get_bounding_box
+    tstpln__MST(tstpln__closest_bounding_box(bbox, 1))
+    --set point orientation
+    tstpln__set_orientation(UP_NORMAL)
+
+    paths__clear_toolpath(pth)
+    REPEAT
+      SELECT (tstpln__next_toolpath) OF
+        CASE(PTH_TOOLING):
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+        CASE(PTH_LINKING):
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+      ENDSELECT
+    UNTIL( tstpln__is_path_end )
+    
+    --lower linking path
+    paths__offset_toolpath(pth, POS(0,0,RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
+    --convert coordinate systems
+    origin = POS(0,0,0,0,0,0, pose__set_config(RBT_CONFIG))
+    paths__cylindrical_to_cartesian(pth, origin, 3)
+
+    j = 1
+    i=SAMPLE_START
+    WHILE i <= SAMPLE_END DO
+      act_path[j] = pth[i].v
+      i = i + 2
+      j = j + 1
+    ENDWHILE
+
+    exp_path[1] = POS(-34.641,20,140,-90,0,60,(ZEROPOS(1).config_data))
+    exp_path[2] = POS(-25.712,30.642,143.333,-90,0,40, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(-13.681,37.588,146.667,-90,0,20, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(0,40,150,-90,0,0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(-17.365,98.481,150,-90,0,10, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(-50,86.603,150,-90,0,30, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(-76.604,64.279,150,-90,0,50, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(-34.641,20,150,-90,0,60, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(-35.952,17.535,130,-90,0,64, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(-37.087,14.984,110,-90,0,68, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(-38.042,12.361,90,-90,0,72, (ZEROPOS(1).config_data))
+
+    RETURN(kunit_eq_arp(exp_path, act_path))
+  END t_pvert_ID
+
+BEGIN
+%ifdef DEBUG_BUILD
+  --(log_filename, show_date, show_debug, show_info)
+  usrdis__constructor(LOG_NAME, FALSE, TRUE, TRUE)
+  usrdis__clear_file
+%endif
+
+  --** use kunit
+  -- kunit_test('flat polygon path planning', t_flat_pnts)
+  -- kunit_test('cylindrical coordinates path planning', t_cyld_pnts)
+  -- kunit_test('polar coordinates path planning', t_pol_pnts)
+  -- kunit_test('hexagon path', t_hex_pnts)
+  -- kunit_test('pads path', t_pads)
+  -- kunit_test('pads vertical path OD', t_pvert_OD)
+  kunit_test('pads vertical path ID', t_pvert_ID)
+  kunit_done
+
+  --clean up
+  -- tstpoly__clear
+  -- tstpln__destructor
+
+%ifdef DEBUG_BUILD
+  usrdis__write_pipe
+  usrdis__destructor
+%endif
+
+END test_paths
