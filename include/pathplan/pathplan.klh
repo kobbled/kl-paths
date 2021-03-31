@@ -32,6 +32,8 @@ declare_member(class_name,get_path_interpolate,class_name,gphi)
 ROUTINE get_path_interpolate(spacing : INTEGER ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = PATH_DATA_TYPE) FROM class_name
 declare_member(class_name,next_toolpath,class_name,ntph)
 ROUTINE next_toolpath : INTEGER FROM class_name
+declare_member(class_name,get_toolpath_interpolate,class_name,gtpi)
+ROUTINE get_toolpath_interpolate(spacing : INTEGER ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,closest_point,class_name,cpnt)
 ROUTINE closest_point(point : PATH_DATA_TYPE) : INTEGER FROM class_name
 declare_member(class_name,MST,class_name,mst)

@@ -172,6 +172,13 @@ ROUTINE paths__get_path_vector
 
   END paths__get_path_vector
 
+ROUTINE paths__get_increments
+  BEGIN
+    --get length of line
+    -- determine increment percentage between 0 - 1
+    RETURN( TRUNC(math__norm(emd - strt)/spacing) )
+  END paths__get_increments
+
 --public
 
 ROUTINE paths__clear_vecpath
@@ -467,5 +474,116 @@ ROUTINE paths__get_opposite_polygon_corner
 
   END paths__get_opposite_polygon_corner
 
+ROUTINE paths__interpolate_vpath
+  VAR
+    i,j : INTEGER
+    inc : INTEGER
+    status : INTEGER
+  BEGIN
+
+    FOR i=1 TO PATH_LEN(vpath)-1 DO
+
+      inc = paths__get_increments(vpath[i].v, vpath[i+1].v, spacing)
+
+      --add start point
+      APPEND_NODE(out_path,status)
+      out_path[PATH_LEN(out_path)] = vpath[i]
+      out_path[PATH_LEN(out_path)].v = ref_frame:vpath[i].v
+
+      IF inc > 0 THEN
+        FOR j=1 TO (inc-1) DO
+          --interpolate points
+          APPEND_NODE(out_path,status)
+          out_path[PATH_LEN(out_path)] = vpath[i+1]
+          out_path[PATH_LEN(out_path)].code = line_type
+          out_path[PATH_LEN(out_path)].v = ref_frame:((j/inc)*vpath[i+1].v + (1-(j/inc))*vpath[i].v)
+        ENDFOR
+      ENDIF
+
+      --add end point
+      APPEND_NODE(out_path,status)
+      out_path[PATH_LEN(out_path)] = vpath[i+1]
+      out_path[PATH_LEN(out_path)].v = ref_frame:vpath[i+1].v
+
+    ENDFOR
+  END paths__interpolate_vpath
+
+ROUTINE paths__interpolate_ppath
+  VAR
+    i,j : INTEGER
+    inc : INTEGER
+    status : INTEGER
+    v, o : VECTOR
+  BEGIN
+
+    FOR i=1 TO PATH_LEN(vpath)-1 DO
+
+      inc = paths__get_increments(pose__pose_to_vector(vpath[i].v), pose__pose_to_vector(vpath[i+1].v), spacing)
+
+      --add start point
+      APPEND_NODE(out_path,status)
+      out_path[PATH_LEN(out_path)] = vpath[i]
+      out_path[PATH_LEN(out_path)].v = ref_frame:vpath[i].v
+
+      IF inc > 0 THEN
+        FOR j=1 TO (inc-1) DO
+          --interpolate points
+          APPEND_NODE(out_path,status)
+          out_path[PATH_LEN(out_path)] = vpath[i+1]
+          out_path[PATH_LEN(out_path)].code = line_type
+          v = (j/inc)*pose__pose_to_vector(vpath[i+1].v) + (1-(j/inc))*pose__pose_to_vector(vpath[i].v)
+          o = (j/inc)*pose__get_orientation(vpath[i+1].v) + (1-(j/inc))*pose__get_orientation(vpath[i].v)
+          out_path[PATH_LEN(out_path)].v = ref_frame:POS(v.x, v.y, v.z, o.x, o.y, o.z, ref_frame.config_data)
+        ENDFOR
+      ENDIF
+
+      --add end point
+      APPEND_NODE(out_path,status)
+      out_path[PATH_LEN(out_path)] = vpath[i+1]
+      out_path[PATH_LEN(out_path)].v = ref_frame:vpath[i+1].v
+
+    ENDFOR
+  END paths__interpolate_ppath
+
+ROUTINE paths__interpolate_toolpath
+  VAR
+    i,j : INTEGER
+    inc : INTEGER
+    status : INTEGER
+    v, o : VECTOR
+  BEGIN
+
+    FOR i=1 TO PATH_LEN(vpath)-1 DO
+
+      inc = paths__get_increments(pose__pose_to_vector(vpath[i].v), pose__pose_to_vector(vpath[i+1].v), spacing)
+
+      --add start point
+      APPEND_NODE(out_path,status)
+      out_path[PATH_LEN(out_path)] = vpath[i]
+      out_path[PATH_LEN(out_path)].v = ref_frame:vpath[i].v
+
+      IF inc > 0 THEN
+        FOR j=1 TO (inc-1) DO
+          --interpolate points
+          APPEND_NODE(out_path,status)
+          out_path[PATH_LEN(out_path)] = vpath[i+1]
+          out_path[PATH_LEN(out_path)].code = line_type
+          v = (j/inc)*pose__pose_to_vector(vpath[i+1].v) + (1-(j/inc))*pose__pose_to_vector(vpath[i].v)
+          o = (j/inc)*pose__get_orientation(vpath[i+1].v) + (1-(j/inc))*pose__get_orientation(vpath[i].v)
+          out_path[PATH_LEN(out_path)].v = ref_frame:POS(v.x, v.y, v.z, o.x, o.y, o.z, ref_frame.config_data)
+        ENDFOR
+      ENDIF
+
+      --add end point
+      -- Do not duplicate points between connecting line segments
+      IF (vpath[i+1].code=PTH_MOVETO) OR (vpath[i+1].code=PTH_CLOSE) THEN
+        APPEND_NODE(out_path,status)
+        out_path[PATH_LEN(out_path)] = vpath[i+1]
+        out_path[PATH_LEN(out_path)].v = ref_frame:vpath[i+1].v
+      ENDIF
+
+    ENDFOR
+
+  END paths__interpolate_toolpath
 BEGIN
 END paths

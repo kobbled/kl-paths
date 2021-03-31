@@ -27,4 +27,14 @@ declare_function(prog_name,raster_neighbors_ppath,prog_name_alias,rstnp)
 ROUTINE paths__raster_neighbors_ppath(point : t_POS_PATH ;  polygon_dep : BOOLEAN ; data : PATH nodedata = t_POS_PATH) : T_RASTQUERY FROM paths
 declare_function(prog_name,get_opposite_polygon_corner,prog_name_alias,gopc)
 ROUTINE paths__get_opposite_polygon_corner(point_idx : INTEGER ; data : PATH nodedata = t_VEC_PATH; stackedtop : BOOLEAN) : INTEGER FROM paths
+--conversion functions
+declare_function(prog_name,interpolate_vpath,prog_name_alias,inrvp)
+ROUTINE paths__interpolate_vpath(vpath : PATH nodedata = t_VEC_PATH; spacing : REAL; line_type : INTEGER ; &
+                                 ref_frame : XYZWPR; out_path : PATH nodedata = t_VEC_PATH) FROM paths
+declare_function(prog_name,interpolate_ppath,prog_name_alias,inrpp)
+ROUTINE paths__interpolate_ppath(vpath : PATH nodedata = t_POS_PATH; spacing : REAL; line_type : INTEGER ; & 
+                                 ref_frame : XYZWPR; out_path : PATH nodedata = t_POS_PATH) FROM paths
+declare_function(prog_name,interpolate_toolpath,prog_name_alias,inrtp)
+ROUTINE paths__interpolate_toolpath(vpath : PATH nodedata = t_TOOLPATH; spacing : REAL; line_type : INTEGER ; &
+                                 ref_frame : XYZWPR; out_path : PATH nodedata = t_TOOLPATH) FROM paths
 %endif --paths_h

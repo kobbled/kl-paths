@@ -401,9 +401,10 @@ ROUTINE get_plan
   VAR
     status : INTEGER
   BEGIN
-    COPY_PATH(pth, 0, 0, out_path, status)
+    COPY_PATH(plan, 0, 0, out_path, status)
     CHK_STAT(status)
-  END get_path
+  END get_plan
+
 ROUTINE reset_path
   BEGIN
     current = 0
@@ -464,6 +465,35 @@ ROUTINE get_path
 
   END get_path
 
+ROUTINE get_path_interpolate
+  BEGIN
+    IF NOT append THEN
+      clear_path(out_path)
+    ENDIF
+
+    IF PATH_LEN(segment) > 0 THEN
+%ifeq PATH_DATA_TYPE t_VEC_PATH
+      paths__interpolate_vpath(segment, (spacing), line_type, frm, out_path)
+%else
+%ifeq PATH_DATA_TYPE t_POS_PATH
+      paths__interpolate_ppath(segment, (spacing), line_type, frm, out_path)
+%else
+%error 'PATH_DATA_TYPE must of type t_VEC_PATH or t_POS_PATH'
+%endif
+%endif
+    ENDIF
+  END get_path_interpolate
+
+ROUTINE get_toolpath_interpolate
+  BEGIN
+    IF NOT append THEN
+      clear_toolpath(out_path)
+    ENDIF
+
+    IF PATH_LEN(tool_segment) > 0 THEN
+      paths__interpolate_toolpath(tool_segment, (spacing), line_type, frm, out_path)
+    ENDIF
+  END get_toolpath_interpolate
 
 ROUTINE closest_point
   VAR
