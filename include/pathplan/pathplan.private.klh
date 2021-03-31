@@ -23,5 +23,8 @@ declare_member(class_name,min_tracked,class_name,mtrk)
 ROUTINE min_tracked(nde_i : INTEGER) : INTEGER FROM class_name
 declare_member(class_name,graph_path_lines,class_name,gphl)
 ROUTINE graph_path_lines(start, emd : INTEGER) FROM class_name
+declare_member(class_name,next_path_util,class_name,npthu)
+--return type is toolpath type
+ROUTINE next_path_util(out_path : PATH nodedata = PATH_DATA_TYPE) : INTEGER FROM class_name
 
 %endif --pathplan_private_h

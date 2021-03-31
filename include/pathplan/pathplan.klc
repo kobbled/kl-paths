@@ -22,7 +22,11 @@ graph_type_define(GRAPH_CLASS_NAME)
 VAR
   start_node : INTEGER
   frm : XYZWPR
+  pnt_orient : VECTOR
+  current : INTEGER
   pth : PATH nodedata = PATH_DATA_TYPE
+  segment : PATH nodedata = PATH_DATA_TYPE
+  tool_segment : PATH nodedata = t_TOOLPATH
   tracked : PATH nodedata = TRACKED_TYPE
   visited : PATH nodedata = t_BOOL
   plan : PATH nodedata = t_INTEGER
@@ -218,6 +222,80 @@ ROUTINE graph_path_lines
     ENDFOR
   END graph_path_lines
 
+ROUTINE next_path_util
+  VAR
+    i,j : INTEGER
+    st, ed : INTEGER
+    dir : INTEGER
+    status : INTEGER
+    adj_list : GRAPH_ADJ_LIST_NAME
+  BEGIN
+    --clear out line
+    clear_path(out_path)
+
+    current = current + 1
+
+    IF current < PATH_LEN(plan) THEN
+      st = plan[current].v
+      ed = plan[current + 1].v
+
+      --which direction is path moving through list
+      IF st < ed THEN
+        dir = 1
+      ELSE
+        dir = -1
+      ENDIF
+
+      --check contiguous path between st and ed.
+      i = st
+      REPEAT
+        i = i + dir
+      UNTIL((pth[i].code = PTH_MOVETO) OR (pth[i].code = PTH_CLOSE) OR (i = ed))
+
+      --if path is not contiguous, it is a linking path. only include
+      --start and end nodes
+      IF i <> ed THEN
+
+        APPEND_NODE(out_path,status)
+        APPEND_NODE(out_path,status)
+        out_path[1] = pth[st]
+        out_path[2] = pth[ed]
+        RETURN(PTH_LINKING)
+      ELSE
+      --is a contiguous path. include points between st and ed
+      --
+
+        j = st
+        REPEAT
+          APPEND_NODE(out_path,status)
+          out_path[PATH_LEN(out_path)] = pth[j]
+          j = j + 1
+        UNTIL(j > ed)
+        
+        -- check graph if path is a tooling path or a linking path
+        -- do so by looking through adjacency list and checking that
+        -- path has PATH_MIN_COST indicating a connected line.
+        adj_list = `GRAPH_CLASS_NAME`__get_adjacencies(st)
+        j = 0
+        REPEAT
+          j = j + 1
+        UNTIL( adj_list[j].GRAPH_NODE_NAME = ed )
+
+        --tooling path
+        IF (adj_list[j].GRAPH_EDGE_NAME = PATH_MIN_COST) THEN
+          RETURN(PTH_TOOLING)
+        --linking path
+        ELSE
+          RETURN(PTH_LINKING)
+        ENDIF
+      ENDIF
+
+    ENDIF
+
+    RETURN(PTH_LINKING)
+
+  END next_path_util
+
 --public
 
 ROUTINE init
@@ -231,6 +309,8 @@ ROUTINE init
     --initialize members
     frm = coord_frame
     COPY_PATH(p, 0, 0, pth, status)
+    current = 0
+    pnt_orient = VEC(0,0,0)
 
     --create kd tree
     `KD_CLASS_NAME`__create_filtered(pth, (ZEROPOS(1)))
@@ -251,62 +331,139 @@ ROUTINE destructor
     clear_path(pth)
     clear_visited
     clear_tracked
+    clear_plan
+    current = 0
+    pnt_orient = VEC(0,0,0)
 
     `KD_CLASS_NAME`__clear
     `GRAPH_CLASS_NAME`__destructor
   END destructor
 
-ROUTINE append_line
+ROUTINE append_path
   VAR
     i, status : INTEGER
+    prev_len : INTEGER
   BEGIN
-    FOR i=1 TO PATH_LEN(line) DO
-      APPEND_NODE(pth,status)
-      pth[PATH_LEN(pth)] = line[i]
-    ENDFOR
-  END append_line
+    prev_len = PATH_LEN(pth)
 
-ROUTINE append_line_arr
+    FOR i=1 TO PATH_LEN(p) DO
+      APPEND_NODE(pth,status)
+      pth[PATH_LEN(pth)] = p[i]
+      --add node to graph
+      `GRAPH_CLASS_NAME`__append
+      -- add to tracked list
+      APPEND_NODE(visited,status)
+      APPEND_NODE(tracked,status)
+      CHK_STAT(status)
+    ENDFOR
+
+    IF add_to_kd THEN
+      --create kd tree
+      `KD_CLASS_NAME`__create_filtered(pth, (ZEROPOS(1)))
+    ENDIF
+
+    --add new paths to graph
+    graph_path_lines(prev_len+1, PATH_LEN(pth))
+  END append_path
+
+ROUTINE append_path_arr
   VAR
     i, status : INTEGER
+    prev_len : INTEGER
   BEGIN
-    FOR i=1 TO ARRAY_LEN(line) DO
-      APPEND_NODE(pth,status)
-      pth[PATH_LEN(pth)] = line[i]
-    ENDFOR
-  END append_line_arr
+    prev_len = PATH_LEN(pth)
 
-ROUTINE get_path
+    FOR i=1 TO ARRAY_LEN(p) DO
+      APPEND_NODE(pth,status)
+      pth[PATH_LEN(pth)] = p[i]
+      --add node to graph
+      `GRAPH_CLASS_NAME`__append
+      -- add to tracked list
+      APPEND_NODE(visited,status)
+      APPEND_NODE(tracked,status)
+    ENDFOR
+
+    IF add_to_kd THEN
+      --create kd tree
+      `KD_CLASS_NAME`__create_filtered(pth, (ZEROPOS(1)))
+    ENDIF
+
+    --add new paths to graph
+    graph_path_lines(prev_len+1, PATH_LEN(pth))
+  END append_path_arr
+
+ROUTINE set_orientation
+  BEGIN
+    pnt_orient = v
+  END set_orientation
+
+ROUTINE get_plan
   VAR
     status : INTEGER
   BEGIN
     COPY_PATH(pth, 0, 0, out_path, status)
     CHK_STAT(status)
   END get_path
+ROUTINE reset_path
+  BEGIN
+    current = 0
+  END reset_path
 
 ROUTINE next_path
   VAR
-    i : INTEGER
+    pth_typ : INTEGER
   BEGIN
-    i = idx
-    REPEAT
-      i = i + 1
-    UNTIL((i = PATH_LEN(pth)) OR (pth[i].code = PTH_MOVETO) OR (pth[i].polygon <> pth[idx].polygon))
+    pth_typ = next_path_util(segment)
 
-    RETURN(i)
+    RETURN(pth_typ)
   END next_path
 
-ROUTINE prev_path
+ROUTINE next_toolpath
   VAR
-    i : INTEGER
+    i, status : INTEGER
+    pth_typ : INTEGER
   BEGIN
-    i = idx
-    REPEAT
-      i = i - 1
-    UNTIL((i = 1) OR (pth[i].code = PTH_CLOSE) OR (pth[i].polygon <> pth[idx].polygon))
+    pth_typ = next_path_util(segment)
 
-    RETURN(i)
-  END prev_path
+    --clear out line
+    clear_toolpath(tool_segment)
+
+    FOR i=1 TO PATH_LEN(segment) DO
+      APPEND_NODE(tool_segment, status)
+      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient)
+      tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
+      tool_segment[PATH_LEN(tool_segment)].typ = pth_typ
+    ENDFOR
+
+    RETURN(pth_typ)
+
+  END next_toolpath
+
+ROUTINE is_path_end
+  BEGIN
+    IF (current < PATH_LEN(plan)) THEN
+      RETURN(FALSE)
+    ELSE
+      RETURN(TRUE)
+    ENDIF
+  END is_path_end
+
+ROUTINE get_path
+  VAR
+    i, status : INTEGER
+  BEGIN
+    IF NOT append THEN
+      clear_path(out_path)
+    ENDIF
+
+    FOR i=1 TO PATH_LEN(segment) DO
+      APPEND_NODE(out_path, status)
+      out_path[PATH_LEN(out_path)] = segment[i]
+      out_path[PATH_LEN(out_path)].v = frm:segment[i].v
+    ENDFOR
+
+  END get_path
+
 
 ROUTINE closest_point
   VAR
