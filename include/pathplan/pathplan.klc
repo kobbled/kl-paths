@@ -2,15 +2,15 @@ PROGRAM class_name
 %NOBUSYLAMP
 %COMMENT = 'planning class'
 %NOLOCKGROUP
-%UNINITVARS
 
 %include namespace.m
 
 %include errors.klt
 %include systemlib.klt
 %include systemvars.klt
-%include paths.klt
+%include draw.rect.klt
 %include pathplan.klt
+%include paths.klt
 
 %include kd_tree.klt
 define_kd_types(KDTREE_QUERY_TYPE,KD_CLASS_NAME,KDTREE_COMPARE_TYPE)
@@ -29,6 +29,8 @@ VAR
 
 %include errors.klh
 %include paths.klh
+%from systemlib.klh %import VEC, VEC2D
+%from pose.klh %import vector_to_pose, get_orientation
 
 --kd tree
 define_kdtree(KD_CLASS_NAME,PATHPLAN_CONFIG_FILENAME)
@@ -52,13 +54,28 @@ ROUTINE clear_path
     i : INTEGER
     status : INTEGER
   BEGIN
-    i = PATH_LEN(pth)
-    WHILE PATH_LEN(pth) > 0 DO
-		  DELETE_NODE(pth,i,status)
+    i = PATH_LEN(p)
+    WHILE PATH_LEN(p) > 0 DO
+		  DELETE_NODE(p,i,status)
       CHK_STAT(status)
       i = i - 1
 	  ENDWHILE
   END clear_path
+
+ROUTINE clear_plan
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    current = 0
+
+    i = PATH_LEN(plan)
+    WHILE PATH_LEN(plan) > 0 DO
+		  DELETE_NODE(plan,i,status)
+      CHK_STAT(status)
+      i = i - 1
+	  ENDWHILE
+  END clear_plan
 
 ROUTINE clear_visited
   VAR
@@ -94,6 +111,19 @@ ROUTINE clear_tracked
       i = i - 1
 	  ENDWHILE
   END clear_tracked
+
+ROUTINE clear_toolpath
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    i = PATH_LEN(p)
+    WHILE PATH_LEN(p) > 0 DO
+		  DELETE_NODE(p,i,status)
+      CHK_STAT(status)
+      i = i - 1
+	  ENDWHILE
+  END clear_toolpath
 
 ROUTINE init_tracked
   VAR
@@ -195,7 +225,7 @@ ROUTINE init
     i, status : INTEGER
   BEGIN
     --clear paths
-    clear_path
+    clear_path(pth)
     clear_visited
     clear_tracked
     --initialize members
@@ -203,7 +233,7 @@ ROUTINE init
     COPY_PATH(p, 0, 0, pth, status)
 
     --create kd tree
-    `KD_CLASS_NAME`__create_filtered(pth, (frm))
+    `KD_CLASS_NAME`__create_filtered(pth, (ZEROPOS(1)))
     --initalize graph
     `GRAPH_CLASS_NAME`__new(PATH_LEN(pth),FALSE)
 
@@ -218,7 +248,7 @@ ROUTINE init
 
 ROUTINE destructor
   BEGIN
-    clear_path
+    clear_path(pth)
     clear_visited
     clear_tracked
 

@@ -6,6 +6,18 @@
 %define prog_name paths
 %define prog_name_alias paths
 
+--clear functions
+declare_function(prog_name,clear_vecpath,prog_name_alias,cvpth)
+ROUTINE paths__clear_vecpath(p : PATH nodedata = t_VEC_PATH) FROM paths
+declare_function(prog_name,clear_pospath,prog_name_alias,cppth)
+ROUTINE paths__clear_pospath(p : PATH nodedata = t_POS_PATH) FROM paths
+declare_function(prog_name,clear_toolpath,prog_name_alias,ctpth)
+ROUTINE paths__clear_toolpath(p : PATH nodedata = t_TOOLPATH) FROM paths
+declare_function(prog_name,clear_vec,prog_name_alias,crvec)
+ROUTINE paths__clear_vec(p : PATH nodedata = t_VECTOR) FROM paths
+declare_function(prog_name,clear_pos,prog_name_alias,crpos)
+ROUTINE paths__clear_pos(p : PATH nodedata = t_POSE) FROM paths
+
 --planning functions
 declare_function(prog_name,opposite_code,prog_name_alias,ocde)
 ROUTINE paths__opposite_code(code : INTEGER) : INTEGER FROM paths

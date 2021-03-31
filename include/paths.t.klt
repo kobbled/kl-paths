@@ -1,0 +1,34 @@
+%ifndef paths_types_t
+%define paths_types_t
+
+TYPE
+  t_VEC_PATH FROM paths = STRUCTURE
+    v : VECTOR
+    code : SHORT
+    polygon : SHORT
+    approach : VECTOR
+  ENDSTRUCTURE
+
+  t_POS_PATH FROM paths = STRUCTURE
+    v : XYZWPR
+    code : SHORT
+    polygon : SHORT
+    approach : VECTOR
+  ENDSTRUCTURE
+
+  t_TOOLPATH FROM paths = STRUCTURE
+    v : XYZWPR
+    code : SHORT
+    typ : SHORT
+  ENDSTRUCTURE 
+
+  T_PTHQUERY FROM paths = STRUCTURE
+    idx : INTEGER
+    value : REAL
+  ENDSTRUCTURE
+  
+  --node order
+  -- up,down,right,left,diag_up, diag_down, poly_right, poly_left
+  T_RASTQUERY FROM paths = ARRAY[6] OF T_PTHQUERY
+
+%endif --paths_types_t
