@@ -499,6 +499,8 @@ ROUTINE closest_point
   VAR
     neigh : ARRAY[MAX_NEIGHBORS] OF KDTREE_QUERY_TYPE
   BEGIN
+    --if points are overlapping, do not exclude overlaping point.
+    --can happen if bounding box intersects convex hull
     `KD_CLASS_NAME`__disable_search_filter
     `KD_CLASS_NAME`__kth_nearest_neighbors(point, 1)
     neigh = `KD_CLASS_NAME`__get_query_idx
@@ -506,6 +508,38 @@ ROUTINE closest_point
 
     RETURN(neigh[1].idx)
   END closest_point
+
+ROUTINE closest_bounding_box
+  VAR
+    neigh : ARRAY[MAX_NEIGHBORS] OF KDTREE_QUERY_TYPE
+    nde : PATH_DATA_TYPE
+    i, idx : INTEGER
+    val : REAL
+  BEGIN
+    --get query node
+    nde = paths__new_vpath(box.verts[vert], PTH_STOP, 0)
+    --if points are overlapping, do not exclude overlaping point.
+    --can happen if bounding box intersects convex hull
+    `KD_CLASS_NAME`__disable_search_filter
+    `KD_CLASS_NAME`__kth_nearest_neighbors(nde, MAX_NEIGHBORS-1)
+    neigh = `KD_CLASS_NAME`__get_query_idx
+    `KD_CLASS_NAME`__enable_search_filter
+
+    --find point with most perpendicular vector to box corner
+    --this will be the point closest to the bounding box edge
+    i=1
+    idx = i
+    val = GRAPH_MAX_COST
+    REPEAT
+      IF (box.vec[1]@(pth[neigh[i].idx].v-box.verts[vert]) < val) THEN
+        val = box.vec[1]@(pth[neigh[i].idx].v-box.verts[vert])
+        idx = i
+      ENDIF
+      i = i + 1
+    UNTIL(UNINIT(neigh[i].idx) OR (i = MAX_NEIGHBORS))
+
+    RETURN(neigh[idx].idx)
+  END closest_bounding_box
 
 ROUTINE MST
   VAR
