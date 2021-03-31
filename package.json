@@ -6,15 +6,18 @@
   "license" : "MIT",
   "author" : "kobbled",
   "source" : [
-    "src/paths.kl"
+    "src/paths.kl",
+    "motion/move_line.tpp",
+    "motion/move_circ.tpp"
   ],
   "tests" : [
     "test/test_pplan.kl"
   ],
   "includes" : [
     "include",
-    "include/turntable",
-    "include/pathplan"
+    "include/paths",
+    "include/pathplan",
+    "include/rotary"
   ],
   "depends" : [
     "errors",
