@@ -261,6 +261,31 @@ ROUTINE paths__opposite_code
     RETURN(code)
     
   END paths__opposite_code
+
+ROUTINE paths__new_vpath
+  VAR
+    vpth : t_VEC_PATH
+  BEGIN
+    vpth.v = v ; vpth.code = code ; vpth.polygon = polygon ;
+    RETURN(vpth)
+  END paths__new_vpath
+
+ROUTINE paths__new_ppath
+  VAR
+    vpth : t_POS_PATH
+  BEGIN
+    vpth.v = v ; vpth.code = code ; vpth.polygon = polygon ;
+    RETURN(vpth)
+  END paths__new_ppath
+
+ROUTINE paths__new_tpath
+  VAR
+    vpth : t_TOOLPATH
+  BEGIN
+    vpth.v = v ; vpth.code = code ; vpth.typ = typ ;
+    RETURN(vpth)
+  END paths__new_tpath
+
 -- query order : up,down,right,left,diag_up,diag_down
 ROUTINE paths__raster_neighbors
   VAR
@@ -585,5 +610,51 @@ ROUTINE paths__interpolate_toolpath
     ENDFOR
 
   END paths__interpolate_toolpath
+
+ROUTINE paths__vpath_to_vec
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    FOR i=1 TO PATH_LEN(vpath) DO
+      APPEND_NODE(out_path,status)
+      out_path[PATH_LEN(out_path)].v = ref_frame:vpath[i].v
+    ENDFOR
+    --return out_path
+  END paths__vpath_to_vec
+
+ROUTINE paths__vpath_to_pos
+  VAR
+    i : INTEGER
+    o : VECTOR
+    status : INTEGER
+  BEGIN
+    o.x = ref_frame.w ; o.y = ref_frame.p ; o.z = ref_frame.r
+    FOR i=1 TO PATH_LEN(vpath) DO
+      APPEND_NODE(out_path,status)
+      out_path[PATH_LEN(out_path)].v = ref_frame:pose__vector_to_pose(vpath[i].v, VEC(0,0,0), ref_frame.config_data)
+    ENDFOR
+    --return out_path
+  END paths__vpath_to_pos
+
+ROUTINE paths__offset_toolpath
+  VAR
+    i : INTEGER
+    b1, b2 : BOOLEAN
+  BEGIN
+    FOR i=1 TO PATH_LEN(p) DO
+      b1 = TRUE ; b2 = TRUE ;
+      IF (filter_code > PTH_NULL) AND (p[i].code <> filter_code) THEN
+        b1 = FALSE
+      ENDIF
+      IF (filter_typ > PTH_NULL) AND (p[i].typ <> filter_typ) THEN
+        b1 = FALSE
+      ENDIF
+      IF b1 AND b2 THEN
+        p[i].v = p[i].v:offset_pos
+      ENDIF
+    ENDFOR
+  END paths__offset_toolpath
+
 BEGIN
 END paths
