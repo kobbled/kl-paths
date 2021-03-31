@@ -56,4 +56,14 @@ ROUTINE paths__vpath_to_pos(vpath : PATH nodedata = t_VEC_PATH ; ref_frame : XYZ
 declare_function(prog_name,offset_toolpath,prog_name_alias,ofstt)
 ROUTINE paths__offset_toolpath(p : PATH nodedata = t_TOOLPATH ; offset_pos : XYZWPR; filter_code, filter_typ : INTEGER) FROM paths
 
+--convert coordinate systems
+declare_function(prog_name,cylindrical_to_cartesian,prog_name_alias,cy2cr)
+ROUTINE paths__cylindrical_to_cartesian(p : PATH nodedata = t_TOOLPATH ; ref_frame : XYZWPR; z_axis : INTEGER) FROM paths
+declare_function(prog_name,cylindrical_to_cartesian_mm,prog_name_alias,cymcr)
+ROUTINE paths__cylindrical_to_cartesian_mm(p : PATH nodedata = t_TOOLPATH; ref_frame : XYZWPR; radius : REAL; z_axis : INTEGER) FROM paths
+declare_function(prog_name,polar_to_cartesian,prog_name_alias,pl2cr)
+ROUTINE paths__polar_to_cartesian(p : PATH nodedata = t_TOOLPATH ; ref_frame : XYZWPR; z_axis : INTEGER) FROM paths
+declare_function(prog_name,polar_to_cartesian_mm,prog_name_alias,plmcr)
+ROUTINE paths__polar_to_cartesian_mm(p : PATH nodedata = t_TOOLPATH ; ref_frame : XYZWPR; z_axis : INTEGER) FROM paths
+
 %endif --paths_h
