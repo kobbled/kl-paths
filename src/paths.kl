@@ -286,6 +286,19 @@ ROUTINE paths__new_tpath
     RETURN(vpth)
   END paths__new_tpath
 
+ROUTINE paths__new_coord_sys
+  VAR
+    cs : t_COORD_SYS
+  BEGIN
+    cs.system = system ; cs.z_axis = z_axis
+    RETURN(cs)
+  END paths__new_coord_sys
+
+--.. warning:: currently `raster_neighbors` is pretty hacky to get
+--             all of the tests to work. Should look for an algorithm
+--             to find spatial neighbors. Need to take out `t_VEC_PATH.approach`,
+--             or polygonal line info.
+
 -- query order : up,down,right,left,diag_up,diag_down
 ROUTINE paths__raster_neighbors
   VAR

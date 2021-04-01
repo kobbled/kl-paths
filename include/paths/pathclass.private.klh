@@ -1,0 +1,16 @@
+%ifndef pathclass_private_h
+%define pathclass_private_h
+
+--oop
+%include namespace.m
+
+declare_member(class_name,set_orientation,class_name,stort)
+ROUTINE set_orientation(idod : INTEGER) : VECTOR FROM class_name
+declare_member(class_name,next_toolpath,class_name,ntpth)
+ROUTINE next_toolpath(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; retract_hght : REAL) FROM class_name
+declare_member(class_name,get_toolpath,class_name,gttph)
+ROUTINE get_toolpath(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; retract_hght : REAL) FROM class_name
+declare_member(class_name,get_midpoint,class_name,gtmpt)
+ROUTINE get_midpoint(start_idx, end_idx : INTEGER; code, typ : INTEGER) : t_TOOLPATH FROM class_name
+
+%endif --pathclass_private_h
