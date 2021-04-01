@@ -11,7 +11,7 @@
     "motion/move_circ.tpp"
   ],
   "tests" : [
-    "test/test_pplan.kl"
+    "test/test_pth_mtn.kl"
   ],
   "includes" : [
     "include",

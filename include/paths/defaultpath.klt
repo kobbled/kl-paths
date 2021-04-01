@@ -1,0 +1,51 @@
+%define PATH_CONFIG_FILENAME defaultpath.klt
+
+--userframes
+%define USER_FRAME_NO 9
+%define TOOL_FRAME_NO 3
+
+%define DEFAULT_CONFIG 'F U T, 0, 0, 0'
+
+--default register list
+--R[]s
+%define SPEED_REGISTER 200
+%define TERM_REGISTER 255
+%define TYPE_REGISTER 253
+%define CODE_REGISTER 259
+--PR[]s
+%define TOOL_OFFSET_REG 20
+%define POSE_REG 85
+%define ARC_REG1 80
+%define ARC_REG2 81
+%define ARC_REG3 82
+
+--default parameter list
+%define TOOLING_SPEED 12
+%define LINKING_SPEED 50
+%define PAD_IDOD 1
+
+--tool orientation
+%define TOOL_ORIENT 0,0,0
+
+--programs
+%define LINEAR_MOVE_PROG 'MOVE_LINE'
+%define ARC_MOVE_PROG 'MOVE_CIRC'
+
+--**dont change
+%define LEFTSIDE 1
+%define RIGHTSIDE 2
+--**change
+%defeval OD_CORNER RIGHTSIDE
+%defeval ID_CORNER LEFTSIDE
+%defeval PLATE_CORNER LEFTSIDE
+
+--pathplan
+------------------
+%defeval PATH_PLAN_NAME tstpln
+%include vecpathplan.klt
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define define_pathplan(object_name,cnfg_file) `%class object_name('pathplan.klc','pathplan.klh','cnfg_file')`
+%mode pop
+------------------
