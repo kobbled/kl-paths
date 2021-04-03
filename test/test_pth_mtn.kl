@@ -9,7 +9,6 @@ PROGRAM test_pth_mtn
 %define LINKING_SPEED 100
 
 --robot config parameters
-%define RBT_GRP 1
 %define USER_FRAME_CUT_NO 9
 %define USER_FRAME_VERT_NO 7
 
@@ -35,14 +34,13 @@ VAR
 
 %from systemlib.klh %import VEC, VEC2D
 %include pose.klh
+%from math.klh %import bitmask
 %from strings.klh %import i_to_s, p_to_s, pose_to_s
 %from registers.klh %import set_real, set_int
 %include paths.klh
 
 --path object
 %class tstpth('paths.klc','pathclass.klh','defaultpath.klt')
---tsp object
-%class tstpln('pathplan.klc','pathplan.klh','vecpathplan.klt')
 --polygon object
 %class tstpoly('polygon.klc', 'polygon.klh')
 
@@ -123,11 +121,11 @@ ROUTINE t_hexagon
   BEGIN
 
     --lock group 1
-    LOCK_GROUP(RBT_GRP,status)
+    LOCK_GROUP(math__bitmask(RBT_GRP),status)
 
     --set frame
-    pose__set_userframe(USER_FRAME_CUT_NO, 0)
-    pose__set_toolframe(TOOL_FRAME_NO, 0)
+    pose__set_userframe(USER_FRAME_CUT_NO, RBT_GRP)
+    pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
 
     --draw hexagon
     rast_ang = 0
@@ -146,8 +144,7 @@ ROUTINE t_hexagon
     tstpoly__lines_to_vec_path(lines) ; tstpoly__contours_to_vec_path(contours) ;
 
     cds = paths__new_coord_sys(PTH_CARTESAN, 3)
-    tstpth__init(origin, POS(0,0,0,TOOL_ORIENT,pose__set_config(DEFAULT_CONFIG)), &
-                 cds, RBT_GRP)
+    tstpth__init(origin, POS(0,0,0,TOOL_ORIENT,pose__set_config(DEFAULT_CONFIG)), cds)
 
     tstpth__set_params(TOOLING_SPEED, 1)
 
@@ -167,7 +164,6 @@ ROUTINE t_hexagon
 
 ROUTINE t_pvert_ID
   VAR
-%define TOOL_ORIENT 0,0,0
 
 %define PAD_RADIUS 100
 %define PAD_WIDTH 360
@@ -192,11 +188,11 @@ ROUTINE t_pvert_ID
     cds : t_COORD_SYS
   BEGIN
     --lock group 1
-    LOCK_GROUP(RBT_GRP,status)
+    LOCK_GROUP(math__bitmask(RBT_GRP),status)
 
     --set frame
-    pose__set_userframe(USER_FRAME_VERT_NO, 0)
-    pose__set_toolframe(TOOL_FRAME_NO, 0)
+    pose__set_userframe(USER_FRAME_VERT_NO, RBT_GRP)
+    pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
 
     --draw pads
     tstpoly__new
@@ -213,8 +209,7 @@ ROUTINE t_pvert_ID
 
     cds = paths__new_coord_sys(PTH_CYLINDER, 3)
     tstpth__init(POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG)), &
-                 POS(0,0,0,TOOL_ORIENT,pose__set_config(DEFAULT_CONFIG)), &
-                 cds, RBT_GRP)
+                 POS(0,0,0,TOOL_ORIENT_UP,pose__set_config(DEFAULT_CONFIG)), cds)
                 
     tstpth__set_params(TOOLING_SPEED, PAD_IDOD)
 
@@ -234,7 +229,6 @@ ROUTINE t_pvert_ID
 
 ROUTINE t_pvert_OD
   VAR
-%define TOOL_ORIENT 0,0,0
 
 %define PAD_RADIUS 100
 %define PAD_WIDTH 360
@@ -252,18 +246,18 @@ ROUTINE t_pvert_OD
 
 %define TOOLING_SPEED 100
 %define LINKING_SPEED 200
-%define TOOLING_STEP 90
-%define LINKING_STEP 90
+%define TOOLING_STEP 20
+%define LINKING_STEP 20
     i, status : INTEGER
     bbox : t_RECT
     cds : t_COORD_SYS
   BEGIN
     --lock group 1
-    LOCK_GROUP(RBT_GRP,status)
+    LOCK_GROUP(math__bitmask(RBT_GRP),status)
 
     --set frame
-    pose__set_userframe(USER_FRAME_VERT_NO, 0)
-    pose__set_toolframe(TOOL_FRAME_NO, 0)
+    pose__set_userframe(USER_FRAME_VERT_NO, RBT_GRP)
+    pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
 
     --draw pads
     tstpoly__new
@@ -280,8 +274,7 @@ ROUTINE t_pvert_OD
 
     cds = paths__new_coord_sys(PTH_CYLINDER, 3)
     tstpth__init(POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG)), &
-                 POS(0,0,0,TOOL_ORIENT,pose__set_config(DEFAULT_CONFIG)), &
-                 cds, RBT_GRP)
+                 POS(0,0,0,TOOL_ORIENT_DOWN,pose__set_config(DEFAULT_CONFIG)), cds)
                 
     tstpth__set_params(TOOLING_SPEED, PAD_IDOD)
 
@@ -289,7 +282,7 @@ ROUTINE t_pvert_OD
     bbox = tstpoly__get_bounding_box
     tstpth__createPath(lines, contours, bbox, POS(PAD_START_DEG,0,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG)), FALSE)
     --move through path
-    tstpth__movePolyArcFull(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, RETRACT_HEIGHT)
+    tstpth__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*RETRACT_HEIGHT)
 
     --get lists
     tstpth__get_plan(path_plan)
@@ -303,7 +296,6 @@ ROUTINE t_pvert_OD
     RETURN
   END t_pvert_OD
 
-
 BEGIN
 %ifdef DEBUG_BUILD
   --(log_filename, show_date, show_debug, show_info)
@@ -315,10 +307,10 @@ BEGIN
   -- t_pvert_ID
   -- t_pvert_OD
 
+
   --clean up
-  -- tstpoly__clear
-  -- tstpln__destructor
-  -- tstpth__destructor
+  tstpoly__clear
+  tstpth__destructor
 
 %ifdef DEBUG_BUILD
   usrdis__write_pipe
