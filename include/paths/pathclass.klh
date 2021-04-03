@@ -10,14 +10,12 @@ header_def -- define class
 declare_member(class_name,new,class_name,new)
 ROUTINE new FROM class_name
 declare_member(class_name,init,class_name,init)
-ROUTINE init(coord_frm : XYZWPR; toolOffst : XYZWPR; coord_sys : t_COORD_SYS; grp : INTEGER) FROM class_name
+ROUTINE init(coord_frm : XYZWPR; toolOffst : PATH_DATA_TYPE; coord_sys : t_COORD_SYS) FROM class_name
 declare_member(class_name,destructor,class_name,dstr)
 ROUTINE destructor FROM class_name
 --setters
-declare_member(class_name,set_group,class_name,stgrp)
-ROUTINE set_group(grp : INTEGER) FROM class_name
 declare_member(class_name,set_tool_offset,class_name,sttof)
-ROUTINE set_tool_offset(ofst : XYZWPR) FROM class_name
+ROUTINE set_tool_offset(ofst : PATH_DATA_TYPE) FROM class_name
 declare_member(class_name,set_params,class_name,stprm)
 ROUTINE set_params(speed : REAL; idod : INTEGER) FROM class_name
 declare_member(class_name,set_coordinate_system,class_name,stcrd)

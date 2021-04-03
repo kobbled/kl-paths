@@ -12,12 +12,15 @@ PROGRAM class_name
 %include pathplan.klt
 %include draw.klt
 
+%ifdef define_paths_types
+define_paths_types(PATH_DATA_TYPE, class_name)
+%endif
+
 %define BASE_CLASSNAME class_name
 
 VAR
   frm : XYZWPR
-  tool_offset : XYZWPR
-  rbt_grp : INTEGER
+  tool_offset : PATH_DATA_TYPE
   reg_vals : t_MOTION_VAR
   coord_system : t_COORD_SYS
   segment : PATH nodedata = t_TOOLPATH
@@ -37,6 +40,9 @@ define_pplan_headers(PATH_PLAN_NAME)
 
 %include pathclass.klh
 %include pathclass.private.klh
+
+-- **** MUST BE DEFINED IN TEMPLATE FILE (.klt)
+define_paths_members(class_name)
 
 --private
 
@@ -147,9 +153,8 @@ ROUTINE new
     paths__clear_toolpath(segment)
     paths__clear_toolpath(pth)
 
-    rbt_grp = 1
     frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
-    tool_offset = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
+    tool_offset = DEFAULT_POSE
 
     set_coordinate_system(PTH_CARTESAN, 3)
   END new
@@ -161,7 +166,6 @@ ROUTINE init
 
     frm = coord_frm
     tool_offset = toolOffst
-    rbt_grp = grp
 
     coord_system = coord_sys
 
@@ -181,16 +185,11 @@ ROUTINE destructor
     reg_vals = unit_vars
 
     frm = (ZEROPOS(1))
-    tool_offset = (ZEROPOS(1))
+    tool_offset = DEFAULT_POSE
 
     --free path plan
     `PATH_PLAN_NAME`__destructor
   END destructor
-
-ROUTINE set_group
-  BEGIN
-    rbt_grp = grp
-  END set_group
 
 ROUTINE set_tool_offset
   BEGIN
@@ -297,9 +296,10 @@ ROUTINE makeline
 ROUTINE moveLine
   VAR
     i : INTEGER
+    nde : PATH_DATA_TYPE
   BEGIN
     --set tool orientation
-    pose__set_posreg_xyz((tool_offset), TOOL_OFFSET_REG, rbt_grp)
+    set_posereg(tool_offset, TOOL_OFFSET_REG)
 
     FOR i=1 TO PATH_LEN(pth) DO
       --set code and type for tp
@@ -312,7 +312,8 @@ ROUTINE moveLine
       ENDSELECT
 
       --set pose
-      pose__set_posreg_xyz((pth[i].v), POSE_REG, rbt_grp)
+      nde = tpath2pos(pth[i])
+      set_posereg(nde, POSE_REG)
       --move to pose
       CALL_PROG(LINEAR_MOVE_PROG, 0)
     ENDFOR
@@ -321,7 +322,12 @@ ROUTINE moveLine
 ROUTINE moveArc
   VAR
     i, status : INTEGER
+    nde, nde_tool : PATH_DATA_TYPE
   BEGIN
+    --make tool offset pose to be multiplied in
+    --as circular_move does not allow the use of
+    --the tool_offset modifier
+    nde_tool = poseInv(tool_offset)
 
     --linear move to start of path
     --LS program should handle PTH_MOVETO case
@@ -331,7 +337,9 @@ ROUTINE moveArc
       registers__set_int(TYPE_REGISTER, (pth[1].typ))
       registers__set_int(TERM_REGISTER, TERM_FINE)
         --set pose
-      pose__set_posreg_xyz(pth[1].v:INV((tool_offset)), ARC_REG1, rbt_grp)
+      nde = tpath2pos(pth[1])
+      nde = poseMul(nde, nde_tool)
+      set_posereg(nde, ARC_REG1)
         --move to pose
       CALL_PROG(ARC_MOVE_PROG, 0)
     ENDIF
@@ -350,12 +358,25 @@ ROUTINE moveArc
       registers__set_int(TYPE_REGISTER, (pth[i+1].typ))
       registers__set_int(TERM_REGISTER, TERM_CONT) ;
 
-      --set midpoint
-      pose__set_posreg_xyz(pth[i].v:INV((tool_offset)), ARC_REG1, rbt_grp)
-      --set endpoint
-      pose__set_posreg_xyz(pth[i+1].v:INV((tool_offset)), ARC_REG2, rbt_grp)
+      --Do not use cicular_move if less than 3 points
+      IF PATH_LEN(pth) < 3 THEN
+        set_posereg(tool_offset, TOOL_OFFSET_REG)
+        nde = tpath2pos(pth[i])
+        set_posereg(nde, POSE_REG)
       --move to pose
-      CALL_PROG(ARC_MOVE_PROG, 0)
+        CALL_PROG(LINEAR_MOVE_PROG, 0)
+      ELSE
+        --set midpoint
+        nde = tpath2pos(pth[i])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG1)
+        --set endpoint
+        nde = tpath2pos(pth[i+1])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG2)
+
+        CALL_PROG(ARC_MOVE_PROG, 0)
+      ENDIF
 
       i = i + 2
     ENDWHILE
@@ -366,7 +387,7 @@ ROUTINE movePoly
     i : INTEGER
   BEGIN
     --set tool orientation
-    pose__set_posreg_xyz((tool_offset), TOOL_OFFSET_REG, rbt_grp)
+    set_posereg(tool_offset, TOOL_OFFSET_REG)
 
     REPEAT
       next_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght)
@@ -382,7 +403,8 @@ ROUTINE movePoly
         ENDSELECT
 
         --set pose
-        pose__set_posreg_xyz((pth[i].v), POSE_REG, rbt_grp)
+        nde = tpath2pos(pth[i])
+        set_posereg(nde, POSE_REG)
         --move to pose
         CALL_PROG(LINEAR_MOVE_PROG, 0)
       ENDFOR
@@ -393,9 +415,10 @@ ROUTINE movePoly
 ROUTINE movePolyFull
   VAR
     i : INTEGER
+    nde : PATH_DATA_TYPE
   BEGIN
     --set tool orientation
-    pose__set_posreg_xyz((tool_offset), TOOL_OFFSET_REG, rbt_grp)
+    set_posereg(tool_offset, TOOL_OFFSET_REG)
 
     get_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght)
 
@@ -410,7 +433,8 @@ ROUTINE movePolyFull
       ENDSELECT
 
       --set pose
-      pose__set_posreg_xyz((pth[i].v), POSE_REG, rbt_grp)
+      nde = tpath2pos(pth[i])
+      set_posereg(nde, POSE_REG)
       --move to pose
       CALL_PROG(LINEAR_MOVE_PROG, 0)
     ENDFOR
@@ -420,7 +444,13 @@ ROUTINE movePolyFull
 ROUTINE movePolyArc
   VAR
     i, status : INTEGER
+    nde, nde_tool : PATH_DATA_TYPE
   BEGIN
+    --make tool offset pose to be multiplied in
+    --as circular_move does not allow the use of
+    --the tool_offset modifier
+    nde_tool = poseInv(tool_offset)
+
     REPEAT
       next_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght)
 
@@ -431,7 +461,9 @@ ROUTINE movePolyArc
         registers__set_int(TYPE_REGISTER, (pth[1].typ))
         registers__set_int(TERM_REGISTER, TERM_FINE)
           --set pose
-        pose__set_posreg_xyz(pth[1].v:INV((tool_offset)), ARC_REG1, rbt_grp)
+        nde = tpath2pos(pth[1])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG1)
           --move to pose
         CALL_PROG(ARC_MOVE_PROG, 0)
       ENDIF
@@ -440,22 +472,40 @@ ROUTINE movePolyArc
       --LS program should handle PTH_CLOSE case
       i = 2
       WHILE i < PATH_LEN(pth) DO
-        --set code and type for tp
-        SELECT pth[i+1].code OF
-          CASE(PTH_MOVETO,PTH_CLOSE):
-            registers__set_int(CODE_REGISTER, PTH_CLOSE)
-          ELSE:
-            registers__set_int(CODE_REGISTER, (pth[i+1].code))
-        ENDSELECT
-        registers__set_int(TYPE_REGISTER, (pth[i+1].typ))
-        registers__set_int(TERM_REGISTER, TERM_CONT)
+        --Do not use cicular_move if less than 3 points
+        IF PATH_LEN(pth) < 3 THEN
+          set_posereg(tool_offset, TOOL_OFFSET_REG)
 
-        --set midpoint
-        pose__set_posreg_xyz(pth[i].v:INV((tool_offset)), ARC_REG1, rbt_grp)
-        --set endpoint
-        pose__set_posreg_xyz(pth[i+1].v:INV((tool_offset)), ARC_REG2, rbt_grp)
-        --move to pose
-        CALL_PROG(ARC_MOVE_PROG, 0)
+          registers__set_int(CODE_REGISTER, PTH_CLOSE)
+          registers__set_int(TYPE_REGISTER, (pth[i].typ))
+          registers__set_int(TERM_REGISTER, TERM_FINE)
+
+          nde = tpath2pos(pth[i])
+          set_posereg(nde, POSE_REG)
+          --move to pose
+          CALL_PROG(LINEAR_MOVE_PROG, 0)
+        ELSE
+          --set code and type for tp
+          SELECT pth[i+1].code OF
+            CASE(PTH_MOVETO,PTH_CLOSE):
+              registers__set_int(CODE_REGISTER, PTH_CLOSE)
+            ELSE:
+              registers__set_int(CODE_REGISTER, (pth[i+1].code))
+          ENDSELECT
+          registers__set_int(TYPE_REGISTER, (pth[i+1].typ))
+          registers__set_int(TERM_REGISTER, TERM_CONT)
+
+          --set midpoint
+          nde = tpath2pos(pth[i])
+          nde = poseMul(nde, nde_tool)
+          set_posereg(nde, ARC_REG1)
+          --set endpoint
+          nde = tpath2pos(pth[i+1])
+          nde = poseMul(nde, nde_tool)
+          set_posereg(nde, ARC_REG2)
+
+          CALL_PROG(ARC_MOVE_PROG, 0)
+        ENDIF
 
         i = i + 2
       ENDWHILE
@@ -468,9 +518,15 @@ ROUTINE movePolyArcFull
   VAR
     i : INTEGER
     startCode,endCode : INTEGER
+    nde, nde_tool : PATH_DATA_TYPE
   BEGIN
+    --make tool offset pose to be multiplied in
+    --as circular_move does not allow the use of
+    --the tool_offset modifier
+    nde_tool = poseInv(tool_offset)
+
     --set tool orientation
-    pose__set_posreg_xyz((tool_offset), TOOL_OFFSET_REG, rbt_grp)
+    set_posereg(tool_offset, TOOL_OFFSET_REG)
 
     get_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght)
 
@@ -484,11 +540,26 @@ ROUTINE movePolyArcFull
         registers__set_int(TYPE_REGISTER, (pth[i].typ))
         registers__set_int(TERM_REGISTER, TERM_FINE)
           --set pose
-        pose__set_posreg_xyz(pth[i].v:INV((tool_offset)), ARC_REG1, rbt_grp)
+        nde = tpath2pos(pth[i])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG1)
           --move to pose
         CALL_PROG(ARC_MOVE_PROG, 0)
 
         endCode = paths__opposite_code(startCode)
+
+        i = i + 1
+      ELSE IF pth[i].code = endCode THEN
+        registers__set_int(CODE_REGISTER, PTH_CLOSE)
+        registers__set_int(TYPE_REGISTER, (pth[i].typ))
+        registers__set_int(TERM_REGISTER, TERM_FINE)
+        set_posereg(tool_offset, TOOL_OFFSET_REG)
+
+        --set pose
+        nde = tpath2pos(pth[i])
+        set_posereg(nde, POSE_REG)
+        --move to pose
+        CALL_PROG(LINEAR_MOVE_PROG, 0)
 
         i = i + 1
       ELSE IF pth[i+1].code = endCode THEN
@@ -497,9 +568,13 @@ ROUTINE movePolyArcFull
         registers__set_int(TERM_REGISTER, TERM_CONT)
 
         --set midpoint
-        pose__set_posreg_xyz(pth[i].v:INV((tool_offset)), ARC_REG1, rbt_grp)
+        nde = tpath2pos(pth[i])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG1)
         --set endpoint
-        pose__set_posreg_xyz(pth[i+1].v:INV((tool_offset)), ARC_REG2, rbt_grp)
+        nde = tpath2pos(pth[i+1])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG2)
         --move to pose
         CALL_PROG(ARC_MOVE_PROG, 0)
         
@@ -513,13 +588,17 @@ ROUTINE movePolyArcFull
         registers__set_int(TERM_REGISTER, TERM_CONT)
 
         --set midpoint
-        pose__set_posreg_xyz(pth[i].v:INV((tool_offset)), ARC_REG1, rbt_grp)
+        nde = tpath2pos(pth[i])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG1)
         --set endpoint
-        pose__set_posreg_xyz(pth[i+1].v:INV((tool_offset)), ARC_REG2, rbt_grp)
+        nde = tpath2pos(pth[i+1])
+        set_posereg(nde, ARC_REG2)
         --move to pose
         CALL_PROG(ARC_MOVE_PROG, 0)
 
         i = i + 2
+      ENDIF
       ENDIF
       ENDIF
     ENDWHILE
