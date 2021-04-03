@@ -8,7 +8,9 @@
   "source" : [
     "src/paths.kl",
     "motion/move_line.tpp",
-    "motion/move_circ.tpp"
+    "motion/move_line_rot.tpp",
+    "motion/move_circ.tpp",
+    "motion/move_circ_rot.tpp"
   ],
   "tests" : [
     "test/test_pth_mtn.kl"
