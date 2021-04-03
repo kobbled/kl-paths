@@ -77,13 +77,38 @@ ROUTINE set_orientation
   END set_orientation
 
 ROUTINE next_toolpath
+%ifdef ROT_GRP
+  VAR
+    endpnts : ARRAY[2] OF t_TOOLPATH
+    status : INTEGER
+%endif
   BEGIN
     SELECT `PATH_PLAN_NAME`__next_toolpath OF
       CASE(PTH_TOOLING):
         `PATH_PLAN_NAME`__get_toolpath_interpolate(tool_step, PTH_LINETO, FALSE, pth)
         registers__set_real(SPEED_REGISTER, tool_speed)
       CASE(PTH_LINKING):
-        `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, FALSE, pth)
+%ifdef ROT_GRP
+          --If rotary group (ROT_GRP) and line is < 90 deg
+          --only include endpoints in line. If path is 0->360
+          --it will not rotate all the way back around
+          endpnts = `PATH_PLAN_NAME`__get_endpoints
+          IF UNINIT(endpnts[1].v) THEN
+            paths__clear_toolpath(pth)
+          ELSE
+            IF(ABS(endpnts[2].v.x-endpnts[1].v.x) < 270) THEN
+              `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, FALSE, pth)
+            ELSE
+              paths__clear_toolpath(pth)
+              APPEND_NODE(pth,status)
+              pth[PATH_LEN(pth)] = endpnts[1]
+              APPEND_NODE(pth,status)
+              pth[PATH_LEN(pth)] = endpnts[2]
+            ENDIF
+          ENDIF
+%else
+          `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, FALSE, pth)
+%endif
         registers__set_real(SPEED_REGISTER, link_speed)
     ENDSELECT
 
@@ -101,6 +126,11 @@ ROUTINE next_toolpath
   END next_toolpath
 
 ROUTINE get_toolpath
+%ifdef ROT_GRP
+  VAR
+    endpnts : ARRAY[2] OF t_TOOLPATH
+    status : INTEGER
+%endif
   BEGIN
     paths__clear_toolpath(pth)
     REPEAT
@@ -109,7 +139,24 @@ ROUTINE get_toolpath
           `PATH_PLAN_NAME`__get_toolpath_interpolate(tool_step, PTH_LINETO, TRUE, pth)
           registers__set_real(SPEED_REGISTER, tool_speed)
         CASE(PTH_LINKING):
+%ifdef ROT_GRP
+          --If rotary group (ROT_GRP) and line is < 90 deg
+          --only include endpoints in line. If path is 0->360
+          --it will not rotate all the way back around
+          endpnts = `PATH_PLAN_NAME`__get_endpoints
+          IF NOT UNINIT(endpnts[1].v) THEN
+            IF(ABS(endpnts[2].v.x-endpnts[1].v.x) < 270) THEN
+              `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, TRUE, pth)
+            ELSE
+              APPEND_NODE(pth,status)
+              pth[PATH_LEN(pth)] = endpnts[1]
+              APPEND_NODE(pth,status)
+              pth[PATH_LEN(pth)] = endpnts[2]
+            ENDIF
+          ENDIF
+%else
           `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, TRUE, pth)
+%endif
           registers__set_real(SPEED_REGISTER, link_speed)
       ENDSELECT
     UNTIL( `PATH_PLAN_NAME`__is_path_end )
@@ -381,6 +428,7 @@ ROUTINE moveArc
 ROUTINE movePoly
   VAR
     i : INTEGER
+    nde : PATH_DATA_TYPE
   BEGIN
     --set tool orientation
     set_posereg(tool_offset, TOOL_OFFSET_REG)
