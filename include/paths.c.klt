@@ -31,9 +31,12 @@ CONST
   PTH_CYLINDER = 2
   PTH_POLAR = 3
 
+
+-- ..note:: some of these might be redundant if fixing issue with
+--          convert2pos
 %define UP_NORMAL VEC(0,0,0)
 %define DOWN_NORMAL VEC(180,0,0)
-%define DOWN_NORMAL_VERT VEC(180,180,0)
+--polar
 %define POLAR_UP_NORMAL VEC(-90,0,0)
 %define POLAR_DOWN_NORMAL VEC(90,0,0)
 

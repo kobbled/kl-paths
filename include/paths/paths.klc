@@ -56,12 +56,7 @@ ROUTINE set_orientation
         IF idod = -1 THEN
           orient = UP_NORMAL
         ELSE
-          --on z-axis
-          IF coord_system.z_axis > 2 THEN
-            orient = DOWN_NORMAL_VERT
-          ELSE
-            orient = DOWN_NORMAL
-          ENDIF
+          orient = DOWN_NORMAL
         ENDIF
       CASE(PTH_POLAR):
         IF idod = -1 THEN
@@ -69,6 +64,7 @@ ROUTINE set_orientation
         ELSE
           orient = POLAR_DOWN_NORMAL
         ENDIF
+      --cartesian
       ELSE:
         IF idod = -1 THEN
           orient = UP_NORMAL
