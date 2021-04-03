@@ -6,7 +6,7 @@
 
 -- ** private **
 declare_member(class_name,clear_path,class_name,cpth)
-ROUTINE clear_path(p : PATH nodedata = PATH_DATA_TYPE) FROM class_name
+ROUTINE clear_path(p : PATH nodedata = PLAN_DATA_TYPE) FROM class_name
 declare_member(class_name,clear_visited,class_name,cvis)
 ROUTINE clear_visited FROM class_name
 declare_member(class_name,reset_visited,class_name,rvis)
@@ -18,13 +18,13 @@ ROUTINE clear_toolpath(p : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,init_tracked,class_name,itrk)
 ROUTINE init_tracked FROM class_name
 declare_member(class_name,update_unvisited,class_name,utrk)
-ROUTINE update_unvisited(nde : PATH_DATA_TYPE) FROM class_name
+ROUTINE update_unvisited(nde : PLAN_DATA_TYPE) FROM class_name
 declare_member(class_name,min_tracked,class_name,mtrk)
 ROUTINE min_tracked(nde_i : INTEGER) : INTEGER FROM class_name
 declare_member(class_name,graph_path_lines,class_name,gphl)
 ROUTINE graph_path_lines(start, emd : INTEGER) FROM class_name
 declare_member(class_name,next_path_util,class_name,npthu)
 --return type is toolpath type
-ROUTINE next_path_util(out_path : PATH nodedata = PATH_DATA_TYPE) : INTEGER FROM class_name
+ROUTINE next_path_util(out_path : PATH nodedata = PLAN_DATA_TYPE) : INTEGER FROM class_name
 
 %endif --pathplan_private_h

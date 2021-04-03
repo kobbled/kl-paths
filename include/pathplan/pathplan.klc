@@ -24,8 +24,8 @@ VAR
   frm : XYZWPR
   pnt_orient : VECTOR
   current : INTEGER
-  pth : PATH nodedata = PATH_DATA_TYPE
-  segment : PATH nodedata = PATH_DATA_TYPE
+  pth : PATH nodedata = PLAN_DATA_TYPE
+  segment : PATH nodedata = PLAN_DATA_TYPE
   tool_segment : PATH nodedata = t_TOOLPATH
   tracked : PATH nodedata = TRACKED_TYPE
   visited : PATH nodedata = t_BOOL
@@ -472,13 +472,13 @@ ROUTINE get_path_interpolate
     ENDIF
 
     IF PATH_LEN(segment) > 0 THEN
-%ifeq PATH_DATA_TYPE t_VEC_PATH
+%ifeq PLAN_DATA_TYPE t_VEC_PATH
       paths__interpolate_vpath(segment, (spacing), line_type, frm, out_path)
 %else
-%ifeq PATH_DATA_TYPE t_POS_PATH
+%ifeq PLAN_DATA_TYPE t_POS_PATH
       paths__interpolate_ppath(segment, (spacing), line_type, frm, out_path)
 %else
-%error 'PATH_DATA_TYPE must of type t_VEC_PATH or t_POS_PATH'
+%error 'PLAN_DATA_TYPE must of type t_VEC_PATH or t_POS_PATH'
 %endif
 %endif
     ENDIF
@@ -512,7 +512,7 @@ ROUTINE closest_point
 ROUTINE closest_bounding_box
   VAR
     neigh : ARRAY[MAX_NEIGHBORS] OF KDTREE_QUERY_TYPE
-    nde : PATH_DATA_TYPE
+    nde : PLAN_DATA_TYPE
     i, idx : INTEGER
     val : REAL
   BEGIN
@@ -608,7 +608,7 @@ ROUTINE NN_graph
 
 --.. warning:: currently `raster_graph` only works for t_VEC_PATH
 --             need to implement for t_POS_PATH
-%ifeq PATH_DATA_TYPE t_VEC_PATH
+%ifeq PLAN_DATA_TYPE t_VEC_PATH
 ROUTINE raster_graph
   VAR
     neigh : T_RASTQUERY

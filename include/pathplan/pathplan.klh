@@ -9,13 +9,13 @@ header_def -- define class
 
 --path functions
 declare_member(class_name,init,class_name,init)
-ROUTINE init(p : PATH nodedata = PATH_DATA_TYPE ; coord_frame : XYZWPR) FROM class_name
+ROUTINE init(p : PATH nodedata = PLAN_DATA_TYPE ; coord_frame : XYZWPR) FROM class_name
 declare_member(class_name,destructor,class_name,dstr)
 ROUTINE destructor FROM class_name
 declare_member(class_name,append_path,class_name,apph)
-ROUTINE append_path(p : PATH nodedata = PATH_DATA_TYPE; add_to_kd : BOOLEAN) FROM class_name
+ROUTINE append_path(p : PATH nodedata = PLAN_DATA_TYPE; add_to_kd : BOOLEAN) FROM class_name
 declare_member(class_name,append_path_arr,class_name,appa)
-ROUTINE append_path_arr(p : ARRAY OF PATH_DATA_TYPE; add_to_kd : BOOLEAN) FROM class_name
+ROUTINE append_path_arr(p : ARRAY OF PLAN_DATA_TYPE; add_to_kd : BOOLEAN) FROM class_name
 declare_member(class_name,get_plan,class_name,gpln)
 ROUTINE get_plan(out_path : PATH nodedata = t_INTEGER) FROM class_name
 declare_member(class_name,set_orientation,class_name,sornt)
@@ -27,15 +27,15 @@ ROUTINE next_path : INTEGER FROM class_name
 declare_member(class_name,is_path_end,class_name,ipte)
 ROUTINE is_path_end : BOOLEAN FROM class_name
 declare_member(class_name,get_path,class_name,gpth)
-ROUTINE get_path(append : BOOLEAN ; out_path : PATH nodedata = PATH_DATA_TYPE) FROM class_name
+ROUTINE get_path(append : BOOLEAN ; out_path : PATH nodedata = PLAN_DATA_TYPE) FROM class_name
 declare_member(class_name,get_path_interpolate,class_name,gphi)
-ROUTINE get_path_interpolate(spacing : INTEGER ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = PATH_DATA_TYPE) FROM class_name
+ROUTINE get_path_interpolate(spacing : INTEGER ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = PLAN_DATA_TYPE) FROM class_name
 declare_member(class_name,next_toolpath,class_name,ntph)
 ROUTINE next_toolpath : INTEGER FROM class_name
 declare_member(class_name,get_toolpath_interpolate,class_name,gtpi)
 ROUTINE get_toolpath_interpolate(spacing : INTEGER ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,closest_point,class_name,cpnt)
-ROUTINE closest_point(point : PATH_DATA_TYPE) : INTEGER FROM class_name
+ROUTINE closest_point(point : PLAN_DATA_TYPE) : INTEGER FROM class_name
 declare_member(class_name,closest_bounding_box,class_name,cbbx)
 ROUTINE closest_bounding_box(box : t_RECT; vert : INTEGER) : INTEGER FROM class_name
 declare_member(class_name,MST,class_name,mst)
@@ -44,7 +44,7 @@ declare_member(class_name,NN_graph,class_name,nng)
 ROUTINE NN_graph FROM class_name
 --.. warning:: currently only works for t_VEC_PATH
 --             need to implement for t_POS_PATH
-%ifeq PATH_DATA_TYPE t_VEC_PATH
+%ifeq PLAN_DATA_TYPE t_VEC_PATH
 declare_member(class_name,raster_graph,class_name,rgrp)
 ROUTINE raster_graph(raster_type : INTEGER; poly_depend : BOOLEAN; strict_dir : BOOLEAN) FROM class_name
 %endif
