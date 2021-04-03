@@ -68,8 +68,9 @@ TOOLPATH_GROUP = '1'
 # PROG_NAME = 'AutoProgram'
 
 #cell2
-REF_FRAME = 'cut_frame'
+# REF_FRAME = 'cut_frame'
 # REF_FRAME = 'vert_frame'
+REF_FRAME = 'data_frame'
 TOOL_FRAME = '756mm_Tool'
 PART_NAME = 'path'
 PROG_NAME = 'AutoProgram'
