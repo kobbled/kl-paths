@@ -465,6 +465,22 @@ ROUTINE get_path
 
   END get_path
 
+ROUTINE get_endpoints
+  VAR
+    endpnts : ARRAY[2] OF t_TOOLPATH
+  BEGIN
+    IF PATH_LEN(tool_segment) > 0 THEN
+      --startpoint
+      endpnts[1] = tool_segment[1]
+      endpnts[1].v = frm:tool_segment[1].v
+      --endpoint
+      endpnts[2] = tool_segment[PATH_LEN(tool_segment)]
+      endpnts[2].v = frm:tool_segment[PATH_LEN(tool_segment)].v
+    ENDIF
+
+    RETURN(endpnts)
+  END get_endpoints
+
 ROUTINE get_path_interpolate
   BEGIN
     IF NOT append THEN

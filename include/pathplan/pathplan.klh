@@ -28,6 +28,8 @@ declare_member(class_name,is_path_end,class_name,ipte)
 ROUTINE is_path_end : BOOLEAN FROM class_name
 declare_member(class_name,get_path,class_name,gpth)
 ROUTINE get_path(append : BOOLEAN ; out_path : PATH nodedata = PLAN_DATA_TYPE) FROM class_name
+declare_member(class_name,get_endpoints,class_name,gendp)
+ROUTINE get_endpoints : ARRAY OF t_TOOLPATH FROM class_name
 declare_member(class_name,get_path_interpolate,class_name,gphi)
 ROUTINE get_path_interpolate(spacing : INTEGER ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = PLAN_DATA_TYPE) FROM class_name
 declare_member(class_name,next_toolpath,class_name,ntph)
