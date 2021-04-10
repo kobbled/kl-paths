@@ -31,14 +31,6 @@ TYPE
   -- up,down,right,left,diag_up, diag_down, poly_right, poly_left
   T_RASTQUERY FROM paths = ARRAY[6] OF T_PTHQUERY
 
---motion types
-TYPE
-
-  t_MOTION_VAR FROM paths = STRUCTURE
-    speed : REAL
-    idod : INTEGER
-  ENDSTRUCTURE
-
   t_COORD_SYS FROM paths = STRUCTURE
     system : SHORT
     z_axis : SHORT

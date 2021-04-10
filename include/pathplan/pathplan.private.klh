@@ -15,6 +15,8 @@ declare_member(class_name,clear_tracked,class_name,ctrk)
 ROUTINE clear_tracked FROM class_name
 declare_member(class_name,clear_toolpath,class_name,ctool)
 ROUTINE clear_toolpath(p : PATH nodedata = t_TOOLPATH) FROM class_name
+declare_member(class_name,clear_bbox,class_name,cbox)
+ROUTINE clear_bbox(b : PATH nodedata = t_RECT) FROM class_name
 declare_member(class_name,init_tracked,class_name,itrk)
 ROUTINE init_tracked FROM class_name
 declare_member(class_name,update_unvisited,class_name,utrk)

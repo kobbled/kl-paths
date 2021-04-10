@@ -18,6 +18,7 @@ PROGRAM paths
 
 %include errors.klt
 %include systemlib.klt
+%include draw.rect.klt
 %include pathplan.klt
 %include paths.klt
 
@@ -27,7 +28,7 @@ PROGRAM paths
 %endif
 
 %include pose.klh
-%from math.klh %import rotz_vec, norm, norm2
+%from math.klh %import rotz_vec, norm, norm2, average_vector, proj, proj_length
 %from systemlib.klh %import VEC, VEC2D
 
 %include paths.klh
@@ -179,6 +180,95 @@ ROUTINE paths__get_increments
     RETURN( TRUNC(math__norm(emd - strt)/spacing) )
   END paths__get_increments
 
+ROUTINE paths__psuedo_center
+  VAR
+    i : INTEGER
+    center : VECTOR
+    count: INTEGER
+  BEGIN
+    center.x = 0 ; center.y = 0; center.z = 0;
+    count = 0
+    FOR i=strti TO endi DO
+      SELECT (data[i].code) OF
+        CASE(PTH_MOVETO,PTH_CLOSE):
+          center.x = center.x + data[i].v.x
+          center.y = center.y + data[i].v.y
+          count = count + 1
+        ELSE:
+      ENDSELECT
+    ENDFOR
+    center.x = center.x/count
+    center.y = center.y/count
+
+    RETURN(center)
+  END paths__psuedo_center
+
+--comparator = TRUE : >, comparator = FALSE : <
+ROUTINE glt(r1, r2 : REAL; comparator : BOOLEAN) : BOOLEAN
+  BEGIN
+    IF comparator THEN
+      RETURN(r1 > r2)
+    ELSE
+      RETURN(r1 < r2)
+    ENDIF
+  END glt
+
+ROUTINE minmax(point_arr : PATH nodedata = t_VEC_PATH; strti, endi : INTEGER ; &
+               origin : VECTOR ; search_vec : VECTOR; comparator : BOOLEAN) : INTEGER
+  VAR
+   i : INTEGER
+   minmax_idx : INTEGER
+   valy, valx : REAL
+   perp_vec : VECTOR
+   v : VECTOR
+  BEGIN
+    --get perpendicular vector
+    perp_vec = math__rotz_vec((search_vec), 90)
+    --find y min
+    minmax_idx = strti
+    --dot product between (point-origin) and search vector
+    --will give the point with the maximum distance from the
+    --origin wrt the search vector
+    valy = search_vec@(point_arr[strti].v-origin)
+    valx = perp_vec@(point_arr[strti].v-origin)
+    FOR i=strti TO endi DO
+      SELECT (point_arr[i].code) OF
+        CASE(PTH_MOVETO,PTH_CLOSE):
+          v = point_arr[i].v
+          --remove z
+          v.z = 0
+
+          IF (glt( search_vec@(v-origin), valy, comparator) ) THEN
+            valy = search_vec@(v-origin)
+            valx = perp_vec@(v-origin)
+            minmax_idx = i
+          ENDIF
+
+          IF (search_vec@(v-origin) = valy) THEN
+            IF (glt( perp_vec@(v-origin), valx, comparator) ) THEN
+              valy = search_vec@(v-origin)
+              valx = perp_vec@(v-origin)
+              minmax_idx = i
+            ENDIF
+          ENDIF
+        ELSE:
+      ENDSELECT
+    ENDFOR
+
+    RETURN(minmax_idx)
+
+  END minmax
+
+ROUTINE paths__find_min
+  BEGIN
+    RETURN( minmax(point_arr, strti, endi, center, search_vec, FALSE) )
+  END paths__find_min
+
+ROUTINE paths__find_max
+  BEGIN
+    RETURN( minmax(point_arr, strti, endi, center, search_vec, TRUE) )
+  END paths__find_max
+
 --public
 
 ROUTINE paths__clear_vecpath
@@ -293,6 +383,113 @@ ROUTINE paths__new_coord_sys
     cs.system = system ; cs.z_axis = z_axis
     RETURN(cs)
   END paths__new_coord_sys
+
+ROUTINE paths__total_polygons
+  VAR
+    i : INTEGER
+    count : INTEGER
+  BEGIN
+    count = 0
+    FOR i=1 TO PATH_LEN(data) DO
+      IF data[i].polygon > count THEN
+        count = data[i].polygon
+      ENDIF
+    ENDFOR
+
+    RETURN(count)
+  END paths__total_polygons
+
+ROUTINE paths__filter_polygon
+  VAR
+    i, status : INTEGER
+  BEGIN
+    paths__clear_vecpath(out_path)
+
+    FOR i=1 TO PATH_LEN(data) DO
+      IF (data[i].polygon = polygon) OR (polygon=0) THEN
+        APPEND_NODE(out_path,status)
+        out_path[PATH_LEN(out_path)] = data[i]
+      ENDIF
+    ENDFOR
+  END paths__filter_polygon
+
+ROUTINE paths__calc_bounding_box
+  VAR
+    edges : ARRAY[4] OF VECTOR
+    box : t_RECT
+    parallel_dir, perp_dir : VECTOR
+    center : VECTOR
+    angle :REAL
+    origin : XYZWPR
+    i : INTEGER
+  BEGIN
+    --get parallel direction
+    --loop through until first complete curve is
+    --found
+    parallel_dir = paths__get_path_vector(1, data)
+    --get perpendicular vector
+    perp_dir = math__rotz_vec((parallel_dir), 90)
+
+    angle = ATAN2(parallel_dir.x, parallel_dir.y)
+
+    --approximated center
+    center = paths__psuedo_center(data, 1, PATH_LEN(data))
+
+    --find four corners
+    --x
+    edges[1] = data[paths__find_min(data, 1, PATH_LEN(data), center, parallel_dir )].v
+    edges[2] = data[paths__find_max(data, 1, PATH_LEN(data), center, parallel_dir )].v
+    --y
+    edges[3] = data[paths__find_min(data, 1, PATH_LEN(data), center, perp_dir )].v
+    edges[4] = data[paths__find_max(data, 1, PATH_LEN(data), center, perp_dir )].v
+
+    --put edges in rotated frame
+    origin.x = 0; origin.y = 0; origin.z = 0; origin.w = 0; origin.p = 0; origin.r = angle ;
+    FOR i=1 TO ARRAY_LEN(edges) DO
+      edges[i] = INV((origin)):edges[i]
+    ENDFOR
+
+    box.verts[1] = origin:(VEC2D(edges[1].x, edges[3].y))
+    box.verts[2] = origin:(VEC2D(edges[2].x, edges[3].y))
+    box.verts[3] = origin:(VEC2D(edges[2].x, edges[4].y))
+    box.verts[4] = origin:(VEC2D(edges[1].x, edges[4].y))
+
+    box.vec[1] = parallel_dir
+    box.vec[2] = perp_dir
+    box.center = math__average_vector(box.verts)
+
+    RETURN(box)
+  END paths__calc_bounding_box
+
+ROUTINE paths__map_to_bounding_box
+  VAR
+    i : INTEGER
+    polygon : INTEGER
+    v : VECTOR
+  BEGIN
+
+    FOR i=1 TO PATH_LEN(data) DO
+      --only do for line endpoints
+      SELECT data[i].code OF
+        CASE(PTH_CLOSE,PTH_MOVETO):
+          
+          --use t_VEC_PATH.approach to determine spatial up/down
+          --neighbors. Project each point to the closest edge of 
+          --the bounding box to force into a rectangular patten.
+          --You can then use the bounding box vectors to determine
+          --if a point is above or below the other.
+          v = data[i].v ; v.z = 0
+          --choose bounding box edge with the shortest distance to the point
+          IF math__proj_length((v - bboxs[data[i].polygon].verts[1]), bboxs[data[i].polygon].vec[1]) < math__proj_length((v - bboxs[data[i].polygon].verts[2]), bboxs[data[i].polygon].vec[1]) THEN
+            --get projected point on left side of box
+            data[i].approach = math__proj((v - bboxs[data[i].polygon].verts[1]), bboxs[data[i].polygon].vec[2]) + bboxs[data[i].polygon].verts[1]
+          ELSE
+            --get projected point on right side of box
+            data[i].approach = math__proj((v - bboxs[data[i].polygon].verts[2]), bboxs[data[i].polygon].vec[2]) + bboxs[data[i].polygon].verts[2]
+          ENDIF
+      ENDSELECT
+    ENDFOR
+  END paths__map_to_bounding_box
 
 --.. warning:: currently `raster_neighbors` is pretty hacky to get
 --             all of the tests to work. Should look for an algorithm

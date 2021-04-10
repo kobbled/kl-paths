@@ -20,13 +20,13 @@ graph_type_define(GRAPH_CLASS_NAME)
 %define BASE_CLASSNAME class_name
 
 VAR
-  start_node : INTEGER
   frm : XYZWPR
   pnt_orient : VECTOR
   current : INTEGER
   pth : PATH nodedata = PLAN_DATA_TYPE
   segment : PATH nodedata = PLAN_DATA_TYPE
   tool_segment : PATH nodedata = t_TOOLPATH
+  bboxs : PATH nodedata = t_RECT
   tracked : PATH nodedata = TRACKED_TYPE
   visited : PATH nodedata = t_BOOL
   plan : PATH nodedata = t_INTEGER
@@ -80,6 +80,19 @@ ROUTINE clear_plan
       i = i - 1
 	  ENDWHILE
   END clear_plan
+
+ROUTINE clear_bbox
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    i = PATH_LEN(b)
+    WHILE PATH_LEN(b) > 0 DO
+		  DELETE_NODE(b,i,status)
+      CHK_STAT(status)
+      i = i - 1
+	  ENDWHILE
+  END clear_bbox
 
 ROUTINE clear_visited
   VAR
@@ -304,6 +317,7 @@ ROUTINE init
   BEGIN
     --clear paths
     clear_path(pth)
+    clear_bbox(bboxs)
     clear_visited
     clear_tracked
     --initialize members
@@ -332,6 +346,7 @@ ROUTINE destructor
     clear_visited
     clear_tracked
     clear_plan
+    clear_bbox(bboxs)
     current = 0
     pnt_orient = VEC(0,0,0)
 
@@ -557,6 +572,31 @@ ROUTINE closest_bounding_box
     RETURN(neigh[idx].idx)
   END closest_bounding_box
 
+ROUTINE filter_polygon
+  BEGIN
+    paths__filter_polygon(pth, polygon, segment)
+  END filter_polygon
+
+ROUTINE calc_bounding_boxes
+  VAR
+    i, status : INTEGER
+    total_poly : INTEGER
+  BEGIN
+    total_poly = paths__total_polygons(pth)
+
+    clear_bbox(bboxs)
+    FOR i=1 TO total_poly DO
+      paths__filter_polygon(pth, i, segment)
+      APPEND_NODE(bboxs, status)
+      bboxs[PATH_LEN(bboxs)] = paths__calc_bounding_box(segment)
+    ENDFOR
+
+    --clear segment
+    clear_path(segment)
+
+  END calc_bounding_boxes
+
+
 ROUTINE MST
   VAR
     i,j : INTEGER
@@ -638,6 +678,10 @@ ROUTINE raster_graph
 
     --change to directional graph
     `GRAPH_CLASS_NAME`__change_directional(TRUE)
+
+    --map points to bounding box(es) for path planning
+    calc_bounding_boxes
+    paths__map_to_bounding_box(pth, bboxs)
 
     --compute raster graph for each endpoint
     FOR i=1 TO PATH_LEN(pth) DO

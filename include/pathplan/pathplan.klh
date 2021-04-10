@@ -40,6 +40,9 @@ declare_member(class_name,closest_point,class_name,cpnt)
 ROUTINE closest_point(point : PLAN_DATA_TYPE) : INTEGER FROM class_name
 declare_member(class_name,closest_bounding_box,class_name,cbbx)
 ROUTINE closest_bounding_box(box : t_RECT; vert : INTEGER) : INTEGER FROM class_name
+ROUTINE filter_polygon(polygon : INTEGER) FROM class_name
+declare_member(class_name,calc_bounding_boxes,class_name,ccbox)
+ROUTINE calc_bounding_boxes FROM class_name
 declare_member(class_name,MST,class_name,mst)
 ROUTINE MST(start_node : INTEGER) FROM class_name
 declare_member(class_name,NN_graph,class_name,nng)
