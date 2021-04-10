@@ -503,9 +503,11 @@ ROUTINE paths__raster_neighbors
     status : INTEGER
     query : T_RASTQUERY
     parallel_dir, perp_dir : VECTOR
+    v, q : VECTOR
     det : VECTOR
-    long, lat, lat2 : REAL
+    long, lat, long2, lat2 : REAL
     dist : REAL
+    mindist : ARRAY[2] OF REAL
 %ifdef DEBUG_BUILD
     str_arr : ARRAY[6] OF STRING[5]
 %endif
@@ -523,7 +525,7 @@ ROUTINE paths__raster_neighbors
       ENDIF
     ENDFOR
 
-    query[2].value = QUERY_MAX_DIST
+    mindist[1] = QUERY_MAX_DIST ; mindist[2] = QUERY_MAX_DIST
 
     --get parallel direction
     --loop through until first complete curve is
@@ -531,6 +533,10 @@ ROUTINE paths__raster_neighbors
     parallel_dir = paths__get_path_vector(1, data)
     --get perpendicular vector
     perp_dir = math__rotz_vec((parallel_dir), 90)
+
+    --remove z component of query point
+    q = point.v; q.z = 0
+
 -- %ifdef DEBUG_BUILD
 --     usrdis__print(DEBUG,'perp dir:' + vec_to_s(perp_dir, ','))
 --     usrdis__print(DEBUG,'parallel dir:' + vec_to_s(parallel_dir, ','))
@@ -545,6 +551,9 @@ ROUTINE paths__raster_neighbors
       SELECT data[i].code OF
         CASE(PTH_CLOSE,PTH_MOVETO):
 
+        --remove z compenent for 2d view
+        v = data[i].v; v.z = 0
+
 -- %ifdef DEBUG_BUILD
 --         usrdis__print(DEBUG,'checking point:' + i_to_s(i) + ' ' + vec_to_s(data[i].v, ','))
 -- %endif
@@ -552,15 +561,20 @@ ROUTINE paths__raster_neighbors
         -- ..note:: use determinate instead of dot product. It is
         --          faster, and more accurate due to not having to
         --          calculate the perpendicular vectors for each.
-        det = perp_dir#(data[i].v - point.v)
+        det = perp_dir#(v - q)
         lat = det.z
-        det = parallel_dir#(data[i].v - point.v)
+        det = parallel_dir#(v - q)
         long = det.z
-        -- get vector of polygon line query point is on
-        det = (data[i].approach/math__norm(data[i].approach))#(data[i].v - point.v)
+        
+        -- get vector of projected polygon on bounding box
+        det = perp_dir#(data[i].approach - point.approach)
         lat2 = det.z
+        det = parallel_dir#(data[i].approach - point.approach)
+        long2 = det.z
 
-        dist = math__norm(data[i].v - point.v)
+        --dist = math__norm(v - data[i].approach)
+        dist = math__norm(v - q)
+
 
 -- %ifdef DEBUG_BUILD
 --         usrdis__print(DEBUG,'long:' + r_to_s(long) + ' lat:' + r_to_s(lat))
@@ -587,28 +601,27 @@ ROUTINE paths__raster_neighbors
             -- is filled. fill the empty slot with the duplicate point
             IF (data[i].code = paths__opposite_code((point.code)) ) THEN
               query[3].idx = i ; query[3].value = lat
-            ENDIF
-            IF (data[i].code = paths__opposite_code((point.code)) ) THEN
               query[4].idx = i ; query[4].value = lat
             ENDIF
           ENDIF
         ENDIF
 
-        --up and down nodes will not be parallel with queried node
-        --Find closest ABS lateral point in each half plane
-        IF (ABS(long) > RASTER_EPSILON) THEN
-          IF (ABS(lat) < RASTER_EPSILON) THEN
-            dist = 0
-          ENDIF
-          --down point if long is negative
-          IF (long < -RASTER_EPSILON) THEN
-            IF ((ABS(long) + dist) < query[2].value) AND (data[i].code = point.code) THEN
-              query[2].idx = i ; query[2].value = ABS(long) + dist
-            ENDIF
-          --up points if long is positive
-          ELSE
-            IF ((ABS(long) + dist) < query[1].value) AND (data[i].code = point.code) THEN
-              query[1].idx = i ; query[1].value = ABS(long) + dist
+        --up and down nodes will not be perpendicular with queried node
+        IF (ABS(lat2) < RASTER_EPSILON) THEN
+          IF (ABS(long2) > RASTER_EPSILON) THEN
+            --down point if long is negative
+            IF (long2 < -RASTER_EPSILON) THEN
+              IF (long2 >= query[2].value) AND (dist < mindist[2]) AND (data[i].code = point.code) THEN
+                query[2].idx = i ; query[2].value = long2
+                mindist[2] = dist
+              ENDIF
+            --up points if long is positive
+            ELSE
+              IF (long2 <= query[1].value) AND (dist < mindist[1]) AND (data[i].code = point.code) THEN
+
+                query[1].idx = i ; query[1].value = long2
+                mindist[1] = dist
+              ENDIF
             ENDIF
           ENDIF
         ENDIF
