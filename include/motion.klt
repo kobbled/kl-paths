@@ -1,0 +1,51 @@
+%ifndef motion_types_t
+%define motion_types_t
+
+--motion types
+TYPE
+  t_PATH_VARS FROM paths = STRUCTURE
+    xStart : REAL
+    yStart : REAL
+    height : REAL
+    polyAngle : REAL
+  ENDSTRUCTURE
+
+  t_TOOL_VARS FROM paths = STRUCTURE
+    retractDist : REAL
+    pitch : REAL
+    idod : INTEGER
+    coordSys : INTEGER
+  ENDSTRUCTURE
+
+  t_PATH_RAST FROM paths = STRUCTURE
+    overlap : REAL
+    line_width : REAL
+    angle : REAL
+    contours : INTEGER
+    dir : INTEGER
+    rastType : INTEGER
+    startCorner : INTEGER
+    constrain : BOOLEAN
+  ENDSTRUCTURE
+
+  t_MOTION_PRM FROM paths = STRUCTURE
+    tool_speed : REAL
+    link_speed : REAL
+    tool_step : INTEGER
+    link_step : INTEGER
+    use_arc   : BOOLEAN
+  ENDSTRUCTURE
+
+  t_PAD_VARS FROM paths = STRUCTURE
+    width : REAL
+    length : REAL
+    separation : REAL
+    no_of_pads : INTEGER
+  ENDSTRUCTURE
+
+  t_HEX_VARS FROM paths = STRUCTURE
+    radius : REAL
+    points : INTEGER
+  ENDSTRUCTURE
+
+%endif --motion_types_t
