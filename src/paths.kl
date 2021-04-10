@@ -21,6 +21,7 @@ PROGRAM paths
 %include draw.rect.klt
 %include pathplan.klt
 %include paths.klt
+%include motion.klt
 
 %include errors.klh
 %ifdef DEBUG_BUILD
@@ -45,6 +46,7 @@ ROUTINE paths__compute_diagonals
   VAR
     i,j : INTEGER
     parallel_dir : VECTOR
+    v, q : VECTOR
     long, lat : REAL
     b : BOOLEAN
   BEGIN
@@ -65,10 +67,13 @@ ROUTINE paths__compute_diagonals
     FOR i=1 TO PATH_LEN(data) DO
       IF (data[i].code = PTH_CLOSE) OR (data[i].code = PTH_MOVETO) THEN
         
+        v = data[i].v ; v.z = 0;
+
         --CHECK UP DIAGONAL
         IF NOT UNINIT(query[1].idx) THEN
-          long = raster_dir@(data[i].v - data[query[1].idx].v)
-          lat = parallel_dir@(data[i].v - data[query[1].idx].v)
+          q = data[query[1].idx].v ; q.z = 0;
+          long = raster_dir@(v - q)
+          lat = parallel_dir@(v - q)
 
           --if polygon independent check diagonals over full drawing
           --if polygon dependent check points only on the polygon.
@@ -97,8 +102,9 @@ ROUTINE paths__compute_diagonals
 
         --CHECK DOWN DIAGONAL
         IF NOT UNINIT(query[2].idx) THEN
-          long = raster_dir@(data[i].v - data[query[2].idx].v)
-          lat = parallel_dir@(data[i].v - data[query[2].idx].v)
+          q = data[query[2].idx].v ; q.z = 0;
+          long = raster_dir@(v - q)
+          lat = parallel_dir@(v - q)
 
           --if polygon independent check diagonals over full drawing
           --if polygon dependent check points only on the polygon.
@@ -149,6 +155,9 @@ ROUTINE paths__get_path_vector
     ENDIF
 
     strt = data[n].v
+    --zero z
+    strt.z = 0
+
     --loop through until first complete curve is
     --found
     i = 0
@@ -165,6 +174,8 @@ ROUTINE paths__get_path_vector
     UNTIL((data[m].code = PTH_CLOSE) OR (data[m].code = PTH_MOVETO))
 
     emd = data[m].v
+    --zero z
+    emd.z = 0
 
     --assume PTH_MOVETO -> PTH_CLOSE creates a line,
     --get unit vector of line
@@ -663,6 +674,7 @@ ROUTINE paths__get_opposite_polygon_corner
     opp_code : INTEGER
     long, lat : REAL
     raster_dir, pth_dir : VECTOR
+    v, q : VECTOR
     costs : ARRAY[2] OF T_PTHQUERY
   BEGIN
 
@@ -683,9 +695,11 @@ ROUTINE paths__get_opposite_polygon_corner
     FOR i=1 TO PATH_LEN(data) DO
       -- filter points on same polygon with same path code
       IF (data[i].polygon = data[point_idx].polygon) AND (data[i].code = opp_code ) THEN
-        
-        lat = ABS(pth_dir@(data[i].v - data[point_idx].v))
-        long = ABS(raster_dir@(data[i].v - data[point_idx].v))
+        v = data[i].v ; v.z = 0;
+        q = data[point_idx].v ; q.z = 0;
+
+        lat = ABS(pth_dir@(v - q))
+        long = ABS(raster_dir@(v - q))
 
         IF stackedtop THEN
           --pick point closest to point_idx in raster direction
