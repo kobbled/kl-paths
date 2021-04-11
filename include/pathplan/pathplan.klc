@@ -278,13 +278,17 @@ ROUTINE next_path_util
       ELSE
       --is a contiguous path. include points between st and ed
       --
-
-        j = st
-        REPEAT
-          APPEND_NODE(out_path,status)
-          out_path[PATH_LEN(out_path)] = pth[j]
-          j = j + 1
-        UNTIL(j > ed)
+        IF st > ed THEN
+          FOR j=st DOWNTO ed DO
+            APPEND_NODE(out_path,status)
+            out_path[PATH_LEN(out_path)] = pth[j]
+          ENDFOR
+        ELSE
+          FOR j=st TO ed DO
+            APPEND_NODE(out_path,status)
+            out_path[PATH_LEN(out_path)] = pth[j]
+          ENDFOR
+        ENDIF
         
         -- check graph if path is a tooling path or a linking path
         -- do so by looking through adjacency list and checking that
