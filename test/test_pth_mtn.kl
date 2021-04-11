@@ -21,8 +21,8 @@ PROGRAM test_pth_mtn
 %include systemlib.klt
 %include systemvars.klt
 %include draw.klt
-%include paths.klt
 %include pathplan.klt
+%include paths.klt
 
 VAR
   contours : PATH nodedata = t_VEC_PATH
@@ -134,10 +134,10 @@ ROUTINE t_hexagon
     origin = POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG))
 
     tstpoly__new
-    tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 180)
+    tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 0)
     --get raster lines
     --     (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params((rast_ang), -1, wall_lines, 0, overlap)
+    tstpoly__set_params((rast_ang), 1, wall_lines, 0, overlap)
     tstpoly__raster(PTH_LINETO)
     
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
@@ -146,13 +146,13 @@ ROUTINE t_hexagon
     cds = paths__new_coord_sys(PTH_CARTESAN, 3)
     tstpth__init(origin, POS(0,0,0,TOOL_ORIENT,pose__set_config(DEFAULT_CONFIG)), cds)
 
-    tstpth__set_params(TOOLING_SPEED, 1)
+    tstpth__set_idod(1)
 
     --generate path
     bbox = tstpoly__get_bounding_box
-    tstpth__createPath(lines, contours, bbox, origin, FALSE)
+    tstpth__createPath(lines, contours, origin, PLATE_CORNER, ONEWAY, FALSE)
     --move through path
-    tstpth__movePolyFull(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*RETRACT_HEIGHT)
+    tstpth__movePolyFull(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
 
     --get lists
     tstpth__get_plan(path_plan)
@@ -184,6 +184,7 @@ ROUTINE t_pvert_ID
 %define TOOLING_STEP 90
 %define LINKING_STEP 90
     i, status : INTEGER
+    origin : XYZWPR
     bbox : t_RECT
     cds : t_COORD_SYS
   BEGIN
@@ -211,17 +212,23 @@ ROUTINE t_pvert_ID
     tstpth__init(POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG)), &
                  POS(0,0,0,TOOL_ORIENT_UP,pose__set_config(DEFAULT_CONFIG)), cds)
                 
-    tstpth__set_params(TOOLING_SPEED, PAD_IDOD)
+    tstpth__set_idod(PAD_IDOD)
 
     --generate path
+    origin = POS(PAD_START_DEG,0,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
     bbox = tstpoly__get_bounding_box
-    tstpth__createPath(lines, contours, bbox, POS(PAD_START_DEG,0,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG)), FALSE)
+    tstpth__createPath(lines, contours, origin, ID_CORNER, ONEWAY, FALSE)
     --move through path
-    tstpth__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, RETRACT_HEIGHT)
+    tstpth__movePolyArcFull(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, RETRACT_HEIGHT)
+    
+    --get lists
+    tstpth__get_plan(path_plan)
+    tstpth__get_path(pth)
 
     -- retract
-    tstpth__makeline(VEC(360+PAD_START_DEG,0,RETRACT_RADIUS), VEC(PAD_START_DEG,0,RETRACT_RADIUS), PTH_LINKING, PTH_LINETO, LINKING_STEP)
-    tstpth__moveArc
+    tstpth__get_line(1, TRUE, TRUE, origin, PTH_LINKING, LINKING_STEP, FALSE)
+    tstpth__moveArc(LINKING_SPEED)
+
 
     RETURN
   END t_pvert_ID
@@ -249,7 +256,7 @@ ROUTINE t_pvert_OD
 %define TOOLING_STEP 20
 %define LINKING_STEP 20
     i, status : INTEGER
-    bbox : t_RECT
+    origin : XYZWPR
     cds : t_COORD_SYS
   BEGIN
     --lock group 1
@@ -265,7 +272,7 @@ ROUTINE t_pvert_OD
 
     --get raster lines
     -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, -1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
 
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
@@ -276,22 +283,22 @@ ROUTINE t_pvert_OD
     tstpth__init(POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG)), &
                  POS(0,0,0,TOOL_ORIENT_DOWN,pose__set_config(DEFAULT_CONFIG)), cds)
                 
-    tstpth__set_params(TOOLING_SPEED, PAD_IDOD)
+    tstpth__set_idod(PAD_IDOD)
 
     --generate path
-    bbox = tstpoly__get_bounding_box
-    tstpth__createPath(lines, contours, bbox, POS(PAD_START_DEG,0,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG)), FALSE)
+    origin = POS(PAD_START_DEG,0,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
+    tstpth__createPath(lines, contours, origin, OD_CORNER, ONEWAY, FALSE)
     --move through path
-    tstpth__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*RETRACT_HEIGHT)
+    tstpth__movePolyArcFull(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
 
     --get lists
     tstpth__get_plan(path_plan)
     tstpth__get_path(pth)
 
-    -- retract
-    tstpth__makeline(VEC(PAD_START_DEG,0,RETRACT_RADIUS+PAD_RADIUS), VEC(360+PAD_START_DEG,0,RETRACT_RADIUS+PAD_RADIUS), PTH_LINKING, PTH_LINETO, LINKING_STEP)
-    tstpth__moveArc
 
+    -- retract
+    tstpth__get_line(1, TRUE, TRUE, origin, PTH_LINKING, LINKING_STEP, FALSE)
+    tstpth__moveArc(LINKING_SPEED)
 
     RETURN
   END t_pvert_OD

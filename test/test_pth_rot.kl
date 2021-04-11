@@ -17,8 +17,8 @@ PROGRAM test_pth_rot
 %include systemlib.klt
 %include systemvars.klt
 %include draw.klt
-%include paths.klt
 %include pathplan.klt
+%include paths.klt
 
 --include motion type
 %include defaultrot.klt
@@ -129,9 +129,10 @@ ROUTINE t_rot_OD
 %define TOOLING_STEP 90
 %define LINKING_STEP 90
     i, status : INTEGER
+    origin : XYZWPR
     bbox : t_RECT
     cds : t_COORD_SYS
-    nde : PATH_DATA_TYPE
+    nde : XYZWPR
   BEGIN
     --lock group 1
     LOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
@@ -149,7 +150,7 @@ ROUTINE t_rot_OD
 
     --get raster lines
     -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, -1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
 
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
@@ -157,17 +158,18 @@ ROUTINE t_rot_OD
     tstpoly__lines_to_vec_path(lines) ;
 
     cds = paths__new_coord_sys(PTH_CYLINDER, 3)
-    nde = tstrot__new_pose(0,0,0,TOOL_ORIENT_DOWN,0, DEFAULT_CONFIG)
+    nde = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
     tstrot__init(POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG)), &
                  nde, cds)
                 
-    tstrot__set_params(TOOLING_SPEED, PAD_IDOD)
+    tstrot__set_idod(PAD_IDOD)
 
     --generate path
+    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
     bbox = tstpoly__get_bounding_box
-    tstrot__createPath(lines, contours, bbox, POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG)), FALSE)
+    tstrot__createPath(lines, contours, origin, OD_CORNER, ONEWAY, FALSE)
     --move through path
-    tstrot__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*RETRACT_HEIGHT)
+    tstrot__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
 
     --get lists
     -- tstrot__get_plan(path_plan)
@@ -201,9 +203,10 @@ ROUTINE t_rot_ID
 %define TOOLING_STEP 20
 %define LINKING_STEP 20
     i, status : INTEGER
+    origin : XYZWPR
     bbox : t_RECT
     cds : t_COORD_SYS
-    nde : PATH_DATA_TYPE
+    nde : XYZWPR
   BEGIN
     --lock group 1
     LOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
@@ -229,17 +232,18 @@ ROUTINE t_rot_ID
     tstpoly__lines_to_vec_path(lines) ;
 
     cds = paths__new_coord_sys(PTH_CYLINDER, 3)
-    nde = tstrot__new_pose(0,0,0,TOOL_ORIENT_UP,0, DEFAULT_CONFIG)
+    nde = POS(0,0,0,TOOL_ORIENT_UP, pose__set_config(DEFAULT_CONFIG))
     tstrot__init(POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG)), &
                  nde, cds)
                 
-    tstrot__set_params(TOOLING_SPEED, PAD_IDOD)
+    tstrot__set_idod(PAD_IDOD)
 
     --generate path
+    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
     bbox = tstpoly__get_bounding_box
-    tstrot__createPath(lines, contours, bbox, POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG)), FALSE)
+    tstrot__createPath(lines, contours, origin, ID_CORNER, ONEWAY, FALSE)
     --move through path
-    tstrot__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*RETRACT_HEIGHT)
+    tstrot__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT) )
 
     --get lists
     -- tstrot__get_plan(path_plan)
@@ -258,8 +262,8 @@ BEGIN
   usrdis__clear_file
 %endif
 
-  -- t_rot_OD
-  t_rot_ID
+  t_rot_OD
+  -- t_rot_ID
 
   --clean up
   -- tstpoly__clear
