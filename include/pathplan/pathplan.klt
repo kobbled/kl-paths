@@ -1,13 +1,18 @@
 %ifndef pathplan_t
 %define pathplan_t
 
-CONST
-  --raster types
-  ONEWAY = 1
-  ZIGZAG = 2
+--raster types
+%define ONEWAY 1
+%define ZIGZAG 2
+%define NEARESTNEIGHBOR 3
     --..warning:: not implemented
-  BOTTOMFILL = 3
-  CASCADEFILL = 4
+%define BOTTOMFILL 4
+%define CASCADEFILL 5
 
+--corner defintions
+%define LEFT_BOTTOM 1
+%define RIGHT_BOTTOM 2
+%define RIGHT_TOP 3
+%define LEFT_TOP 4
 
 %endif --pathplan_t

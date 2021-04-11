@@ -25,7 +25,7 @@
 --dynamic userframe variables
 %define CD_PAIR 1
 %define LEADER_FRM 1
-%define DEFAULT_LEADER POS(0,0,0,180,0,180, (ZEROPOS(1).Config_data))
+%define DEFAULT_LEADER POS(0,0,0,0,0,0, (ZEROPOS(1).Config_data))
 
 %defeval DEFAULT_POSE new_pose(0,0,0,0,0,0,0, DEFAULT_CONFIG)
 --tool orientation
@@ -45,6 +45,8 @@
 
 %define define_paths_headers(parent) `declare_member(parent,new_pose,parent,npose)
 ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : STRING) : PATH_DATA_TYPE FROM parent
+declare_member(parent,set_tool_offset,parent,sttof)
+ROUTINE set_tool_offset(ofst : XYZWPR) : PATH_DATA_TYPE FROM parent
 declare_member(parent,tpath2pos,parent,tppse)
 ROUTINE tpath2pos(nde : t_TOOLPATH) : PATH_DATA_TYPE FROM parent
 declare_member(parent,set_posereg,parent,stpr)
@@ -58,15 +60,29 @@ ROUTINE poseInv(nde1 : PATH_DATA_TYPE) : PATH_DATA_TYPE FROM parent
 %define define_paths_members(parent) `declare_member(parent,new_pose,parent,npose)
 ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : STRING) : PATH_DATA_TYPE
   VAR
-    i : INTEGER
     nde : PATH_DATA_TYPE
-    arr: ARRAY[ROT_NUM_OF_AXES] OF REAL
   BEGIN
     nde.pose = POS(x,y,z,w,p,r, pose__set_config(cnfg)) 
     nde.rot = pose__set_jointpos_axis(ROT_DRIVING_AXIS, j1)
 
     RETURN( nde )
   END new_pose
+declare_member(parent,set_tool_offset,parent,sttof)
+ROUTINE set_tool_offset(ofst : XYZWPR) : PATH_DATA_TYPE
+  VAR
+    i   : INTEGER
+    nde : PATH_DATA_TYPE
+    arr : ARRAY[ROT_NUM_OF_AXES] OF REAL
+  BEGIN
+    nde.pose = ofst
+    --initalize rotary
+    FOR i=1 TO ARRAY_LEN(arr) DO
+      arr[i] = 0
+    ENDFOR
+    nde.rot = pose__set_jointpos(arr)
+
+    RETURN( nde )
+  END set_tool_offset
 declare_member(parent,tpath2pos,parent,tppse)
 ROUTINE tpath2pos(nde : t_TOOLPATH) : PATH_DATA_TYPE
   VAR

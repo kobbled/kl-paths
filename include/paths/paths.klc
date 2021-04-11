@@ -208,7 +208,7 @@ ROUTINE init
     paths__clear_toolpath(pth)
 
     frm = coord_frm
-    tool_offset = toolOffst
+    tool_offset = set_tool_offset(toolOffst)
 
     coord_system = coord_sys
 
@@ -259,13 +259,14 @@ ROUTINE get_plan
   END get_plan
 
 ROUTINE createPath
-  VAR
-    start_vert : INTEGER
-    orient : INTEGER
   BEGIN
     `PATH_PLAN_NAME`__init(lines, origin)
-    --(poly_depend, strict_dir)
-    `PATH_PLAN_NAME`__raster_graph(ONEWAY, poly_depend, TRUE)
+    IF raster_type = NEARESTNEIGHBOR THEN
+      `PATH_PLAN_NAME`__NN_graph
+    ELSE
+      --(poly_depend, strict_dir)
+      `PATH_PLAN_NAME`__raster_graph(raster_type, poly_depend, TRUE)
+    ENDIF
 
     IF PATH_LEN(contours) > 0 THEN
       --append contours after to not include in rastering process
@@ -308,6 +309,37 @@ ROUTINE makeline
     ENDSELECT
 
   END makeline
+
+ROUTINE get_line
+  BEGIN
+    paths__clear_toolpath(segment)
+    --get line
+    `PATH_PLAN_NAME`__set_line(line_no, revrs_ordr, line_typ)
+
+    IF reverse_line THEN
+      `PATH_PLAN_NAME`__reverse_toolpath(segment)
+    ELSE
+      `PATH_PLAN_NAME`__get_toolpath(segment)
+    ENDIF
+
+    IF NOT append THEN
+      paths__clear_toolpath(pth)
+    ENDIF
+    paths__interpolate_toolpath(segment, (spacing), PTH_LINETO, origin, pth)
+
+    IF UNINIT(coord_system.system) THEN
+      karelError(VAR_UNINIT,'coordinate system must be set in class_name', ER_ABORT)
+    ENDIF
+
+    SELECT (coord_system.system) OF
+      CASE(PTH_CYLINDER):
+        paths__cylindrical_to_cartesian(pth, frm, (coord_system.z_axis))
+      CASE(PTH_POLAR):
+        paths__polar_to_cartesian(pth, frm, (coord_system.z_axis))
+      ELSE:
+    ENDSELECT
+
+  END get_line
 
 ROUTINE moveLine
   VAR

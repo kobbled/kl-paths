@@ -1,5 +1,7 @@
 %define PATH_CONFIG_FILENAME defaultpath.klt
 
+%include pathplan.klt
+
 %define RBT_GRP 1
 --frames
 %define USER_FRAME_NO 9
@@ -36,19 +38,17 @@
 %define LINEAR_MOVE_PROG 'MOVE_LINE'
 %define ARC_MOVE_PROG 'MOVE_CIRC'
 
---**dont change
-%define LEFTSIDE 1
-%define RIGHTSIDE 2
---**change
-%defeval OD_CORNER RIGHTSIDE
-%defeval ID_CORNER LEFTSIDE
-%defeval PLATE_CORNER LEFTSIDE
+%defeval OD_CORNER RIGHT_BOTTOM
+%defeval ID_CORNER LEFT_BOTTOM
+%defeval PLATE_CORNER RIGHT_BOTTOM
 
 %mode push
 %mode string QQQ "`" "`" "\\"
 
 %define define_paths_headers(parent) `declare_member(parent,new_pose,parent,npose)
 ROUTINE new_pose(x,y,z,w,p,r : REAL; cnfg : STRING) : PATH_DATA_TYPE FROM parent
+declare_member(parent,set_tool_offset,parent,sttof)
+ROUTINE set_tool_offset(ofst : XYZWPR) : PATH_DATA_TYPE  FROM parent
 declare_member(parent,tpath2pos,parent,tppse)
 ROUTINE tpath2pos(nde : t_TOOLPATH) : PATH_DATA_TYPE FROM parent
 declare_member(parent,set_posereg,parent,stpr)
@@ -64,6 +64,11 @@ ROUTINE new_pose(x,y,z,w,p,r : REAL; cnfg : STRING) : PATH_DATA_TYPE
   BEGIN
     RETURN( POS(x,y,z,w,p,r, pose__set_config(cnfg)) )
   END new_pose
+declare_member(parent,set_tool_offset,parent,sttof)
+ROUTINE set_tool_offset(ofst : XYZWPR) : PATH_DATA_TYPE
+  BEGIN
+    RETURN( ofst )
+  END set_tool_offset
 declare_member(parent,tpath2pos,parent,tppse)
 ROUTINE tpath2pos(nde : t_TOOLPATH) : PATH_DATA_TYPE
   BEGIN

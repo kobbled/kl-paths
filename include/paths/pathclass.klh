@@ -10,9 +10,11 @@ header_def -- define class
 declare_member(class_name,new,class_name,new)
 ROUTINE new FROM class_name
 declare_member(class_name,init,class_name,init)
-ROUTINE init(coord_frm : XYZWPR; toolOffst : PATH_DATA_TYPE; coord_sys : t_COORD_SYS) FROM class_name
+ROUTINE init(coord_frm : XYZWPR; toolOffst : XYZWPR; coord_sys : t_COORD_SYS) FROM class_name
 declare_member(class_name,destructor,class_name,dstr)
 ROUTINE destructor FROM class_name
+declare_member(class_name,makeCustom,class_name,mkctm)
+ROUTINE makeCustom(filename : STRING) FROM class_name
 --setters
 declare_member(class_name,set_idod,class_name,stido)
 ROUTINE set_idod(i : INTEGER) FROM class_name
@@ -24,16 +26,18 @@ ROUTINE get_path(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,get_plan,class_name,gtpln)
 ROUTINE get_plan(out_path : PATH nodedata = t_INTEGER) FROM class_name
 
-
 declare_member(class_name,createPath,class_name,crtpt)
-ROUTINE createPath(lines : PATH nodedata = t_VEC_PATH; contours : PATH nodedata = t_VEC_PATH; bbox : t_RECT ; & 
-               origin : XYZWPR; poly_depend : BOOLEAN) FROM class_name
+ROUTINE createPath(lines : PATH nodedata = t_VEC_PATH; contours : PATH nodedata = t_VEC_PATH; & 
+               origin : XYZWPR; start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN) FROM class_name
 declare_member(class_name,makeline,class_name,mkln)
 ROUTINE makeline(start_point, end_point : VECTOR; line_typ : INTEGER; line_code : INTEGER; spacing : REAL) FROM class_name
+declare_member(class_name,get_line,class_name,gtln)
+ROUTINE get_line(line_no : INTEGER; revrs_ordr, reverse_line : BOOLEAN; origin: XYZWPR ; &
+                 line_typ : INTEGER; spacing : REAL; append : BOOLEAN) FROM class_name
 declare_member(class_name,moveLine,class_name,mvln)
-ROUTINE moveLine FROM class_name
+ROUTINE moveLine(speed : REAL) FROM class_name
 declare_member(class_name,moveArc,class_name,mvac)
-ROUTINE moveArc FROM class_name
+ROUTINE moveArc(speed : REAL) FROM class_name
 declare_member(class_name,movePoly,class_name,mvpy)
 ROUTINE movePoly(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
                  retract_hght : REAL) FROM class_name
