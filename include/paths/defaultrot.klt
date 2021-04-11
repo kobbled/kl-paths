@@ -73,7 +73,7 @@ ROUTINE tpath2pos(nde : t_TOOLPATH) : PATH_DATA_TYPE
     deg : REAL
     p : PATH_DATA_TYPE
   BEGIN
-    IF (reg_vals.idod = -1) THEN deg = nde.v.r-180 ; ELSE deg = nde.v.r ; ENDIF
+    IF (idod_ = -1) THEN deg = nde.v.r-180 ; ELSE deg = nde.v.r ; ENDIF
     p.pose = nde.v
     p.rot = pose__set_jointpos_axis(ROT_DRIVING_AXIS, ROT_DIRECTION*deg )
     RETURN(p)

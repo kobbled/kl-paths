@@ -21,7 +21,7 @@ define_paths_types(PATH_DATA_TYPE, class_name)
 VAR
   frm : XYZWPR
   tool_offset : PATH_DATA_TYPE
-  reg_vals : t_MOTION_VAR
+  idod_ : INTEGER
   coord_system : t_COORD_SYS
   segment : PATH nodedata = t_TOOLPATH
   pth : PATH nodedata = t_TOOLPATH
@@ -213,19 +213,18 @@ ROUTINE init
     coord_system = coord_sys
 
     --registers preset in template
-    set_params(TOOLING_SPEED, PAD_IDOD)
+    set_idod(PAD_IDOD)
   END init
 
 ROUTINE destructor
   VAR
     unit_sys : t_COORD_SYS
-    unit_vars : t_MOTION_VAR
   BEGIN
     paths__clear_toolpath(segment)
     paths__clear_toolpath(pth)
 
     coord_system = unit_sys
-    reg_vals = unit_vars
+    idod_ = 0
 
     frm = (ZEROPOS(1))
     tool_offset = DEFAULT_POSE
@@ -234,16 +233,10 @@ ROUTINE destructor
     `PATH_PLAN_NAME`__destructor
   END destructor
 
-ROUTINE set_tool_offset
+ROUTINE set_idod
   BEGIN
-    tool_offset = ofst
-  END set_tool_offset
-
-ROUTINE set_params
-  BEGIN
-    reg_vals.speed = speed
-    reg_vals.idod = idod
-  END set_params
+    idod_ = i
+  END set_idod
 
 ROUTINE set_coordinate_system
   BEGIN
@@ -280,30 +273,10 @@ ROUTINE createPath
       `PATH_PLAN_NAME`__append_path(contours, FALSE)
     ENDIF
 
-    --get start node
-    IF UNINIT(reg_vals.idod) THEN
-      karelError(VAR_UNINIT,'idod must be set in class_name', ER_ABORT)
-    ENDIF
-
-    SELECT coord_system.system OF
-      CASE(PTH_CYLINDER,PTH_POLAR):
-        SELECT reg_vals.idod OF
-          CASE(-1):
-            start_vert = ID_CORNER
-          CASE(1):
-            start_vert = OD_CORNER
-          ELSE:
-            karelError(INVALID_TYPE_CODE,'idod not set properly in class_name', ER_ABORT)
-        ENDSELECT
-      ELSE:
-        --cartesian
-        start_vert = OD_CORNER
-    ENDSELECT
-
-    `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(bbox, start_vert))
+    `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
 
     --set point orientation
-    `PATH_PLAN_NAME`__set_orientation( set_orientation((reg_vals.idod)) )
+    `PATH_PLAN_NAME`__set_orientation( set_orientation(idod_) )
 
   END createPath
 
@@ -314,10 +287,10 @@ ROUTINE makeline
     paths__clear_toolpath(segment)
     --add start point
     APPEND_NODE(segment,status)
-    segment[PATH_LEN(segment)] = paths__new_tpath(pose__vector_to_pose(start_point, set_orientation((reg_vals.idod)), frm.config_data), PTH_MOVETO, line_typ)
+    segment[PATH_LEN(segment)] = paths__new_tpath(pose__vector_to_pose(start_point, set_orientation(idod_), frm.config_data), PTH_MOVETO, line_typ)
     --add end point
     APPEND_NODE(segment,status)
-    segment[PATH_LEN(segment)] = paths__new_tpath(pose__vector_to_pose(end_point, set_orientation((reg_vals.idod)), frm.config_data), PTH_CLOSE, line_typ)
+    segment[PATH_LEN(segment)] = paths__new_tpath(pose__vector_to_pose(end_point, set_orientation(idod_), frm.config_data), PTH_CLOSE, line_typ)
 
     paths__clear_toolpath(pth)
     paths__interpolate_toolpath(segment, (spacing), line_code, POS(0,0,0,0,0,0,frm.config_data), pth)

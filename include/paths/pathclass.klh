@@ -14,10 +14,8 @@ ROUTINE init(coord_frm : XYZWPR; toolOffst : PATH_DATA_TYPE; coord_sys : t_COORD
 declare_member(class_name,destructor,class_name,dstr)
 ROUTINE destructor FROM class_name
 --setters
-declare_member(class_name,set_tool_offset,class_name,sttof)
-ROUTINE set_tool_offset(ofst : PATH_DATA_TYPE) FROM class_name
-declare_member(class_name,set_params,class_name,stprm)
-ROUTINE set_params(speed : REAL; idod : INTEGER) FROM class_name
+declare_member(class_name,set_idod,class_name,stido)
+ROUTINE set_idod(i : INTEGER) FROM class_name
 declare_member(class_name,set_coordinate_system,class_name,stcrd)
 ROUTINE set_coordinate_system(system : INTEGER ; z_axis : INTEGER) FROM class_name
 --getters
