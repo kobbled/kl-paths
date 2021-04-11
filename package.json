@@ -6,31 +6,37 @@
   "license" : "MIT",
   "author" : "kobbled",
   "source" : [
-    "src/paths.kl",
-    "motion/move_line.tpp",
-    "motion/move_line_rot.tpp",
-    "motion/move_circ.tpp",
-    "motion/move_circ_rot.tpp"
+    "src/paths.kl"
+  ],
+  "forms" : [
+    "forms/gspptheg.ftx",
+    "forms/gsppadeg.ftx",
+    "forms/gsphexeg.ftx",
+    "forms/gspcuseg.ftx",
+    "forms/frm_pad.kl"
   ],
   "tests" : [
-    "test/test_pth_mtn.kl"
+    "test/test_paths.kl",
+    "test/test_pplan.kl"
   ],
   "includes" : [
     "include",
     "include/paths",
     "include/pathplan",
-    "include/rotary"
+    "include/rotary",
+    "forms/include"
   ],
   "depends" : [
     "errors",
+    "display",
     "math",
     "graph",
+    "draw",
+    "forms",
     "pose",
     "ktransw-macros"
   ],
   "tests-depends" : [
-    "display",
-    "draw",
     "Strings",
     "KUnit"
   ]

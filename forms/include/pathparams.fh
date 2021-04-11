@@ -1,0 +1,52 @@
+#ifndef pathparams_h
+#define pathparams_h
+
+#mode push
+#mode string QQQ "`" "`" "\\"
+
+*********
+#define define_form_shapes `$-,enum_shapes
+"Pad"  *
+$-
+"Hexagon"  *
+$-
+"Custom"  *
+$-
+"\a"  * eol
+`
+
+*********
+#define define_tool_params `$-,enum_idod
+"OD"  &new_line  * value will be set to 1.
+"ID"  &new_line  * value will be set to 2 need to convert to -1
+* eol
+
+$-,enum_coord
+"Cart"  &new_line *
+"Cyl"  &new_line  *
+"Pol"  &new_line  *
+* eol
+`
+
+*********
+#define define_raster_params `$-,enum_rast
+"Oneway"  &new_line *
+"Zigzag"  &new_line  *
+"NN"  &new_line  *
+* eol
+
+$-,enum_corners
+"Left Bottom"  * values depend on coordSys, and idod
+$-
+"Right Bottom"  *
+$-
+"Left Top"  *
+$-
+"Right Top"  *
+$-
+"\a"  * eol
+`
+
+#mode pop
+
+#endif * pathparams_h

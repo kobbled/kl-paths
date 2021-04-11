@@ -1,0 +1,37 @@
+--define 
+%define STATION1_NAME tspthw
+%define STATION1_CNFG defaultwrapperpath.klt
+
+%define STATION2_NAME tsverw
+%define STATION2_CNFG defaultwrappervert.klt
+
+%define STATION3_NAME tsrotw
+%define STATION3_CNFG defaultwrapperrot.klt
+
+--path wrapper
+------------------
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define pathswrapper_define(object_name,cnfg_file) `%class object_name('pathswrapper.klc','pathswrapper.klh','cnfg_file')`
+%mode pop
+
+%mode push
+%mode string QQQ "$" "$" "\\"
+%define frame_path_station_instructions(station) $
+    SELECT shapeType OF
+      CASE(SHP_PAD):
+        `station`__drawPad(padprm, toolprm, rastprm)
+      CASE(SHP_HEX):
+        `station`__drawHex(hexprm, polyprm, toolprm, rastprm)
+      CASE(SHP_CUST):
+        `station`__drawCustom(filename, polyprm, toolprm, rastprm)
+      ELSE:
+        WRITE TPDISPLAY(CR, 'Shape type not selected properly')
+        display__show
+    ENDSELECT
+
+    `station`__make(polyprm, toolprm, rastprm, motnprm)
+    --free memory
+    `station`__destructor$
+%mode pop
+------------------

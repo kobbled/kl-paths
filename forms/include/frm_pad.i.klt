@@ -1,0 +1,123 @@
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define make_path_indicies(ps) `ROUTINE frm_pthList
+  BEGIN
+    --station info
+    path_val_arr[1] = '['+ps+']stationTree'
+    --
+    path_val_arr[2] = '['+ps+']station'
+    path_val_arr[3] = '['+ps+']useScanner'
+    path_val_arr[4] = '['+ps+']shapeType'
+    path_val_arr[5] = '['+ps+']toolprm.coordSys'
+    path_val_arr[6] = '['+ps+']toolprm.idod'
+    path_val_arr[7] = '['+ps+']toolprm.pitch'
+    --raster info
+    path_val_arr[8] = '['+ps+']rasterTree'
+    --
+    path_val_arr[9] = '['+ps+']rastprm.rastType'
+    path_val_arr[10] = '['+ps+']rastprm.angle'
+    path_val_arr[11] = '['+ps+']rastprm.overlap'
+    path_val_arr[12] = '['+ps+']rastprm.dir'
+    path_val_arr[13] = '['+ps+']rastprm.line_width'
+    path_val_arr[14] = '['+ps+']rastprm.contours'
+    path_val_arr[15] = '['+ps+']rastprm.constrain'
+    path_val_arr[16] = '['+ps+']startCorner'
+    --motion params
+    path_val_arr[17] = '['+ps+']motionTree'
+    --
+    path_val_arr[18] = '['+ps+']toolprm.retractDist'
+    path_val_arr[19] = '['+ps+']motnprm.tool_speed'
+    path_val_arr[20] = '['+ps+']motnprm.link_speed'
+    path_val_arr[21] = '['+ps+']motnprm.tool_step'
+    path_val_arr[22] = '['+ps+']motnprm.link_step'
+    path_val_arr[23] = '['+ps+']motnprm.use_arc'
+  END frm_pthList
+
+ROUTINE init_pthList
+  BEGIN
+    IF UNINIT(station) THEN station = 1 ; ENDIF
+    IF UNINIT(useScanner) THEN useScanner = FALSE ; ENDIF
+    IF UNINIT(shapeType) THEN shapeType = 1 ; ENDIF
+    --tool params
+    IF UNINIT(toolprm.coordSys) THEN toolprm.coordSys = 2; ENDIF
+    IF UNINIT(toolprm.idod) THEN toolprm.idod = 1; ENDIF
+    IF UNINIT(toolprm.pitch) THEN toolprm.pitch = 0; ENDIF
+    IF UNINIT(toolprm.retractDist) THEN toolprm.retractDist = 5; ENDIF
+    --raster params
+    IF UNINIT(rastprm.rastType) THEN rastprm.rastType = 1; ENDIF
+    IF UNINIT(startCorner) THEN startCorner = 1; ENDIF
+    IF UNINIT(rastprm.constrain) THEN rastprm.constrain = FALSE; ENDIF
+    IF UNINIT(rastprm.overlap) THEN rastprm.overlap = 3.5; ENDIF
+    IF UNINIT(rastprm.dir) THEN rastprm.dir = 1; ENDIF
+    IF UNINIT(rastprm.line_width) THEN rastprm.line_width = 0; ENDIF
+    IF UNINIT(rastprm.angle) THEN rastprm.angle = 0; ENDIF
+    IF UNINIT(rastprm.contours) THEN rastprm.contours = 0; ENDIF
+    --motion params
+    IF UNINIT(motnprm.tool_speed) THEN motnprm.tool_speed = 12; ENDIF
+    IF UNINIT(motnprm.link_speed) THEN motnprm.link_speed = 40; ENDIF
+    IF UNINIT(motnprm.tool_step) THEN motnprm.tool_step = 90; ENDIF
+    IF UNINIT(motnprm.link_step) THEN motnprm.link_step = 90; ENDIF
+    IF UNINIT(motnprm.use_arc) THEN motnprm.use_arc = TRUE; ENDIF
+
+    IF UNINIT(polyprm.polyAngle) THEN polyprm.polyAngle = 0 ; ENDIF
+  END init_pthList
+`
+
+%define make_pad_indicies(ps) `ROUTINE frm_padList
+  BEGIN
+    --pad parameters
+    draw_val_arr[1] = '['+ps+']padprm.width'
+    draw_val_arr[2] = '['+ps+']padprm.length'
+    draw_val_arr[3] = '['+ps+']polyprm.height'
+    draw_val_arr[4] = '['+ps+']polyprm.xStart'
+    draw_val_arr[5] = '['+ps+']polyprm.yStart'
+    draw_val_arr[6] = '['+ps+']padprm.no_of_pads'
+    draw_val_arr[7] = '['+ps+']padprm.separation'
+    draw_val_arr[8] = ''
+  END frm_padList
+
+ROUTINE init_padList
+  BEGIN
+    --pad params
+    IF UNINIT(padprm.no_of_pads) THEN padprm.no_of_pads = 1 ; ENDIF
+    IF UNINIT(padprm.separation) THEN padprm.separation = 0 ; ENDIF
+    IF UNINIT(padprm.width) THEN padprm.width = 0 ; ENDIF
+    IF UNINIT(padprm.length) THEN padprm.length = 0 ; ENDIF
+  END init_padList
+
+ROUTINE frm_hexList
+  BEGIN
+    --pad parameters
+    draw_val_arr[1] = '['+ps+']hexprm.radius'
+    draw_val_arr[2] = '['+ps+']hexprm.points'
+    draw_val_arr[3] = '['+ps+']polyprm.height'
+    draw_val_arr[4] = '['+ps+']polyprm.xStart'
+    draw_val_arr[5] = '['+ps+']polyprm.yStart'
+    draw_val_arr[6] = '['+ps+']polyprm.polyAngle'
+    draw_val_arr[7] = ''
+    draw_val_arr[8] = ''
+  END frm_hexList
+
+ROUTINE init_hexList
+  BEGIN
+    --pad params
+    IF UNINIT(hexprm.radius) THEN hexprm.radius = 50 ; ENDIF
+    IF UNINIT(hexprm.points) THEN hexprm.points = 4 ; ENDIF
+  END init_hexList
+
+ROUTINE frm_cusList
+  BEGIN
+    --pad parameters
+    draw_val_arr[1] = '['+ps+']filename'
+    draw_val_arr[2] = '['+ps+']polyprm.height'
+    draw_val_arr[3] = '['+ps+']polyprm.xStart'
+    draw_val_arr[4] = '['+ps+']polyprm.yStart'
+    draw_val_arr[5] = '['+ps+']polyprm.polyAngle'
+    draw_val_arr[6] = ''
+    draw_val_arr[7] = ''
+    draw_val_arr[8] = ''
+  END frm_cusList
+`
+
+%mode pop

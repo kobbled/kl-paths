@@ -1,0 +1,51 @@
+*     Dictionary Form File : gspptheg
+*
+
+#include fkeys.fh
+#include pathparams.fh
+
+* **CHANGE. USER DEPENDANT
+#include defaultpad.fh
+
+.kl ppth
+.form
+$-,ppth
+  &home &reverse "Raster a Shape" &standard &new_line
+  &new_line
+  "-%t" &bold " Station Parameters" &standard &new_line
+  " Station:      " "-%16w(enum_station)" &new_line
+  " Use Scanner:  " "-%6B(bool_fkey)" &new_line
+  " Shape:        " "-%10w(enum_shapes)" &new_line
+  " Coord System: " "-%8n(enum_coord)" &new_line
+  " OD/ID:        " "-%8n(enum_idod)" &new_line
+  " Tool Pitch:   " "-%6.2f" &new_line
+  "-%t" &bold " Raster Parameters" &standard &new_line
+  " Raster Type:          " "-%8n(enum_rast)" &new_line
+  " Raster Angle:         " "-%6.2f" &new_line
+  " Raster Overlap:       " "-%6.2f" &new_line
+  " Raster Dir:           " "-%3d" &new_line
+  " Line Width:           " "-%6.2f" &new_line
+  " Countour Lines:       " "-%3d" &new_line
+  " Constrain to Polygon: " "-%6B(bool_fkey)" &new_line
+  " Start Corner:    " "-%12w(enum_corners)" &new_line
+  "-%t" &bold " Motion Parameters" &standard &new_line
+  " Retract Distance:   " "-%6.2f" &new_line
+  " Tooling Speed:      " "-%6.2f" &new_line
+  " Linking Speed:      " "-%6.2f" &new_line
+  " Tool Step Inc:      " "-%5d" &new_line
+  " Link Step Inc:      " "-%5d" &new_line
+  " Use Arc Motions:    " "-%6B(bool_fkey)" &new_line
+  ^ppth_fkey
+.endform
+
+$-,ppth_fkey     *function key labels
+    "  EXIT" &new_line
+    "  NEXT" &new_line
+* fkeys
+#eval tf_keys
+* defaultpad
+#eval form_station_define
+* pathparams
+#eval define_form_shapes
+#eval define_tool_params
+#eval define_raster_params

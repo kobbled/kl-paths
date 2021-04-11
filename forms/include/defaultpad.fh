@@ -1,0 +1,20 @@
+#ifndef defaultpad_h
+#define defaultpad_h
+
+#mode push
+#mode string QQQ "`" "`" "\\"
+
+********
+#define form_station_define `$-,enum_station
+"Plate Station"
+$-
+"Vertical Station"
+$-
+"Headstock 1"
+$-
+"\a"
+`
+
+#mode pop
+
+#endif * defaultpad_h

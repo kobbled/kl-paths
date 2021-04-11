@@ -1,0 +1,18 @@
+*     Dictionary Form File : gsphexeg
+*
+.kl phex
+.form
+$-,phex
+  &home &reverse "Polygon Dimensions" &standard &new_line
+  &new_line
+  " Polygon Radius:     " "-%6.2f" &new_line
+  " No. of Pads:        " "-%5d" &new_line
+  " Height:             " "-%6.2f" &new_line
+  " Start X:            " "-%6.2f" &new_line
+  " Start Y:            " "-%6.2f" &new_line
+  " Polygon Rotation:   " "-%6.2f" &new_line
+  ^phex_fkey
+.endform
+$-,phex_fkey     *function key labels
+    "  EXIT" &new_line
+    "  RUN" &new_line
