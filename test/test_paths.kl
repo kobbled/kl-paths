@@ -205,7 +205,7 @@ ROUTINE t_hex_pnts : BOOLEAN
     tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 0)
     --get raster lines
     --     (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(rast_ang, -1, wall_lines, 0, overlap)
+    tstpoly__set_params(rast_ang, 1, wall_lines, 0, overlap)
     tstpoly__raster(PTH_LINETO)
     
     paths__clear_vecpath(lines)
@@ -221,7 +221,7 @@ ROUTINE t_hex_pnts : BOOLEAN
     tstpln__append_path(contours, FALSE)
      --get start node
     bbox = tstpoly__get_bounding_box
-    tstpln__MST(tstpln__closest_bounding_box(bbox, 2))
+    tstpln__MST(tstpln__closest_bounding_box(2))
     
     -- clear_list(path_plan)
     -- tstpln__get_plan(path_plan)
@@ -531,7 +531,7 @@ ROUTINE t_pads : BOOLEAN
 
     --get raster lines
     -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, -1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
     --get lines and contours
     paths__clear_vecpath(lines)
@@ -549,7 +549,7 @@ ROUTINE t_pads : BOOLEAN
     tstpln__append_path(contours, FALSE)
      --get start node
     bbox = tstpoly__get_bounding_box
-    tstpln__MST(tstpln__closest_bounding_box(bbox, 2))
+    tstpln__MST(tstpln__closest_bounding_box(2))
     --set point orientation
     tstpln__set_orientation(DOWN_NORMAL)
 
@@ -594,6 +594,7 @@ ROUTINE t_pvert_OD : BOOLEAN
 %defeval PAD_SEPERATION (30+PAD_WIDTH)
 %define NO_OF_PADS 3
 %defeval RETRACT_HEIGHT 20
+%define DOWN_NORMAL_VERT VEC(180,180,0)
 
 %define RASTER_ANGLE 0
 %define PASS_OVERLAP 10
@@ -615,7 +616,7 @@ ROUTINE t_pvert_OD : BOOLEAN
 
     --get raster lines
     -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, -1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
     --get lines and contours
     paths__clear_vecpath(lines)
@@ -632,7 +633,7 @@ ROUTINE t_pvert_OD : BOOLEAN
     tstpln__append_path(contours, FALSE)
      --get start node
     bbox = tstpoly__get_bounding_box
-    tstpln__MST(tstpln__closest_bounding_box(bbox, 2))
+    tstpln__MST(tstpln__closest_bounding_box(2))
     -- apprch_pnt = paths__new_vpath(bbox.verts[2], PTH_STOP, 0)
     -- tstpln__MST(tstpln__closest_point(apprch_pnt))
     --set point orientation
@@ -723,7 +724,7 @@ ROUTINE t_pvert_ID : BOOLEAN
     tstpln__append_path(contours, FALSE)
      --get start node
     bbox = tstpoly__get_bounding_box
-    tstpln__MST(tstpln__closest_bounding_box(bbox, 1))
+    tstpln__MST(tstpln__closest_bounding_box(1))
     --set point orientation
     tstpln__set_orientation(UP_NORMAL)
 
@@ -774,12 +775,12 @@ BEGIN
 %endif
 
   --** use kunit
-  -- kunit_test('flat polygon path planning', t_flat_pnts)
-  -- kunit_test('cylindrical coordinates path planning', t_cyld_pnts)
-  -- kunit_test('polar coordinates path planning', t_pol_pnts)
-  -- kunit_test('hexagon path', t_hex_pnts)
-  -- kunit_test('pads path', t_pads)
-  -- kunit_test('pads vertical path OD', t_pvert_OD)
+  kunit_test('flat polygon path planning', t_flat_pnts)
+  kunit_test('cylindrical coordinates path planning', t_cyld_pnts)
+  kunit_test('polar coordinates path planning', t_pol_pnts)
+  kunit_test('hexagon path', t_hex_pnts)
+  kunit_test('pads path', t_pads)
+  kunit_test('pads vertical path OD', t_pvert_OD)
   kunit_test('pads vertical path ID', t_pvert_ID)
   kunit_done
 
