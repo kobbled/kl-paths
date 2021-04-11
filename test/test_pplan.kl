@@ -127,6 +127,22 @@ ROUTINE draw_multi(rast_ang : REAL ; pitch : REAL)
 
   END draw_multi
 
+ROUTINE check_idx(idx : INTEGER; poly_dep : BOOLEAN)
+  VAR
+    qry : T_RASTQUERY
+  BEGIN
+    qry = get_neighbors(idx, poly_dep)
+    IF NOT UNINIT(qry[1].idx) THEN WRITE TPDISPLAY(CR, 'up:', lines[qry[1].idx].v::5::2) ; ENDIF
+    IF NOT UNINIT(qry[2].idx) THEN WRITE TPDISPLAY(CR, 'down:', lines[qry[2].idx].v::5::2) ; ENDIF
+    IF NOT UNINIT(qry[3].idx) THEN WRITE TPDISPLAY(CR, 'right:', lines[qry[3].idx].v::5::2) ; ENDIF
+    IF NOT UNINIT(qry[4].idx) THEN WRITE TPDISPLAY(CR, 'left:', lines[qry[4].idx].v::5::2) ; ENDIF
+    IF NOT UNINIT(qry[5].idx) THEN WRITE TPDISPLAY(CR, 'diagu:', lines[qry[5].idx].v::5::2) ; ENDIF
+    IF NOT UNINIT(qry[6].idx) THEN WRITE TPDISPLAY(CR, 'diagd:', lines[qry[6].idx].v::5::2) ; ENDIF
+  END check_idx
+
+
+-- ****************
+
 ROUTINE t_NN : BOOLEAN
   VAR
     rast_ang : REAL
@@ -457,18 +473,55 @@ ROUTINE t_hexagon : BOOLEAN
     tstpln__init(lines, (ZEROPOS(1)))
     tstpln__raster_graph(ONEWAY, FALSE, FALSE)
      --get start node
-    tstpln__MST(tstpln__closest_bounding_box(bbox, 2))
+    tstpln__MST(tstpln__closest_bounding_box(2))
     tstpln__get_plan(path_plan)
 
     FOR i=1 TO ARRAY_LEN(act1) DO
       act1[i] =  path_plan[i+12].v
     ENDFOR
 
-    s_to_iarr('13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32', ',', exp1)
+    s_to_iarr('20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1', ',', exp1)
     
     RETURN(kunit_eq_ari(exp1, act1))
 
   END t_hexagon
+
+ROUTINE t_temp : BOOLEAN
+  VAR 
+    rast_ang : REAL
+    start_corner : INTEGER
+    start_nde : INTEGER
+    i : INTEGER
+    act1, exp1 : ARRAY[20] OF INTEGER
+    bbox : t_RECT
+    apprch_pnt : t_VEC_PATH
+  BEGIN
+
+    rast_ang = 90
+    start_corner = 1
+
+    tstpoly__new
+    tstpoly__set_canvas(POS(0,0,0,0,0,rast_ang, (ZEROPOS(1).config_data) ))
+    tstpoly__import_shape('FR:\rebel.csv')
+    --raster polygon
+    tstpoly__set_params(rast_ang, 1, 1, 0, 5)
+    tstpoly__raster(PTH_LINETO)
+
+      --get contours
+    paths__clear_vecpath(lines)
+    tstpoly__lines_to_vec_path(lines)
+
+    --generate path
+    clear_list(path_plan)
+    tstpln__init(lines, POS(0,0,0,0,0,0, (ZEROPOS(1).config_data)))
+    tstpln__raster_graph(ONEWAY, FALSE, TRUE)
+
+    --get start node
+    tstpln__MST(tstpln__closest_bounding_box(1))
+    tstpln__get_plan(path_plan)
+
+    RETURN(TRUE)
+  END t_temp
 
 BEGIN
 
@@ -477,13 +530,13 @@ BEGIN
   usrdis__constructor(LOG_NAME, FALSE, SHOW_DEBUG, TRUE)
   usrdis__clear_file
 %endif
-
   kunit_test('test raster NN path plan', t_NN)
-  kunit_test('test raster query', t_rast_neigh)
+  -- ..issue:: kunit_test('test raster query', t_rast_neigh)
   kunit_test('test raster path', t_rast_path)
   kunit_test('test raster multi polygons', t_rast_multi)
   kunit_test('test raster multi polygon indep', t_rast_mult2)
-  kunit_test('test raster heagon poly', t_hexagon)
+  kunit_test('test raster hexagon poly', t_hexagon)
+  -- kunit_test('test raster heagon poly', t_temp)
   kunit_done
 
   --clean up
@@ -494,6 +547,5 @@ BEGIN
   usrdis__write_pipe
   usrdis__destructor
 %endif
-
 
 END test_pplan
