@@ -47,7 +47,7 @@ ROUTINE get_toolpath_interpolate(spacing : INTEGER ; line_type : INTEGER ; appen
 declare_member(class_name,closest_point,class_name,cpnt)
 ROUTINE closest_point(point : PLAN_DATA_TYPE) : INTEGER FROM class_name
 declare_member(class_name,closest_bounding_box,class_name,cbbx)
-ROUTINE closest_bounding_box(box : t_RECT; vert : INTEGER) : INTEGER FROM class_name
+ROUTINE closest_bounding_box(vert : INTEGER) : INTEGER FROM class_name
 declare_member(class_name,filter_polygon,class_name,ftply)
 ROUTINE filter_polygon(polygon : INTEGER) FROM class_name
 declare_member(class_name,calc_bounding_boxes,class_name,ccbox)

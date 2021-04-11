@@ -730,6 +730,7 @@ ROUTINE raster_graph
     polyidx : INTEGER
     i : INTEGER
     b : BOOLEAN
+    polygon : INTEGER
   BEGIN
     --graph edges through paths. This uses PATH_MIN_COST to force
     --MST or a-star through these routes first.
@@ -752,17 +753,17 @@ ROUTINE raster_graph
       IF NOT poly_depend THEN
         --if left or right neighbor, use as link
         IF (NOT UNINIT(neigh[3].idx)) THEN
-          `GRAPH_CLASS_NAME`__addEdge(i, (neigh[3].idx), PATH_LINK_ADJ_COST)
+          `GRAPH_CLASS_NAME`__addEdge(i, (neigh[3].idx), PATH_LINK_SIDE_COST)
         ENDIF
         IF (NOT UNINIT(neigh[4].idx)) THEN
-          `GRAPH_CLASS_NAME`__addEdge(i, (neigh[4].idx), PATH_LINK_ADJ_COST)
+          `GRAPH_CLASS_NAME`__addEdge(i, (neigh[4].idx), PATH_LINK_SIDE_COST)
         ENDIF
       --graph dependent on polygons
       ELSE
         --if left or right neighbor on same poly, use as link
         IF (NOT UNINIT(neigh[3].idx)) THEN
           IF pth[neigh[3].idx].polygon = pth[i].polygon THEN
-            `GRAPH_CLASS_NAME`__addEdge(i, (neigh[3].idx), PATH_LINK_ADJ_COST)
+            `GRAPH_CLASS_NAME`__addEdge(i, (neigh[3].idx), PATH_LINK_SIDE_COST)
           --if neighbor is on a different polygon 
           ELSE
             --at top or bottom of polygon find the right neighbor of the next
@@ -778,7 +779,7 @@ ROUTINE raster_graph
         ENDIF
         IF (NOT UNINIT(neigh[4].idx)) THEN
           IF pth[neigh[4].idx].polygon = pth[i].polygon THEN
-            `GRAPH_CLASS_NAME`__addEdge(i, (neigh[4].idx), PATH_LINK_ADJ_COST)
+            `GRAPH_CLASS_NAME`__addEdge(i, (neigh[4].idx), PATH_LINK_SIDE_COST)
           --if neighbor is on a different polygon 
           ELSE
             --at top or bottom of polygon record the left neighbor
@@ -834,20 +835,20 @@ ROUTINE raster_graph
           IF poly_depend THEN
             IF (NOT UNINIT(neigh[1].idx)) THEN
               IF pth[neigh[1].idx].polygon = pth[i].polygon THEN
-                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[1].idx), PATH_LINK_ADJ_COST)
+                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[1].idx), PATH_LINK_VERT_COST)
               ENDIF
             ENDIF
             IF (NOT UNINIT(neigh[2].idx)) THEN
               IF pth[neigh[2].idx].polygon = pth[i].polygon THEN
-                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[2].idx), PATH_LINK_ADJ_COST)
+                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[2].idx), PATH_LINK_VERT_COST)
               ENDIF
             ENDIF
           ELSE
             IF (NOT UNINIT(neigh[1].idx)) THEN
-              `GRAPH_CLASS_NAME`__addEdge(i, (neigh[1].idx), PATH_LINK_ADJ_COST)
+              `GRAPH_CLASS_NAME`__addEdge(i, (neigh[1].idx), PATH_LINK_VERT_COST)
             ENDIF
             IF (NOT UNINIT(neigh[2].idx)) THEN
-              `GRAPH_CLASS_NAME`__addEdge(i, (neigh[2].idx), PATH_LINK_ADJ_COST)
+              `GRAPH_CLASS_NAME`__addEdge(i, (neigh[2].idx), PATH_LINK_VERT_COST)
             ENDIF
           ENDIF
         ELSE:
