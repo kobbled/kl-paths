@@ -28,18 +28,27 @@ declare_member(class_name,is_path_end,class_name,ipte)
 ROUTINE is_path_end : BOOLEAN FROM class_name
 declare_member(class_name,get_path,class_name,gpth)
 ROUTINE get_path(append : BOOLEAN ; out_path : PATH nodedata = PLAN_DATA_TYPE) FROM class_name
+declare_member(class_name,get_neighbors,class_name,gtnh)
+ROUTINE get_neighbors(idx : INTEGER; poly_depend : BOOLEAN) : T_RASTQUERY FROM class_name
 declare_member(class_name,get_endpoints,class_name,gendp)
 ROUTINE get_endpoints : ARRAY OF t_TOOLPATH FROM class_name
 declare_member(class_name,get_path_interpolate,class_name,gphi)
 ROUTINE get_path_interpolate(spacing : INTEGER ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = PLAN_DATA_TYPE) FROM class_name
 declare_member(class_name,next_toolpath,class_name,ntph)
 ROUTINE next_toolpath : INTEGER FROM class_name
+declare_member(class_name,set_line,class_name,stlin)
+ROUTINE set_line(line_no : INTEGER; revrs_ordr : BOOLEAN; line_typ : INTEGER) FROM class_name
+declare_member(class_name,reverse_toolpath,class_name,revtp)
+ROUTINE reverse_toolpath(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
+declare_member(class_name,get_toolpath,class_name,gettp)
+ROUTINE get_toolpath(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,get_toolpath_interpolate,class_name,gtpi)
 ROUTINE get_toolpath_interpolate(spacing : INTEGER ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,closest_point,class_name,cpnt)
 ROUTINE closest_point(point : PLAN_DATA_TYPE) : INTEGER FROM class_name
 declare_member(class_name,closest_bounding_box,class_name,cbbx)
 ROUTINE closest_bounding_box(box : t_RECT; vert : INTEGER) : INTEGER FROM class_name
+declare_member(class_name,filter_polygon,class_name,ftply)
 ROUTINE filter_polygon(polygon : INTEGER) FROM class_name
 declare_member(class_name,calc_bounding_boxes,class_name,ccbox)
 ROUTINE calc_bounding_boxes FROM class_name

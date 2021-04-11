@@ -33,6 +33,7 @@ VAR
 
 %include errors.klh
 %include paths.klh
+%from math.klh %import norm2
 %from systemlib.klh %import VEC, VEC2D
 %from pose.klh %import vector_to_pose, get_orientation
 
@@ -455,6 +456,45 @@ ROUTINE next_toolpath
 
   END next_toolpath
 
+--set line number of generator if not wanting to start
+--generator from the start
+ROUTINE set_line
+  VAR
+    i, status : INTEGER
+    dummy : INTEGER
+  BEGIN
+    --if reverse_order count line numbers from
+    --end to start
+    -- ..note:: current - 1, as currnet + 1 is added in
+    --          next_path_util
+    IF revrs_ordr THEN
+      current = PATH_LEN(plan) - line_no - 1
+    ELSE
+      current = line_no - 1
+    ENDIF
+
+    --get path segment
+    dummy = next_path_util(segment)
+
+    --clear out line
+    clear_toolpath(tool_segment)
+    --convert to t_TOOLPATH
+    FOR i=1 TO PATH_LEN(segment) DO
+      APPEND_NODE(tool_segment, status)
+      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient)
+      tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
+      tool_segment[PATH_LEN(tool_segment)].typ = line_typ
+    ENDFOR
+    
+  END set_line
+
+ROUTINE reverse_toolpath
+  VAR
+    status : INTEGER
+  BEGIN
+    COPY_PATH(tool_segment, PATH_LEN(tool_segment), 1, out_path, status)
+  END reverse_toolpath
+
 ROUTINE is_path_end
   BEGIN
     IF (current < PATH_LEN(plan)) THEN
@@ -479,6 +519,18 @@ ROUTINE get_path
     ENDFOR
 
   END get_path
+
+ROUTINE get_neighbors
+  BEGIN
+    RETURN(paths__raster_neighbors(pth[idx], poly_depend, pth))
+  END get_neighbors
+
+ROUTINE get_toolpath
+  VAR
+    status : INTEGER
+  BEGIN
+    COPY_PATH(tool_segment, 0, 0, out_path, status)
+  END get_toolpath
 
 ROUTINE get_endpoints
   VAR
