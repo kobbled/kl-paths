@@ -594,34 +594,37 @@ ROUTINE closest_point
 
 ROUTINE closest_bounding_box
   VAR
-    neigh : ARRAY[MAX_NEIGHBORS] OF KDTREE_QUERY_TYPE
-    nde : PLAN_DATA_TYPE
     i, idx : INTEGER
-    val : REAL
+    val, val2 : REAL
+    min_val, min_val2 : REAL
+    v : VECTOR
+    box : t_RECT
   BEGIN
-    --get query node
-    nde = paths__new_vpath(box.verts[vert], PTH_STOP, 0)
-    --if points are overlapping, do not exclude overlaping point.
-    --can happen if bounding box intersects convex hull
-    `KD_CLASS_NAME`__disable_search_filter
-    `KD_CLASS_NAME`__kth_nearest_neighbors(nde, MAX_NEIGHBORS-1)
-    neigh = `KD_CLASS_NAME`__get_query_idx
-    `KD_CLASS_NAME`__enable_search_filter
+    --calc bounding box
+    box = paths__calc_bounding_box(pth)
 
-    --find point with most perpendicular vector to box corner
-    --this will be the point closest to the bounding box edge
-    i=1
-    idx = i
-    val = GRAPH_MAX_COST
-    REPEAT
-      IF (box.vec[1]@(pth[neigh[i].idx].v-box.verts[vert]) < val) THEN
-        val = box.vec[1]@(pth[neigh[i].idx].v-box.verts[vert])
-        idx = i
+    idx = 1
+    min_val = GRAPH_MAX_COST
+    min_val2 = GRAPH_MAX_COST
+    FOR i=1 TO PATH_LEN(pth) DO
+      v = pth[i].v ; v.z = 0
+      val = ABS(box.vec[2]@(v-box.verts[vert]))
+      --find point with most perpendicular vector to box corner
+      --as well as the closest point.
+      --this will be the point closest to the bounding box edge
+      IF (val <= min_val) THEN
+        IF (val < min_val) THEN
+          min_val2 = GRAPH_MAX_COST
+        ENDIF
+        IF math__norm2(v-box.verts[vert]) < min_val2 THEN
+          min_val = val
+          min_val2 = math__norm2(v-box.verts[vert])
+          idx = i
+        ENDIF
       ENDIF
-      i = i + 1
-    UNTIL(UNINIT(neigh[i].idx) OR (i = MAX_NEIGHBORS))
+    ENDFOR
 
-    RETURN(neigh[idx].idx)
+    RETURN(idx)
   END closest_bounding_box
 
 ROUTINE filter_polygon
