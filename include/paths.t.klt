@@ -18,6 +18,7 @@ TYPE
 
   t_TOOLPATH FROM paths = STRUCTURE
     v : XYZWPR
+    speed : REAL
     code : SHORT
     typ : SHORT
   ENDSTRUCTURE 

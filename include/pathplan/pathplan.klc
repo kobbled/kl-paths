@@ -537,6 +537,9 @@ ROUTINE next_toolpath
       tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient)
       tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
       tool_segment[PATH_LEN(tool_segment)].typ = pth_typ
+%ifeq INCLUDE_SPEED_CONTROLS TRUE
+      tool_segment[PATH_LEN(tool_segment)].speed = DEFAULT_SPEED
+%endif
     ENDFOR
 
     RETURN(pth_typ)

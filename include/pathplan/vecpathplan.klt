@@ -12,6 +12,9 @@
 %define PATH_LINK_DIAG_COST 4
 %define PATH_LINK_POLY_COST 5
 
+%define INCLUDE_SPEED_CONTROLS FALSE
+%define DEFAULT_SPEED 12
+
 %mode push
 %mode string QQQ "`" "`" "\\"
 
