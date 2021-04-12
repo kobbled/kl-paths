@@ -10,6 +10,8 @@ termn    := R[255]
 poseType := R[253]
 poseCode := R[259]
 
+scan_trigger := DO[50]
+
 # constants
 # --------
 
