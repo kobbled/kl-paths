@@ -22,6 +22,7 @@ VAR
   frm : XYZWPR
   tool_offset : PATH_DATA_TYPE
   idod_ : INTEGER
+  intrp_tool_ : BOOLEAN
   coord_system : t_COORD_SYS
   segment : PATH nodedata = t_TOOLPATH
   pth : PATH nodedata = t_TOOLPATH
@@ -85,7 +86,9 @@ ROUTINE next_toolpath
   BEGIN
     SELECT `PATH_PLAN_NAME`__next_toolpath OF
       CASE(PTH_TOOLING):
-        `PATH_PLAN_NAME`__get_toolpath_interpolate(tool_step, PTH_LINETO, FALSE, pth)
+        IF interp_tool THEN
+          `PATH_PLAN_NAME`__get_toolpath_interpolate(tool_step, PTH_LINETO, FALSE, pth)
+        ENDIF
         registers__set_real(SPEED_REGISTER, tool_speed)
       CASE(PTH_LINKING):
 %ifdef ROT_GRP
@@ -136,7 +139,9 @@ ROUTINE get_toolpath
     REPEAT
       SELECT (`PATH_PLAN_NAME`__next_toolpath) OF
         CASE(PTH_TOOLING):
-          `PATH_PLAN_NAME`__get_toolpath_interpolate(tool_step, PTH_LINETO, TRUE, pth)
+          IF interp_tool THEN
+            `PATH_PLAN_NAME`__get_toolpath_interpolate(tool_step, PTH_LINETO, TRUE, pth)
+          ENDIF
           registers__set_real(SPEED_REGISTER, tool_speed)
         CASE(PTH_LINKING):
 %ifdef ROT_GRP
@@ -225,6 +230,7 @@ ROUTINE destructor
 
     coord_system = unit_sys
     idod_ = 0
+    intrp_tool_ = TRUE
 
     frm = (ZEROPOS(1))
     tool_offset = DEFAULT_POSE
@@ -237,6 +243,11 @@ ROUTINE set_idod
   BEGIN
     idod_ = i
   END set_idod
+
+ROUTINE set_interpolation
+  BEGIN
+    intrp_tool_ = interp
+  END set_interpolation
 
 ROUTINE set_coordinate_system
   BEGIN
@@ -280,6 +291,28 @@ ROUTINE createPath
     `PATH_PLAN_NAME`__set_orientation( set_orientation(idod_) )
 
   END createPath
+
+ROUTINE loadPath
+  BEGIN
+    `PATH_PLAN_NAME`__new(origin)
+    `PATH_PLAN_NAME`__importPath(filename)
+    
+    --set if wanting to interpolate toolpath
+    intrp_tool_ = intrep_tool
+
+    IF raster_type = NEARESTNEIGHBOR THEN
+      `PATH_PLAN_NAME`__NN_graph
+    ELSE
+      --(poly_depend, strict_dir)
+      `PATH_PLAN_NAME`__raster_graph(raster_type, poly_depend, TRUE)
+    ENDIF
+
+    `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
+
+    --set point orientation
+    `PATH_PLAN_NAME`__set_orientation( set_orientation(idod_) )
+
+  END loadPath
 
 ROUTINE makeline
   VAR

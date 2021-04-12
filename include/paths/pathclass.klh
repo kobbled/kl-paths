@@ -18,6 +18,8 @@ ROUTINE makeCustom(filename : STRING) FROM class_name
 --setters
 declare_member(class_name,set_idod,class_name,stido)
 ROUTINE set_idod(i : INTEGER) FROM class_name
+declare_member(class_name,set_interpolation,class_name,stitp)
+ROUTINE set_interpolation(interp : BOOLEAN) FROM class_name
 declare_member(class_name,set_coordinate_system,class_name,stcrd)
 ROUTINE set_coordinate_system(system : INTEGER ; z_axis : INTEGER) FROM class_name
 --getters
@@ -29,6 +31,8 @@ ROUTINE get_plan(out_path : PATH nodedata = t_INTEGER) FROM class_name
 declare_member(class_name,createPath,class_name,crtpt)
 ROUTINE createPath(lines : PATH nodedata = t_VEC_PATH; contours : PATH nodedata = t_VEC_PATH; & 
                origin : XYZWPR; start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN) FROM class_name
+declare_member(class_name,loadPath,class_name,ldpth)
+ROUTINE loadPath(filename : STRING; origin : XYZWPR; start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN; intrep_tool : BOOLEAN) FROM class_name
 declare_member(class_name,makeline,class_name,mkln)
 ROUTINE makeline(start_point, end_point : VECTOR; line_typ : INTEGER; line_code : INTEGER; spacing : REAL) FROM class_name
 declare_member(class_name,get_line,class_name,gtln)
