@@ -21,6 +21,8 @@ declare_member(class_name,init_tracked,class_name,itrk)
 ROUTINE init_tracked FROM class_name
 declare_member(class_name,update_unvisited,class_name,utrk)
 ROUTINE update_unvisited(nde : PLAN_DATA_TYPE) FROM class_name
+declare_member(class_name,build_support_members,class_name,bdsm)
+ROUTINE build_support_members FROM class_name
 declare_member(class_name,min_tracked,class_name,mtrk)
 ROUTINE min_tracked(nde_i : INTEGER) : INTEGER FROM class_name
 declare_member(class_name,graph_path_lines,class_name,gphl)

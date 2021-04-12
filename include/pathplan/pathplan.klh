@@ -8,10 +8,14 @@ header_if -- ifndef class
 header_def -- define class
 
 --path functions
+declare_member(class_name,new,class_name,new)
+ROUTINE new(coord_frame : XYZWPR) FROM class_name
 declare_member(class_name,init,class_name,init)
 ROUTINE init(p : PATH nodedata = PLAN_DATA_TYPE ; coord_frame : XYZWPR) FROM class_name
 declare_member(class_name,destructor,class_name,dstr)
 ROUTINE destructor FROM class_name
+declare_member(class_name,importPath,class_name,impp)
+ROUTINE importPath(filename : STRING) FROM class_name
 declare_member(class_name,append_path,class_name,apph)
 ROUTINE append_path(p : PATH nodedata = PLAN_DATA_TYPE; add_to_kd : BOOLEAN) FROM class_name
 declare_member(class_name,append_path_arr,class_name,appa)
@@ -26,8 +30,10 @@ declare_member(class_name,next_path,class_name,npth)
 ROUTINE next_path : INTEGER FROM class_name
 declare_member(class_name,is_path_end,class_name,ipte)
 ROUTINE is_path_end : BOOLEAN FROM class_name
+declare_member(class_name,get_path_segement,class_name,gpts)
+ROUTINE get_path_segement(append : BOOLEAN ; out_path : PATH nodedata = PLAN_DATA_TYPE) FROM class_name
 declare_member(class_name,get_path,class_name,gpth)
-ROUTINE get_path(append : BOOLEAN ; out_path : PATH nodedata = PLAN_DATA_TYPE) FROM class_name
+ROUTINE get_path(out_path : PATH nodedata = PLAN_DATA_TYPE) FROM class_name
 declare_member(class_name,get_neighbors,class_name,gtnh)
 ROUTINE get_neighbors(idx : INTEGER; poly_depend : BOOLEAN) : T_RASTQUERY FROM class_name
 declare_member(class_name,get_endpoints,class_name,gendp)

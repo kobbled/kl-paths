@@ -44,6 +44,9 @@ define_kd_headers(KD_CLASS_NAME)
 define_graph_class(GRAPH_CLASS_NAME,PATHPLAN_CONFIG_FILENAME)
 define_graphs_headers(GRAPH_CLASS_NAME)
 
+-- sensor csv file
+%class csvpth('csvclass.klc','csvclass.klh')
+
 %defeval class_name BASE_CLASSNAME
 
 %include pathplan.klh
@@ -166,6 +169,23 @@ ROUTINE update_unvisited
       ENDIF
     ENDFOR
   END update_unvisited
+
+ROUTINE build_support_members
+  VAR
+    i, status : INTEGER
+  BEGIN
+    --create kd tree
+    `KD_CLASS_NAME`__create_filtered(pth, (ZEROPOS(1)))
+    --initalize graph
+    `GRAPH_CLASS_NAME`__new(PATH_LEN(pth),FALSE)
+
+    --build tracked and visited
+    FOR i=1 TO PATH_LEN(pth) DO
+      APPEND_NODE(visited,status)
+      APPEND_NODE(tracked,status)
+      CHK_STAT(status)
+    ENDFOR
+  END build_support_members
 
 ROUTINE min_tracked
   VAR
@@ -316,6 +336,21 @@ ROUTINE next_path_util
 
 --public
 
+ROUTINE new
+  BEGIN
+    --clear paths
+    clear_path(pth)
+    clear_bbox(bboxs)
+    clear_visited
+    clear_tracked
+
+    --initialize members
+    frm = coord_frame
+    current = 0
+    pnt_orient = VEC(0,0,0)
+
+  END new
+
 ROUTINE init
   VAR
     i, status : INTEGER
@@ -331,17 +366,9 @@ ROUTINE init
     current = 0
     pnt_orient = VEC(0,0,0)
 
-    --create kd tree
-    `KD_CLASS_NAME`__create_filtered(pth, (ZEROPOS(1)))
-    --initalize graph
-    `GRAPH_CLASS_NAME`__new(PATH_LEN(pth),FALSE)
-
-    --build tracked and visited
-    FOR i=1 TO PATH_LEN(p) DO
-      APPEND_NODE(visited,status)
-      APPEND_NODE(tracked,status)
-      CHK_STAT(status)
-    ENDFOR
+    --build kd tree, and start visited
+    -- and tracked lists
+    build_support_members
 
   END init
 
@@ -358,6 +385,62 @@ ROUTINE destructor
     `KD_CLASS_NAME`__clear
     `GRAPH_CLASS_NAME`__destructor
   END destructor
+
+ROUTINE importPath
+  VAR
+    i : INTEGER
+    b : BOOLEAN
+    unint_r : ARRAY[5] OF REAL
+    r : ARRAY[5] OF REAL
+    prev_line, line_cnt : INTEGER
+    status : INTEGER
+  BEGIN
+    csvpth__constructor(filename, ',', '')
+    csvpth__open
+    --read header
+    --(x,y,z,depth)
+    csvpth__read_header
+
+    clear_path(segment)
+    clear_path(pth)
+
+    prev_line = 0
+    REPEAT
+      b = csvpth__read_rarr(r, unint_r)
+      IF b THEN
+        APPEND_NODE(pth, status)
+        pth[PATH_LEN(pth)].v = VEC(r[1], r[2], r[3])
+        pth[PATH_LEN(pth)].polygon = 1
+
+        -- --store depth info
+        -- APPEND_NODE(depths, status)
+        -- depths[PATH_LEN(depths)].v = r[4]
+
+        line_cnt = TRUNC(r[5])
+        IF line_cnt <> prev_line THEN
+          pth[PATH_LEN(pth)].code = PTH_MOVETO
+          IF PATH_LEN(pth) > 1 THEN
+            pth[PATH_LEN(pth)-1].code = PTH_CLOSE
+          ENDIF
+        ELSE
+          pth[PATH_LEN(pth)].code = PTH_LINETO
+        ENDIF
+
+        prev_line = line_cnt
+      ENDIF
+    UNTIL(NOT b)
+
+    --close path
+    pth[PATH_LEN(pth)].code = PTH_CLOSE
+
+    csvpth__close
+    csvpth__clear
+
+    --build kd tree, and start visited
+    -- and tracked lists
+    build_support_members
+
+  END importPath
 
 ROUTINE append_path
   VAR
@@ -508,7 +591,7 @@ ROUTINE is_path_end
     ENDIF
   END is_path_end
 
-ROUTINE get_path
+ROUTINE get_path_segement
   VAR
     i, status : INTEGER
   BEGIN
@@ -522,6 +605,13 @@ ROUTINE get_path
       out_path[PATH_LEN(out_path)].v = frm:segment[i].v
     ENDFOR
 
+  END get_path_segement
+
+ROUTINE get_path
+  VAR
+    status : INTEGER
+  BEGIN
+    COPY_PATH(pth, 0, 0, out_path, status)
   END get_path
 
 ROUTINE get_neighbors
@@ -746,113 +836,119 @@ ROUTINE raster_graph
     --compute raster graph for each endpoint
     FOR i=1 TO PATH_LEN(pth) DO
 
-      neigh = paths__raster_neighbors(pth[i], poly_depend, pth)
+      SELECT pth[i].code OF
+        CASE(PTH_MOVETO,PTH_CLOSE):
+      
+          neigh = paths__raster_neighbors(pth[i], poly_depend, pth)
 
-      --add all neighbors as weighted edges to graph
-      --graph not dependant on polygons
-      IF NOT poly_depend THEN
-        --if left or right neighbor, use as link
-        IF (NOT UNINIT(neigh[3].idx)) THEN
-          `GRAPH_CLASS_NAME`__addEdge(i, (neigh[3].idx), PATH_LINK_SIDE_COST)
-        ENDIF
-        IF (NOT UNINIT(neigh[4].idx)) THEN
-          `GRAPH_CLASS_NAME`__addEdge(i, (neigh[4].idx), PATH_LINK_SIDE_COST)
-        ENDIF
-      --graph dependent on polygons
-      ELSE
-        --if left or right neighbor on same poly, use as link
-        IF (NOT UNINIT(neigh[3].idx)) THEN
-          IF pth[neigh[3].idx].polygon = pth[i].polygon THEN
-            `GRAPH_CLASS_NAME`__addEdge(i, (neigh[3].idx), PATH_LINK_SIDE_COST)
-          --if neighbor is on a different polygon 
+          --add all neighbors as weighted edges to graph
+          --graph not dependant on polygons
+          IF NOT poly_depend THEN
+            --if left or right neighbor, use as link
+            IF (NOT UNINIT(neigh[3].idx)) THEN
+              `GRAPH_CLASS_NAME`__addEdge(i, (neigh[3].idx), PATH_LINK_SIDE_COST)
+            ENDIF
+            IF (NOT UNINIT(neigh[4].idx)) THEN
+              `GRAPH_CLASS_NAME`__addEdge(i, (neigh[4].idx), PATH_LINK_SIDE_COST)
+            ENDIF
+          --graph dependent on polygons
           ELSE
-            --at top or bottom of polygon find the right neighbor of the next
-            --polygon. Find the opposite corner of the polygon. Add this to
-            --the graph 
-            IF strict_dir THEN
-              IF (UNINIT(neigh[1].idx) OR UNINIT(neigh[2].idx)) THEN
-                polyidx = paths__get_opposite_polygon_corner(neigh[3].idx, pth, FALSE)
+            --if left or right neighbor on same poly, use as link
+            IF (NOT UNINIT(neigh[3].idx)) THEN
+              IF pth[neigh[3].idx].polygon = pth[i].polygon THEN
+                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[3].idx), PATH_LINK_SIDE_COST)
+              --if neighbor is on a different polygon 
+              ELSE
+                --at top or bottom of polygon find the right neighbor of the next
+                --polygon. Find the opposite corner of the polygon. Add this to
+                --the graph 
+                IF strict_dir THEN
+                  IF (UNINIT(neigh[1].idx) OR UNINIT(neigh[2].idx)) THEN
+                    polyidx = paths__get_opposite_polygon_corner(neigh[3].idx, pth, FALSE)
+                    `GRAPH_CLASS_NAME`__addEdge(i, polyidx, PATH_LINK_POLY_COST)
+                  ENDIF
+                ENDIF
+              ENDIF
+            ENDIF
+            IF (NOT UNINIT(neigh[4].idx)) THEN
+              IF pth[neigh[4].idx].polygon = pth[i].polygon THEN
+                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[4].idx), PATH_LINK_SIDE_COST)
+              --if neighbor is on a different polygon 
+              ELSE
+                --at top or bottom of polygon record the left neighbor
+                IF strict_dir THEN
+                  IF (UNINIT(neigh[1].idx) OR UNINIT(neigh[2].idx)) THEN
+                    polyidx = paths__get_opposite_polygon_corner(neigh[4].idx, pth, FALSE)
+                    `GRAPH_CLASS_NAME`__addEdge(i, polyidx, PATH_LINK_POLY_COST)
+                  ENDIF
+                ENDIF
+              ENDIF
+            ENDIF
+            --If polygons are stacked vertically check up/down positions for
+            --opposite corners of the next polygon
+            IF strict_dir AND (NOT UNINIT(neigh[1].idx)) THEN
+              IF ((UNINIT(neigh[3].idx) OR UNINIT(neigh[4].idx)) AND (pth[neigh[1].idx].polygon <> pth[i].polygon)) THEN
+                polyidx = paths__get_opposite_polygon_corner(neigh[1].idx, pth, TRUE)
                 `GRAPH_CLASS_NAME`__addEdge(i, polyidx, PATH_LINK_POLY_COST)
               ENDIF
             ENDIF
-          ENDIF
-        ENDIF
-        IF (NOT UNINIT(neigh[4].idx)) THEN
-          IF pth[neigh[4].idx].polygon = pth[i].polygon THEN
-            `GRAPH_CLASS_NAME`__addEdge(i, (neigh[4].idx), PATH_LINK_SIDE_COST)
-          --if neighbor is on a different polygon 
-          ELSE
-            --at top or bottom of polygon record the left neighbor
-            IF strict_dir THEN
-              IF (UNINIT(neigh[1].idx) OR UNINIT(neigh[2].idx)) THEN
-                polyidx = paths__get_opposite_polygon_corner(neigh[4].idx, pth, FALSE)
+            IF strict_dir AND (NOT UNINIT(neigh[2].idx)) THEN
+              IF ((UNINIT(neigh[3].idx) OR UNINIT(neigh[4].idx)) AND (pth[neigh[2].idx].polygon <> pth[i].polygon)) THEN
+                polyidx = paths__get_opposite_polygon_corner(neigh[2].idx, pth, TRUE)
                 `GRAPH_CLASS_NAME`__addEdge(i, polyidx, PATH_LINK_POLY_COST)
               ENDIF
             ENDIF
-          ENDIF
-        ENDIF
-        --If polygons are stacked vertically check up/down positions for
-        --opposite corners of the next polygon
-        IF strict_dir AND (NOT UNINIT(neigh[1].idx)) THEN
-          IF ((UNINIT(neigh[3].idx) OR UNINIT(neigh[4].idx)) AND (pth[neigh[1].idx].polygon <> pth[i].polygon)) THEN
-            polyidx = paths__get_opposite_polygon_corner(neigh[1].idx, pth, TRUE)
-            `GRAPH_CLASS_NAME`__addEdge(i, polyidx, PATH_LINK_POLY_COST)
-          ENDIF
-        ENDIF
-        IF strict_dir AND (NOT UNINIT(neigh[2].idx)) THEN
-          IF ((UNINIT(neigh[3].idx) OR UNINIT(neigh[4].idx)) AND (pth[neigh[2].idx].polygon <> pth[i].polygon)) THEN
-            polyidx = paths__get_opposite_polygon_corner(neigh[2].idx, pth, TRUE)
-            `GRAPH_CLASS_NAME`__addEdge(i, polyidx, PATH_LINK_POLY_COST)
-          ENDIF
-        ENDIF
 
-      ENDIF
+          ENDIF
 
-      SELECT raster_type OF
-        --use diagonals
-        CASE(ONEWAY):
-          IF poly_depend THEN
-            IF (NOT UNINIT(neigh[5].idx)) THEN
-              IF pth[neigh[5].idx].polygon = pth[i].polygon THEN
-                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[5].idx), PATH_LINK_DIAG_COST)
+          SELECT raster_type OF
+            --use diagonals
+            CASE(ONEWAY):
+              IF poly_depend THEN
+                IF (NOT UNINIT(neigh[5].idx)) THEN
+                  IF pth[neigh[5].idx].polygon = pth[i].polygon THEN
+                    `GRAPH_CLASS_NAME`__addEdge(i, (neigh[5].idx), PATH_LINK_DIAG_COST)
+                  ENDIF
+                ENDIF
+                IF (NOT UNINIT(neigh[6].idx)) THEN
+                  IF pth[neigh[6].idx].polygon = pth[i].polygon THEN
+                    `GRAPH_CLASS_NAME`__addEdge(i, (neigh[6].idx), PATH_LINK_DIAG_COST)
+                  ENDIF
+                ENDIF
+              ELSE
+                IF (NOT UNINIT(neigh[5].idx)) THEN
+                  `GRAPH_CLASS_NAME`__addEdge(i, (neigh[5].idx), PATH_LINK_DIAG_COST)
+                ENDIF
+                IF (NOT UNINIT(neigh[6].idx)) THEN
+                    `GRAPH_CLASS_NAME`__addEdge(i, (neigh[6].idx), PATH_LINK_DIAG_COST)
+                ENDIF
               ENDIF
-            ENDIF
-            IF (NOT UNINIT(neigh[6].idx)) THEN
-              IF pth[neigh[6].idx].polygon = pth[i].polygon THEN
-                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[6].idx), PATH_LINK_DIAG_COST)
+            -- use up/down
+            CASE(ZIGZAG):
+              IF poly_depend THEN
+                IF (NOT UNINIT(neigh[1].idx)) THEN
+                  IF pth[neigh[1].idx].polygon = pth[i].polygon THEN
+                    `GRAPH_CLASS_NAME`__addEdge(i, (neigh[1].idx), PATH_LINK_VERT_COST)
+                  ENDIF
+                ENDIF
+                IF (NOT UNINIT(neigh[2].idx)) THEN
+                  IF pth[neigh[2].idx].polygon = pth[i].polygon THEN
+                    `GRAPH_CLASS_NAME`__addEdge(i, (neigh[2].idx), PATH_LINK_VERT_COST)
+                  ENDIF
+                ENDIF
+              ELSE
+                IF (NOT UNINIT(neigh[1].idx)) THEN
+                  `GRAPH_CLASS_NAME`__addEdge(i, (neigh[1].idx), PATH_LINK_VERT_COST)
+                ENDIF
+                IF (NOT UNINIT(neigh[2].idx)) THEN
+                  `GRAPH_CLASS_NAME`__addEdge(i, (neigh[2].idx), PATH_LINK_VERT_COST)
+                ENDIF
               ENDIF
-            ENDIF
-          ELSE
-            IF (NOT UNINIT(neigh[5].idx)) THEN
-              `GRAPH_CLASS_NAME`__addEdge(i, (neigh[5].idx), PATH_LINK_DIAG_COST)
-            ENDIF
-            IF (NOT UNINIT(neigh[6].idx)) THEN
-                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[6].idx), PATH_LINK_DIAG_COST)
-            ENDIF
-          ENDIF
-        -- use up/down
-        CASE(ZIGZAG):
-          IF poly_depend THEN
-            IF (NOT UNINIT(neigh[1].idx)) THEN
-              IF pth[neigh[1].idx].polygon = pth[i].polygon THEN
-                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[1].idx), PATH_LINK_VERT_COST)
-              ENDIF
-            ENDIF
-            IF (NOT UNINIT(neigh[2].idx)) THEN
-              IF pth[neigh[2].idx].polygon = pth[i].polygon THEN
-                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[2].idx), PATH_LINK_VERT_COST)
-              ENDIF
-            ENDIF
-          ELSE
-            IF (NOT UNINIT(neigh[1].idx)) THEN
-              `GRAPH_CLASS_NAME`__addEdge(i, (neigh[1].idx), PATH_LINK_VERT_COST)
-            ENDIF
-            IF (NOT UNINIT(neigh[2].idx)) THEN
-              `GRAPH_CLASS_NAME`__addEdge(i, (neigh[2].idx), PATH_LINK_VERT_COST)
-            ENDIF
-          ENDIF
+            ELSE:
+              karelError(INVALID_INDEX,'raster type not set correctly. See pathplan.klt.', ER_ABORT)
+          ENDSELECT
+
         ELSE:
-          karelError(INVALID_INDEX,'raster type not set correctly. See pathplan.klt.', ER_ABORT)
       ENDSELECT
 
     ENDFOR
