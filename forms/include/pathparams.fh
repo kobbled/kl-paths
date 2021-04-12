@@ -26,6 +26,12 @@ $-,enum_coord
 "Cyl"  &new_line  *
 "Pol"  &new_line  *
 * eol
+
+$-,enum_mtn
+"Dry Run"  &new_line *
+"Work"  &new_line  *
+"Scan"  &new_line  *
+* eol
 `
 
 *********

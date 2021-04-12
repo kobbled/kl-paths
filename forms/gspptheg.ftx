@@ -14,7 +14,7 @@ $-,ppth
   &new_line
   "-%t" &bold " Station Parameters" &standard &new_line
   " Station:      " "-%16w(enum_station)" &new_line
-  " Use Scanner:  " "-%6B(bool_fkey)" &new_line
+  " Execution:    " "-%8n(enum_mtn)" &new_line
   " Shape:        " "-%10w(enum_shapes)" &new_line
   " Coord System: " "-%8n(enum_coord)" &new_line
   " OD/ID:        " "-%8n(enum_idod)" &new_line

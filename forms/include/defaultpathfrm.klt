@@ -8,6 +8,27 @@
 %define STATION3_NAME tsrotw
 %define STATION3_CNFG defaultwrapperrot.klt
 
+------------------
+--scanning
+------------------
+%define ENABLE_SCANNING TRUE
+
+-- ****
+%ifeq ENABLE_SCANNING TRUE
+
+%define SCANNING_OBJECT_NAME tstscn
+%define SCANNING_CNFG defaultscan.klt
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define define_scan_object(object_name,cnfg_file) `%class object_name('scan_part.klc','scan_part.klh','cnfg_file')`
+%mode pop
+
+
+%endif
+
+-----------------
+
 --path wrapper
 ------------------
 %mode push
@@ -30,6 +51,7 @@
         display__show
     ENDSELECT
 
+    `station`__set_motion_type(motion_type)
     `station`__make(polyprm, toolprm, rastprm, motnprm)
     --free memory
     `station`__destructor$

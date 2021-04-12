@@ -15,15 +15,28 @@
     "forms/gspcuseg.ftx",
     "forms/frm_pad.kl"
   ],
+  "tp" : [
+    "motion/tp/general/mov_circ_rot.tpp",
+    "motion/tp/general/mov_line_rot.tpp",
+    "motion/tp/general/move_circ.tpp",
+    "motion/tp/general/move_line.tpp",
+    "motion/tp/scanning/mov_scn_rot.tpp",
+    "motion/tp/scanning/mov_scn.tpp",
+    "motion/tp/am/mov_am_circ.tpp",
+    "motion/tp/am/mov_am_crot.tpp",
+    "motion/tp/am/mov_am_line.tpp",
+    "motion/tp/am/mov_am_lrot.tpp"
+  ],
   "tests" : [
-    "test/test_paths.kl",
-    "test/test_pplan.kl"
+    "test/test_pth_mtn.kl",
+    "test/test_pth_rot.kl"
   ],
   "includes" : [
     "include",
     "include/paths",
     "include/pathplan",
     "include/rotary",
+    "include/motion",
     "forms/include"
   ],
   "depends" : [
@@ -34,6 +47,10 @@
     "draw",
     "forms",
     "pose",
+    "csv",
+    "tof-sensor",
+    "multitask",
+    "systemlib",
     "ktransw-macros"
   ],
   "tests-depends" : [

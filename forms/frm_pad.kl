@@ -1,7 +1,7 @@
 PROGRAM frm_pad
 %NOLOCKGROUP
 
---Load user template
+--** USER MODIFY : Load user template
 %include defaultpathfrm.klt
 
 %include klevkeys.kl
@@ -22,6 +22,7 @@ PROGRAM frm_pad
 %include ppth.kl
 %include ppad.kl
 
+%include errors.klt
 %include pathplan.klt
 %include paths.c.klt
 %include motion.klt
@@ -37,7 +38,7 @@ VAR
   --tree views
   stationTree, rasterTree, motionTree : BOOLEAN
   station IN CMOS: INTEGER
-  useScanner IN CMOS : BOOLEAN
+  motion_type IN CMOS : INTEGER
   shapeType IN CMOS : INTEGER
   filename IN CMOS : STRING[12]
   --default start corner
@@ -56,6 +57,11 @@ VAR
 --helper functions
 %from display.klh %import clear, show
 %include forms.klh
+%include errors.klh
+
+%ifeq ENABLE_SCANNING TRUE
+%include multitask.klh
+%endif
 
 --create objects for each workstation
 ---
@@ -71,6 +77,12 @@ pathswrapper_define(STATION3_NAME,STATION3_CNFG)
 pathswrapper_define(STATION4_NAME,STATION4_CNFG)
 %endif
 ---
+
+%ifeq ENABLE_SCANNING TRUE
+--create scanning object
+define_scan_object(SCANNING_OBJECT_NAME,SCANNING_CNFG)
+---
+%endif
 
 -- ** define form arrays
 %include frm_pad.i.klt
@@ -140,6 +152,18 @@ BEGIN
     ENDSELECT
 
     IF (term_char = ky_f2) THEN
+%ifeq ENABLE_SCANNING TRUE
+      IF (motion_type = MOVE_SCANING) THEN
+        --load variables into scanning object
+        `SCANNING_OBJECT_NAME`__set_coord_sys(toolprm.coordSys, 3)
+        --enable scanner
+        IF NOT task__thread('SCANNING_OBJECT_NAME') THEN
+            karelError(RUN_TASK_FAILED, 'scan task did not start',ER_ABORT)
+        ENDIF
+      ENDIF
+%endif
+      --draw shape and raster
+      --move through raster
       SELECT station OF
         CASE(1):
           frame_path_station_instructions(STATION1_NAME)
@@ -151,6 +175,14 @@ BEGIN
           WRITE TPDISPLAY(CR, 'Workstation not selected properly')
           display__show
       ENDSELECT
+
+%ifeq ENABLE_SCANNING TRUE
+      IF (motion_type = MOVE_SCANING) THEN
+        --stop scanning process
+        `SCANNING_OBJECT_NAME`__set_scan_finished
+      ENDIF
+%endif
+
     ELSE
       WRITE TPDISPLAY(CR, 'Must hit RUN on form to continue')
       WRITE TPDISPLAY(CR, 'Shift should not be held down.')
