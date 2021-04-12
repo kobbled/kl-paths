@@ -169,6 +169,7 @@ ROUTINE t_rot_OD
     bbox = tstpoly__get_bounding_box
     tstrot__createPath(lines, contours, origin, OD_CORNER, ONEWAY, FALSE)
     --move through path
+    tstrot__set_prog_names(MOVE_DRYRUN)
     tstrot__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
 
     --get lists
@@ -243,6 +244,7 @@ ROUTINE t_rot_ID
     bbox = tstpoly__get_bounding_box
     tstrot__createPath(lines, contours, origin, ID_CORNER, ONEWAY, FALSE)
     --move through path
+    tstrot__set_prog_names(MOVE_DRYRUN)
     tstrot__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT) )
 
     --get lists

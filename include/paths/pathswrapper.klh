@@ -9,6 +9,8 @@ header_def -- define class
 
 declare_member(class_name,destructor,class_name,dstr)
 ROUTINE destructor FROM class_name
+declare_member(class_name,set_motion_type,class_name,stmp)
+ROUTINE set_motion_type(typ : INTEGER) FROM class_name
 declare_member(class_name,make,class_name,make)
 ROUTINE make(polyprm : t_PATH_VARS ; toolprm : t_TOOL_VARS ; & 
              rastprm : t_PATH_RAST ; motnprm : t_MOTION_PRM) FROM class_name

@@ -31,6 +31,12 @@ CONST
   PTH_CYLINDER = 2
   PTH_POLAR = 3
 
+--motion program enum
+CONST
+  MOVE_DRYRUN = 1
+  MOVE_WORKING = 2
+  MOVE_SCANING = 3
+
 
 -- ..note:: some of these might be redundant if fixing issue with
 --          convert2pos

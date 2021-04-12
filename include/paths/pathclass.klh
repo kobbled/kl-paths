@@ -22,6 +22,8 @@ declare_member(class_name,set_interpolation,class_name,stitp)
 ROUTINE set_interpolation(interp : BOOLEAN) FROM class_name
 declare_member(class_name,set_coordinate_system,class_name,stcrd)
 ROUTINE set_coordinate_system(system : INTEGER ; z_axis : INTEGER) FROM class_name
+declare_member(class_name,set_prog_names,class_name,stprg)
+ROUTINE set_prog_names(prog_typ : INTEGER) FROM class_name
 --getters
 declare_member(class_name,get_path,class_name,gtpth)
 ROUTINE get_path(out_path : PATH nodedata = t_TOOLPATH) FROM class_name

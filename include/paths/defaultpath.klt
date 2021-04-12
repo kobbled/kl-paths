@@ -34,9 +34,12 @@
 %define TOOL_ORIENT_UP 0,0,0
 %define TOOL_ORIENT_DOWN 0,0,180
 
---programs
-%define LINEAR_MOVE_PROG 'MOVE_LINE'
-%define ARC_MOVE_PROG 'MOVE_CIRC'
+--motion programs
+%define DRYRUN_LINE_PROG 'MOVE_LINE'
+%define DRYRUN_CIRC_PROG 'MOVE_CIRC'
+%define WORK_LINE_PROG 'MOV_AM_LINE'
+%define WORK_CIRC_PROG 'MOV_AM_CIRC'
+%define SCAN_LINE_PROG 'MOV_SCN'
 
 %defeval OD_CORNER RIGHT_BOTTOM
 %defeval ID_CORNER LEFT_BOTTOM
@@ -87,7 +90,7 @@ ROUTINE poseMul(nde1 : PATH_DATA_TYPE; nde2 : PATH_DATA_TYPE) : PATH_DATA_TYPE
 declare_member(parent,poseInv,parent,psinv)
 ROUTINE poseInv(nde1 : PATH_DATA_TYPE) : PATH_DATA_TYPE
   BEGIN
-    RETURN(INV(nde1))
+    RETURN(INV((nde1)))
   END poseInv
 `
 %mode pop

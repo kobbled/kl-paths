@@ -21,6 +21,7 @@ define_paths_types(PATH_DATA_TYPE, PATH_OBJECT_NAME)
 VAR
   origin : XYZWPR
   tool : XYZWPR
+  motion_type : INTEGER
   bbox : t_RECT
   contours : PATH nodedata = t_VEC_PATH
   lines : PATH nodedata = t_VEC_PATH
@@ -116,6 +117,7 @@ ROUTINE raster
 
 ROUTINE move
   BEGIN
+    `PATH_OBJECT_NAME`__set_prog_names(motion_type)
     --move though path
     IF (motnprm.use_arc) THEN
 %ifeq GENERATE_FULL_PATH TRUE
@@ -162,6 +164,7 @@ ROUTINE destructor
     --pause for visualization before releasing memory
     PAUSE
 %endif
+    motion_type = 0
     --clear wrapper members
     paths__clear_vecpath(contours)
     paths__clear_vecpath(lines)
@@ -172,6 +175,11 @@ ROUTINE destructor
     --clear path object
     `PATH_OBJECT_NAME`__destructor
   END destructor
+
+ROUTINE set_motion_type
+  BEGIN
+    motion_type = typ
+  END set_motion_type
 
 ROUTINE make
   VAR

@@ -498,6 +498,7 @@ ROUTINE paths__map_to_bounding_box
             --get projected point on right side of box
             data[i].approach = math__proj((v - bboxs[data[i].polygon].verts[2]), bboxs[data[i].polygon].vec[2]) + bboxs[data[i].polygon].verts[2]
           ENDIF
+        ELSE:
       ENDSELECT
     ENDFOR
   END paths__map_to_bounding_box

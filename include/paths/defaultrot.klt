@@ -18,9 +18,12 @@
 %define ROT_DRIVING_AXIS 1 
 %define ROT_DIRECTION -1
 
---programs
-%define LINEAR_MOVE_PROG 'MOVE_LINE_ROT'
-%define ARC_MOVE_PROG 'MOVE_CIRC_ROT'
+--motion programs
+%define DRYRUN_LINE_PROG 'MOV_LINE_ROT'
+%define DRYRUN_CIRC_PROG 'MOV_CIRC_ROT'
+%define WORK_LINE_PROG 'MOV_AM_LROT'
+%define WORK_CIRC_PROG 'MOV_AM_CROT'
+%define SCAN_LINE_PROG 'MOV_SCN_ROT'
 
 --dynamic userframe variables
 %define CD_PAIR 1
