@@ -10,6 +10,7 @@ $-,ppad
   " Radius:                " "-%6.2f" &new_line
   " Start Degree:          " "-%6.2f" &new_line
   " Start Dist:            " "-%6.2f" &new_line
+  " Pad Angle:             " "-%6.2f" &new_line
   " No. of Pads:           " "-%5d" &new_line
   " Pad Sep. (Degs):       " "-%6.2f" &new_line
   ^ppad_fkey

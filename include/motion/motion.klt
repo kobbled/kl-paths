@@ -8,6 +8,7 @@ TYPE
     yStart : REAL
     height : REAL
     polyAngle : REAL
+    polyRotation : REAL
   ENDSTRUCTURE
 
   t_TOOL_VARS FROM paths = STRUCTURE

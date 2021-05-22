@@ -60,6 +60,7 @@ ROUTINE init_pthList
     IF UNINIT(motnprm.link_step) THEN motnprm.link_step = 90; ENDIF
     IF UNINIT(motnprm.use_arc) THEN motnprm.use_arc = TRUE; ENDIF
 
+    IF UNINIT(polyprm.polyRotation) THEN polyprm.polyRotation = 0 ; ENDIF
     IF UNINIT(polyprm.polyAngle) THEN polyprm.polyAngle = 0 ; ENDIF
   END init_pthList
 `
@@ -72,9 +73,10 @@ ROUTINE init_pthList
     draw_val_arr[3] = '['+ps+']polyprm.height'
     draw_val_arr[4] = '['+ps+']polyprm.xStart'
     draw_val_arr[5] = '['+ps+']polyprm.yStart'
-    draw_val_arr[6] = '['+ps+']padprm.no_of_pads'
-    draw_val_arr[7] = '['+ps+']padprm.separation'
-    draw_val_arr[8] = ''
+    draw_val_arr[6] = '['+ps+']polyprm.polyAngle'
+    draw_val_arr[7] = '['+ps+']padprm.no_of_pads'
+    draw_val_arr[8] = '['+ps+']padprm.separation'
+    draw_val_arr[9] = ''
   END frm_padList
 
 ROUTINE init_padList
@@ -94,9 +96,10 @@ ROUTINE frm_hexList
     draw_val_arr[3] = '['+ps+']polyprm.height'
     draw_val_arr[4] = '['+ps+']polyprm.xStart'
     draw_val_arr[5] = '['+ps+']polyprm.yStart'
-    draw_val_arr[6] = '['+ps+']polyprm.polyAngle'
-    draw_val_arr[7] = ''
+    draw_val_arr[6] = '['+ps+']polyprm.polyRotation'
+    draw_val_arr[7] = '['+ps+']polyprm.polyAngle'
     draw_val_arr[8] = ''
+    draw_val_arr[9] = ''
   END frm_hexList
 
 ROUTINE init_hexList
@@ -113,10 +116,11 @@ ROUTINE frm_cusList
     draw_val_arr[2] = '['+ps+']polyprm.height'
     draw_val_arr[3] = '['+ps+']polyprm.xStart'
     draw_val_arr[4] = '['+ps+']polyprm.yStart'
-    draw_val_arr[5] = '['+ps+']polyprm.polyAngle'
-    draw_val_arr[6] = ''
+    draw_val_arr[5] = '['+ps+']polyprm.polyRotation'
+    draw_val_arr[6] = '['+ps+']polyprm.polyAngle'
     draw_val_arr[7] = ''
     draw_val_arr[8] = ''
+    draw_val_arr[9] = ''
   END frm_cusList
 `
 

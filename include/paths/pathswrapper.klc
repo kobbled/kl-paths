@@ -64,6 +64,7 @@ ROUTINE createPath
     cds : t_COORD_SYS
     p : XYZWPR
     v : VECTOR
+    st : REAL
   BEGIN
     --initialize path
       --coordinate system
@@ -93,7 +94,7 @@ ROUTINE createPath
     `PATH_OBJECT_NAME`__set_idod((toolprm.idod))
     
     --generate path
-    origin = POS((polyprm.xStart), (polyprm.yStart), (polyprm.height), 0,0,0, pose__set_config(DEFAULT_CONFIG))
+    origin = POS((polyprm.xStart), (polyprm.yStart), (polyprm.height), (polyprm.polyAngle*toolprm.idod),0,0, pose__set_config(DEFAULT_CONFIG))
     `PATH_OBJECT_NAME`__createPath(lines, contours, origin, (rastprm.startCorner), (rastprm.rastType), (rastprm.constrain))
   END createPath
 
@@ -232,7 +233,7 @@ ROUTINE drawHex
   BEGIN
     --draw pads
     `DRAW_OBJECT_NAME`__new
-    `DRAW_OBJECT_NAME`__hexagon((hexprm.radius), (hexprm.points), VEC2D(0, 0), (polyprm.polyAngle))
+    `DRAW_OBJECT_NAME`__hexagon((hexprm.radius), (hexprm.points), VEC2D(0, 0), (polyprm.polyRotation))
 
     --raster shape
     raster(toolprm, rastprm)
@@ -249,7 +250,7 @@ ROUTINE drawCustom
 
     --draw pads
     `DRAW_OBJECT_NAME`__new
-    p = POS(0,0,0,0,0,(polyprm.polyAngle),pose__set_config(DEFAULT_CONFIG))
+    p = POS(0,0,0,0,0,(polyprm.polyRotation),pose__set_config(DEFAULT_CONFIG))
     `DRAW_OBJECT_NAME`__set_canvas(p)
     `DRAW_OBJECT_NAME`__import_shape('FR:\' + filename + '.csv')
 

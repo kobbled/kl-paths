@@ -10,6 +10,7 @@ $-,pcus
   " Start X:       " "-%6.2f" &new_line
   " Start Y:       " "-%6.2f" &new_line
   " Polygon Rotation:   " "-%6.2f" &new_line
+  " Polygon Pitch:      " "-%6.2f" &new_line
   ^pcus_fkey
 .endform
 $-,pcus_fkey     *function key labels

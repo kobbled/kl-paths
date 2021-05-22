@@ -11,6 +11,7 @@ $-,phex
   " Start X:            " "-%6.2f" &new_line
   " Start Y:            " "-%6.2f" &new_line
   " Polygon Rotation:   " "-%6.2f" &new_line
+  " Polygon Pitch:      " "-%6.2f" &new_line
   ^phex_fkey
 .endform
 $-,phex_fkey     *function key labels

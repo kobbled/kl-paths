@@ -40,8 +40,10 @@ $-,ppth_fkey     *function key labels
     "  NEXT" &new_line
 * fkeys
 #eval tf_keys
-* defaultpad
-#eval form_station_define
+* station names
+$-,enum_station
+    "frm_pad" &new_line * program name of variable
+    "station_name" &new_line * variable name containing choices
 * pathparams
 #eval define_form_shapes
 #eval define_tool_params
