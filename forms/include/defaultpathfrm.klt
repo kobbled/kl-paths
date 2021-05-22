@@ -8,7 +8,22 @@
 %define STATION3_NAME tsrotw
 %define STATION3_CNFG defaultwrapperrot.klt
 
+--station names
 ------------------
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define define_station_names(variableName) `ROUTINE make_station
+  BEGIN
+    --first entry must be blank
+    variableName[1] = ''
+    variableName[2] = 'Plate Station'
+    variableName[3] = 'Vertical Station'
+    variableName[4] = 'Headstock 1'
+  END make_station`
+%mode pop
+-----------------
+
+
 --scanning
 ------------------
 %define ENABLE_SCANNING TRUE
@@ -35,7 +50,11 @@
 %mode string QQQ "`" "`" "\\"
 %define pathswrapper_define(object_name,cnfg_file) `%class object_name('pathswrapper.klc','pathswrapper.klh','cnfg_file')`
 %mode pop
+-----------------
 
+
+--drawing type
+------------------
 %mode push
 %mode string QQQ "$" "$" "\\"
 %define frame_path_station_instructions(station) $

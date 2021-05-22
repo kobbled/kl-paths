@@ -6,13 +6,15 @@
   "license" : "MIT",
   "author" : "kobbled",
   "source" : [
-    "src/paths.kl"
+    "src/paths.kl",
+    "src/lam.kl"
   ],
   "forms" : [
     "forms/gspptheg.ftx",
     "forms/gsppadeg.ftx",
     "forms/gsphexeg.ftx",
     "forms/gspcuseg.ftx",
+    "forms/gsworkeg.ftx",
     "forms/frm_pad.kl"
   ],
   "tp" : [
@@ -37,6 +39,7 @@
     "include/pathplan",
     "include/rotary",
     "include/motion",
+    "include/lam",
     "forms/include"
   ],
   "depends" : [

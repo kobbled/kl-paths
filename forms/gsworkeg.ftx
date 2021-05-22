@@ -1,0 +1,24 @@
+*     Dictionary Form File : gsworkeg
+*
+.kl work
+.form
+$-,work
+  &home &reverse "AM parameters" &standard &new_line
+  &new_line
+  &bold " Laser Parameters " &standard &new_line
+  " Laser Power (W):       " "-%5d" &new_line
+  &bold " Powder Parameters " &standard &new_line
+  " Hopper:                " "-%8n(enum_feeder)" &new_line
+  " Feeder Speed (RPM):    " "-%4.2f" &new_line
+  " Gas Flow (LPM):        " "-%4.2f" &new_line
+  " Flow Rate (g/s):       " "-%5.3f" &new_line
+  " Clad Height (Thou):    " "-%5.3f" &new_line
+  ^work_fkey
+.endform
+$-,work_fkey     *function key labels
+    "  RUN" &new_line
+
+$-,enum_feeder
+"1"  &new_line *
+"2"  &new_line  *
+* eol

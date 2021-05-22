@@ -4,16 +4,13 @@
 #include fkeys.fh
 #include pathparams.fh
 
-* **CHANGE. USER DEPENDANT
-#include defaultpad.fh
-
 .kl ppth
 .form
 $-,ppth
   &home &reverse "Raster a Shape" &standard &new_line
   &new_line
   "-%t" &bold " Station Parameters" &standard &new_line
-  " Station:      " "-%16w(enum_station)" &new_line
+  " Station:      " "-%16v(enum_station)" &new_line
   " Execution:    " "-%8n(enum_mtn)" &new_line
   " Shape:        " "-%10w(enum_shapes)" &new_line
   " Coord System: " "-%8n(enum_coord)" &new_line

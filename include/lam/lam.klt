@@ -1,0 +1,18 @@
+%ifndef lam_types_t
+%define lam_types_t
+
+--motion types
+TYPE
+  t_LASER FROM lam = STRUCTURE
+    power : INTEGER
+  ENDSTRUCTURE
+
+  t_POWDER FROM lam = STRUCTURE
+    hopper : INTEGER
+    rpm : REAL
+    lpm : REAL
+    flow_rate : REAL
+    height : REAL
+  ENDSTRUCTURE
+
+%endif --lam_types_t

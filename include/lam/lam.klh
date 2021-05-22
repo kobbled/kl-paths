@@ -1,0 +1,16 @@
+%ifndef lam_h
+%define lam_h
+
+%include namespace.m
+
+%define prog_name lam
+%define prog_name_alias lam
+
+--clear functions
+declare_function(prog_name,set_registers,prog_name_alias,streg)
+ROUTINE lam__set_registers FROM lam
+declare_function(prog_name,start,prog_name_alias,start)
+ROUTINE lam__start FROM lam
+declare_function(prog_name,stop,prog_name_alias,stop)
+ROUTINE lam__stop FROM lam
+%endif --lam_h

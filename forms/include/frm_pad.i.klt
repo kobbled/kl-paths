@@ -10,7 +10,7 @@
     path_val_arr[3] = '['+ps+']motion_type'
     path_val_arr[4] = '['+ps+']shapeType'
     path_val_arr[5] = '['+ps+']toolprm.coordSys'
-    path_val_arr[6] = '['+ps+']toolprm.idod'
+    path_val_arr[6] = '['+ps+']idod_'
     path_val_arr[7] = '['+ps+']toolprm.pitch'
     --raster info
     path_val_arr[8] = '['+ps+']rasterTree'
@@ -41,7 +41,7 @@ ROUTINE init_pthList
     IF UNINIT(shapeType) THEN shapeType = 1 ; ENDIF
     --tool params
     IF UNINIT(toolprm.coordSys) THEN toolprm.coordSys = 2; ENDIF
-    IF UNINIT(toolprm.idod) THEN toolprm.idod = 1; ENDIF
+    IF UNINIT(idod_) THEN idod_ = 1; ENDIF
     IF UNINIT(toolprm.pitch) THEN toolprm.pitch = 0; ENDIF
     IF UNINIT(toolprm.retractDist) THEN toolprm.retractDist = 5; ENDIF
     --raster params
@@ -118,6 +118,26 @@ ROUTINE frm_cusList
     draw_val_arr[7] = ''
     draw_val_arr[8] = ''
   END frm_cusList
+`
+
+%define make_work_indicies(ps) `ROUTINE frm_wrkList
+  BEGIN
+    --pad parameters
+    work_val_arr[1] = '['+ps+']lsrprm.power'
+    work_val_arr[2] = '['+ps+']powprm.hopper'
+    work_val_arr[3] = '['+ps+']powprm.rpm'
+    work_val_arr[4] = '['+ps+']powprm.lpm'
+    work_val_arr[5] = '['+ps+']powprm.flow_rate'
+    work_val_arr[6] = '['+ps+']powprm.height'
+    work_val_arr[7] = ''
+  END frm_wrkList
+
+ROUTINE init_wrkList
+  BEGIN
+    --pad params
+    IF UNINIT(lsrprm.power) THEN lsrprm.power = 3000 ; ENDIF
+    IF UNINIT(powprm.hopper) THEN powprm.hopper = 1 ; ENDIF
+  END init_wrkList
 `
 
 %mode pop
