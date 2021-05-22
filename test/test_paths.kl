@@ -586,6 +586,89 @@ ROUTINE t_pads : BOOLEAN
     RETURN(kunit_eq_arp(exp_path, act_path))
   END t_pads
 
+
+ROUTINE t_lpads : BOOLEAN
+  VAR
+%define PAD_WIDTH 60
+%define PAD_LENGTH 60
+%defeval PAD_SEPERATION 90
+%define NO_OF_PADS 3
+
+%define RASTER_ANGLE 0
+%define PASS_OVERLAP 10
+%define CONTOUR_LINES 0
+%define TOOLING_STEP 20
+%define LINKING_STEP 50
+    origin : XYZWPR
+    bbox : t_RECT
+%define SAMPLE_START 50
+%define SAMPLE_END 70
+    i, j : INTEGER
+    act_path, exp_path : ARRAY[11] OF XYZWPR
+  BEGIN
+    -- ** drawing **
+    --draw pads
+    tstpoly__clear
+    tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
+    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(50,0) )
+
+    --get raster lines
+    -- (start_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstpoly__raster(PTH_LINETO)
+    --get lines and contours
+    paths__clear_vecpath(lines)
+    paths__clear_vecpath(contours)
+    tstpoly__lines_to_vec_path(lines)
+    tstpoly__contours_to_vec_path(contours)
+
+    -- ** planning **
+    origin = POS(0,0,100,90,0,0, pose__set_config(RBT_CONFIG))
+    --generate path
+    tstpln__init(lines, origin)
+    --(poly_depend, strict_dir)
+    tstpln__raster_graph(ONEWAY, TRUE, TRUE)
+    -- (add to kd tree)
+    tstpln__append_path(contours, FALSE)
+     --get start node
+    bbox = tstpoly__get_bounding_box
+    tstpln__MST(tstpln__closest_bounding_box(2))
+    --set point orientation
+    tstpln__set_orientation(VEC(90,0,0))
+
+    paths__clear_toolpath(pth)
+    REPEAT
+      SELECT (tstpln__next_toolpath) OF
+        CASE(PTH_TOOLING):
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+        CASE(PTH_LINKING):
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+      ENDSELECT
+    UNTIL( tstpln__is_path_end )
+
+    j = 1
+    i=SAMPLE_START
+    WHILE i <= SAMPLE_END DO
+      act_path[j] = pth[i].v
+      i = i + 2
+      j = j + 1
+    ENDWHILE
+
+    exp_path[1] = POS(180,0,110,-180,0,0,(ZEROPOS(1).config_data))
+    exp_path[2] = POS(140,-0,110,-180, 0, 0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(200,-0,120,-180, 0, 0, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(180,-0,120,-180, 0, 0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(140,-0,120,-180, 0, 0, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(200,-0,130,-180, 0, 0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(180,-0,130,-180, 0, 0, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(140,-0,130,-180, 0, 0, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(200,-0,140,-180, 0, 0, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(180,-0,140,-180, 0, 0, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(140,-0,140,-180, 0, 0, (ZEROPOS(1).config_data))
+
+    RETURN(kunit_eq_arp(exp_path, act_path))
+  END t_lpads
+
 ROUTINE t_pvert_OD : BOOLEAN
   VAR
 %define PAD_RADIUS 100
@@ -775,13 +858,14 @@ BEGIN
 %endif
 
   --** use kunit
-  kunit_test('flat polygon path planning', t_flat_pnts)
-  kunit_test('cylindrical coordinates path planning', t_cyld_pnts)
-  kunit_test('polar coordinates path planning', t_pol_pnts)
-  kunit_test('hexagon path', t_hex_pnts)
-  kunit_test('pads path', t_pads)
-  kunit_test('pads vertical path OD', t_pvert_OD)
-  kunit_test('pads vertical path ID', t_pvert_ID)
+  -- kunit_test('flat polygon path planning', t_flat_pnts)
+  -- kunit_test('cylindrical coordinates path planning', t_cyld_pnts)
+  -- kunit_test('polar coordinates path planning', t_pol_pnts)
+  -- kunit_test('hexagon path', t_hex_pnts)
+  -- kunit_test('pads path', t_pads)
+  -- kunit_test('lpads path', t_lpads)
+  -- kunit_test('pads vertical path OD', t_pvert_OD)
+  -- kunit_test('pads vertical path ID', t_pvert_ID)
   kunit_done
 
   --clean up

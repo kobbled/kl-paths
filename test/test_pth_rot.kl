@@ -115,6 +115,8 @@ ROUTINE t_rot_OD
 %defeval PAD_SEPERATION 0
 %define PAD_START_DEG 0
 %define PAD_START_DIST 100
+-- set to 90 for vertical, or 135 for bevel
+%define PAD_ANGLE 0
 %define NO_OF_PADS 1
 %define RETRACT_RADIUS 30
 %defeval RETRACT_HEIGHT (RETRACT_RADIUS)
@@ -165,14 +167,14 @@ ROUTINE t_rot_OD
     tstrot__set_idod(PAD_IDOD)
 
     --generate path
-    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
+    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,PAD_ANGLE,0,0,pose__set_config(DEFAULT_CONFIG))
     bbox = tstpoly__get_bounding_box
     tstrot__createPath(lines, contours, origin, OD_CORNER, ONEWAY, FALSE)
     --move through path
     tstrot__set_prog_names(MOVE_DRYRUN)
     tstrot__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
 
-    --get lists
+    -- --get lists
     -- tstrot__get_plan(path_plan)
     -- tstrot__get_path(pth)
 
@@ -190,6 +192,8 @@ ROUTINE t_rot_ID
 %defeval PAD_SEPERATION 0
 %define PAD_START_DEG 180
 %define PAD_START_DIST 100
+-- set to -90 for vertical, or -135 for bevel
+%define PAD_ANGLE 0
 %define NO_OF_PADS 1
 %define RETRACT_RADIUS 30
 %defeval RETRACT_HEIGHT (RETRACT_RADIUS)
@@ -240,14 +244,14 @@ ROUTINE t_rot_ID
     tstrot__set_idod(PAD_IDOD)
 
     --generate path
-    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
+    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,PAD_ANGLE,0,0,pose__set_config(DEFAULT_CONFIG))
     bbox = tstpoly__get_bounding_box
     tstrot__createPath(lines, contours, origin, ID_CORNER, ONEWAY, FALSE)
     --move through path
     tstrot__set_prog_names(MOVE_DRYRUN)
     tstrot__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT) )
 
-    --get lists
+    -- --get lists
     -- tstrot__get_plan(path_plan)
     -- tstrot__get_path(pth)
 

@@ -547,14 +547,14 @@ BEGIN
   usrdis__constructor(LOG_NAME, FALSE, SHOW_DEBUG, TRUE)
   usrdis__clear_file
 %endif
-  -- kunit_test('test raster NN path plan', t_NN)
-  -- -- ..issue:: kunit_test('test raster query', t_rast_neigh)
-  -- kunit_test('test raster path', t_rast_path)
-  -- kunit_test('test raster multi polygons', t_rast_multi)
-  -- kunit_test('test raster multi polygon indep', t_rast_mult2)
-  -- kunit_test('test raster hexagon poly', t_hexagon)
+  kunit_test('test raster NN path plan', t_NN)
+  -- ..issue:: kunit_test('test raster query', t_rast_neigh)
+  kunit_test('test raster path', t_rast_path)
+  kunit_test('test raster multi polygons', t_rast_multi)
+  kunit_test('test raster multi polygon indep', t_rast_mult2)
+  kunit_test('test raster hexagon poly', t_hexagon)
   -- -- kunit_test('test raster heagon poly', t_temp)
-  kunit_test('test import raster path', t_import)
+  -- --kunit_test('test import raster path', t_import)
 
   kunit_done
 

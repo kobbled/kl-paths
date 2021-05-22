@@ -30,7 +30,6 @@
     "motion/tp/am/mov_am_lrot.tpp"
   ],
   "tests" : [
-    "test/test_pth_mtn.kl",
     "test/test_pth_rot.kl"
   ],
   "includes" : [
