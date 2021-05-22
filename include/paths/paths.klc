@@ -48,36 +48,6 @@ define_paths_members(class_name)
 
 --private
 
-ROUTINE set_orientation
-  VAR
-    orient : VECTOR
-  BEGIN
-    --set point orientation
-    SELECT (coord_system.system) OF
-      CASE(PTH_CYLINDER):
-        IF idod = -1 THEN
-          orient = UP_NORMAL
-        ELSE
-          orient = DOWN_NORMAL
-        ENDIF
-      CASE(PTH_POLAR):
-        IF idod = -1 THEN
-          orient = POLAR_UP_NORMAL
-        ELSE
-          orient = POLAR_DOWN_NORMAL
-        ENDIF
-      --cartesian
-      ELSE:
-        IF idod = -1 THEN
-          orient = UP_NORMAL
-        ELSE
-          orient = DOWN_NORMAL
-        ENDIF
-    ENDSELECT
-
-    RETURN(orient)
-  END set_orientation
-
 ROUTINE next_toolpath
 %ifdef ROT_GRP
   VAR
@@ -293,6 +263,8 @@ ROUTINE get_plan
   END get_plan
 
 ROUTINE createPath
+  VAR
+    orient : VECTOR
   BEGIN
     `PATH_PLAN_NAME`__init(lines, origin)
     IF raster_type = NEARESTNEIGHBOR THEN
@@ -304,14 +276,16 @@ ROUTINE createPath
 
     IF PATH_LEN(contours) > 0 THEN
       --append contours after to not include in rastering process
-      -- (add to kd tree)
+      -- (add to kd tree) = FALSE
       `PATH_PLAN_NAME`__append_path(contours, FALSE)
     ENDIF
 
     `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
 
     --set point orientation
-    `PATH_PLAN_NAME`__set_orientation( set_orientation(idod_) )
+    orient = paths__set_orientation((coord_system.system), idod_)
+    orient = orient - VEC(origin.w, origin.p, origin.r)
+    `PATH_PLAN_NAME`__set_orientation( orient )
 
   END createPath
 
@@ -333,7 +307,7 @@ ROUTINE loadPath
     `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
 
     --set point orientation
-    `PATH_PLAN_NAME`__set_orientation( set_orientation(idod_) )
+    `PATH_PLAN_NAME`__set_orientation( paths__set_orientation((coord_system.system), idod_) )
 
   END loadPath
 
@@ -344,10 +318,10 @@ ROUTINE makeline
     paths__clear_toolpath(segment)
     --add start point
     APPEND_NODE(segment,status)
-    segment[PATH_LEN(segment)] = paths__new_tpath(pose__vector_to_pose(start_point, set_orientation(idod_), frm.config_data), PTH_MOVETO, line_typ)
+    segment[PATH_LEN(segment)] = paths__new_tpath(pose__vector_to_pose(start_point, paths__set_orientation((coord_system.system), idod_), frm.config_data), PTH_MOVETO, line_typ)
     --add end point
     APPEND_NODE(segment,status)
-    segment[PATH_LEN(segment)] = paths__new_tpath(pose__vector_to_pose(end_point, set_orientation(idod_), frm.config_data), PTH_CLOSE, line_typ)
+    segment[PATH_LEN(segment)] = paths__new_tpath(pose__vector_to_pose(end_point, paths__set_orientation((coord_system.system), idod_), frm.config_data), PTH_CLOSE, line_typ)
 
     paths__clear_toolpath(pth)
     paths__interpolate_toolpath(segment, (spacing), line_code, POS(0,0,0,0,0,0,frm.config_data), pth)

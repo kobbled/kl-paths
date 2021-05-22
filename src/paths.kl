@@ -395,6 +395,36 @@ ROUTINE paths__new_coord_sys
     RETURN(cs)
   END paths__new_coord_sys
 
+ROUTINE paths__set_orientation
+  VAR
+    orient : VECTOR
+  BEGIN
+    --set point orientation
+    SELECT (crd_sys) OF
+      CASE(PTH_CYLINDER):
+        IF idod = -1 THEN
+          orient = UP_NORMAL
+        ELSE
+          orient = DOWN_NORMAL
+        ENDIF
+      CASE(PTH_POLAR):
+        IF idod = -1 THEN
+          orient = POLAR_UP_NORMAL
+        ELSE
+          orient = POLAR_DOWN_NORMAL
+        ENDIF
+      --cartesian
+      ELSE:
+        IF idod = -1 THEN
+          orient = UP_NORMAL
+        ELSE
+          orient = DOWN_NORMAL
+        ENDIF
+    ENDSELECT
+
+    RETURN(orient)
+  END paths__set_orientation
+
 ROUTINE paths__total_polygons
   VAR
     i : INTEGER

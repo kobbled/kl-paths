@@ -27,6 +27,8 @@ declare_function(prog_name,new_tpath,prog_name_alias,ntpth)
 ROUTINE paths__new_tpath(v : XYZWPR ; code : INTEGER ; typ : INTEGER) : t_TOOLPATH FROM paths
 declare_function(prog_name,new_coord_sys,prog_name_alias,ncord)
 ROUTINE paths__new_coord_sys(system : INTEGER ; z_axis : INTEGER) : t_COORD_SYS FROM paths
+declare_function(prog_name,set_orientation,prog_name_alias,storn)
+ROUTINE paths__set_orientation(crd_sys : INTEGER; idod : INTEGER) : VECTOR FROM paths
 
 --planning functions
 declare_function(prog_name,opposite_code,prog_name_alias,ocde)

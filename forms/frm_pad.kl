@@ -6,10 +6,13 @@ PROGRAM frm_pad
 
 %include klevkeys.kl
 
---user macros for defining form properties
 %define prog_str 'frm_pad'
+
+--user forms for defining main parameters
 %define dict_file 'gspptheg'
 %define dict_str 'PPTH'
+
+--user forms for defining polygons
 %define dict_file2 'gsppadeg'
 %define dict_str2 'PPAD'
 %define dict_file3 'gsphexeg'
@@ -41,6 +44,7 @@ VAR
   motion_type IN CMOS : INTEGER
   shapeType IN CMOS : INTEGER
   filename IN CMOS : STRING[12]
+  orient : VECTOR
   --default start corner
   startCorner IN CMOS : INTEGER
   polyprm IN CMOS  : t_PATH_VARS
@@ -56,6 +60,8 @@ VAR
 
 --helper functions
 %from display.klh %import clear, show
+%from paths.klh %import set_orientation
+%from systemlib.klh %import VEC
 %include forms.klh
 %include errors.klh
 
@@ -153,35 +159,55 @@ BEGIN
 
     IF (term_char = ky_f2) THEN
 %ifeq ENABLE_SCANNING TRUE
-      IF (motion_type = MOVE_SCANING) THEN
-        --load variables into scanning object
-        `SCANNING_OBJECT_NAME`__set_coord_sys(toolprm.coordSys, 3)
-        --enable scanner
-        IF NOT task__thread('SCANNING_OBJECT_NAME') THEN
-            karelError(RUN_TASK_FAILED, 'scan task did not start',ER_ABORT)
-        ENDIF
-      ENDIF
+        CASE(MOVE_SCANING):
+          orient = paths__set_orientation(toolprm.coordSys, toolprm.idod)
+          orient = orient - VEC(polyprm.polyAngle, 0, 0)
+          --load variables into scanning object
+          `SCANNING_OBJECT_NAME`__init(toolprm.coordSys, 3, orient)
+          --enable scanner
+          IF NOT task__thread('SCANNING_OBJECT_NAME') THEN
+              karelError(RUN_TASK_FAILED, 'scan task did not start',ER_ABORT)
+          ENDIF
 %endif
+        --dry run toolpath
+        ELSE:
+      ENDSELECT
+      
       --draw shape and raster
       --move through raster
       SELECT station OF
         CASE(1):
           frame_path_station_instructions(STATION1_NAME)
+%ifdef STATION2_NAME
         CASE(2):
           frame_path_station_instructions(STATION2_NAME)
+%endif
+%ifdef STATION3_NAME
         CASE(3):
           frame_path_station_instructions(STATION3_NAME)
+%endif
+%ifdef STATION4_NAME
+        CASE(4):
+          frame_path_station_instructions(STATION4_NAME)
+%endif
         ELSE:
           WRITE TPDISPLAY(CR, 'Workstation not selected properly')
           display__show
+          ABORT
       ENDSELECT
 
+      SELECT motion_type OF
+        --scanning toolpath
 %ifeq ENABLE_SCANNING TRUE
-      IF (motion_type = MOVE_SCANING) THEN
-        --stop scanning process
-        `SCANNING_OBJECT_NAME`__set_scan_finished
-      ENDIF
+        CASE(MOVE_SCANING):
+          IF (motion_type = MOVE_SCANING) THEN
+            --stop scanning process
+            `SCANNING_OBJECT_NAME`__set_scan_finished
+          ENDIF
 %endif
+        --dry run toolpath
+        ELSE:
+      ENDSELECT
 
     ELSE
       WRITE TPDISPLAY(CR, 'Must hit RUN on form to continue')
@@ -195,6 +221,7 @@ BEGIN
     display__show
     ABORT
   ENDIF
+
 
 
 END frm_pad
