@@ -42,6 +42,7 @@ CONST
 --          convert2pos
 %define UP_NORMAL VEC(0,0,0)
 %define DOWN_NORMAL VEC(180,0,0)
+%define DOWN_NORMAL_VERT VEC(0,0,180)
 --polar
 %define POLAR_UP_NORMAL VEC(-90,0,0)
 %define POLAR_DOWN_NORMAL VEC(90,0,0)
