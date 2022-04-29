@@ -62,19 +62,19 @@ TOOLPATH_GROUP = '1'
 
 # ** robodk parameters **
 #dummy cell
-# REF_FRAME = 'data_frame'
-# TOOL_FRAME = 'Tool 1'
-# PART_NAME = 'path'
-# PROG_NAME = 'AutoProgram'
-
-#cell2
-#REF_FRAME = 'cut_frame'
-REF_FRAME = 'vert_frame'
-#REF_FRAME = 'data_frame'
-#TOOL_FRAME = '756mm_Tool'
-TOOL_FRAME = 'Tool 2'
+REF_FRAME = 'data_frame'
+TOOL_FRAME = 'Tool 1'
 PART_NAME = 'path'
 PROG_NAME = 'AutoProgram'
+
+#cell2
+# #REF_FRAME = 'cut_frame'
+# REF_FRAME = 'vert_frame'
+# #REF_FRAME = 'data_frame'
+# #TOOL_FRAME = '756mm_Tool'
+# TOOL_FRAME = 'Tool 2'
+# PART_NAME = 'path'
+# PROG_NAME = 'AutoProgram'
 
 #pattern1 = r"Field: {LINES_VARNAME}\.NODEDATA\[(\d{1,5})\]\.{LINE_START_SUFFIX} Access: RW: VECTOR =\s*(.*)"
 #pattern2 = r"Field: {LINES_VARNAME}\.NODEDATA\[(\d{1,5})\]\.{LINE_END_SUFFIX} Access: RW: VECTOR =\s*(.*)"
@@ -322,7 +322,7 @@ def print_line(list_obj):
 
 def print_vec(list_obj):
   for i in range(len(list_obj)):
-    print(list_obj[i])
+    print("{}: [{:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(i+1,list_obj[i][0],list_obj[i][1],list_obj[i][2],list_obj[i][3],list_obj[i][4],list_obj[i][5]))
 
 def plot():
   fig, ax = plt.subplots()
