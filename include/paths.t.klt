@@ -9,6 +9,13 @@ TYPE
     approach : VECTOR
   ENDSTRUCTURE
 
+  t_VEC2D_PATH FROM paths = STRUCTURE
+    v : VECTOR2D
+    code : SHORT
+    polygon : SHORT
+    approach : VECTOR
+  ENDSTRUCTURE
+
   t_POS_PATH FROM paths = STRUCTURE
     v : XYZWPR
     code : SHORT
