@@ -1,3 +1,8 @@
+-- ** SET MACRO TO ENABLE SCANNING **
+%define ENABLE_SCANNING FALSE
+
+------------------
+
 --define 
 %define STATION1_NAME tspthw
 %define STATION1_CNFG defaultwrapperpath.klt
@@ -26,12 +31,10 @@
 
 --scanning
 ------------------
-%define ENABLE_SCANNING TRUE
 
--- ****
 %ifeq ENABLE_SCANNING TRUE
 
-%define SCANNING_OBJECT_NAME tstscn
+%define SCANNING_OBJECT_NAME scan_part
 %define SCANNING_CNFG defaultscan.klt
 
 %mode push

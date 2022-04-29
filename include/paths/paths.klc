@@ -193,7 +193,7 @@ ROUTINE init
     set_idod(PAD_IDOD)
   END init
 
-ROUTINE destructor
+ROUTINE delete
   VAR
     unit_sys : t_COORD_SYS
   BEGIN
@@ -209,8 +209,8 @@ ROUTINE destructor
     tool_offset = DEFAULT_POSE
 
     --free path plan
-    `PATH_PLAN_NAME`__destructor
-  END destructor
+    `PATH_PLAN_NAME`__delete
+  END delete
 
 ROUTINE set_idod
   BEGIN

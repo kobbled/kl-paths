@@ -23,8 +23,8 @@ VAR
   frm : XYZWPR
   pnt_orient : VECTOR
   current : INTEGER
-  pth : PATH nodedata = PLAN_DATA_TYPE
-  segment : PATH nodedata = PLAN_DATA_TYPE
+  pth : PATH nodedata = t_VEC_PATH
+  segment : PATH nodedata = t_VEC_PATH
   tool_segment : PATH nodedata = t_TOOLPATH
   bboxs : PATH nodedata = t_RECT
   tracked : PATH nodedata = TRACKED_TYPE
@@ -372,7 +372,7 @@ ROUTINE init
 
   END init
 
-ROUTINE destructor
+ROUTINE delete
   BEGIN
     clear_path(pth)
     clear_visited
@@ -383,8 +383,8 @@ ROUTINE destructor
     pnt_orient = VEC(0,0,0)
 
     `KD_CLASS_NAME`__clear
-    `GRAPH_CLASS_NAME`__destructor
-  END destructor
+    `GRAPH_CLASS_NAME`__delete
+  END delete
 
 ROUTINE importPath
   VAR
@@ -537,9 +537,7 @@ ROUTINE next_toolpath
       tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient)
       tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
       tool_segment[PATH_LEN(tool_segment)].typ = pth_typ
-%ifeq INCLUDE_SPEED_CONTROLS TRUE
       tool_segment[PATH_LEN(tool_segment)].speed = DEFAULT_SPEED
-%endif
     ENDFOR
 
     RETURN(pth_typ)
@@ -652,15 +650,7 @@ ROUTINE get_path_interpolate
     ENDIF
 
     IF PATH_LEN(segment) > 0 THEN
-%ifeq PLAN_DATA_TYPE t_VEC_PATH
       paths__interpolate_vpath(segment, (spacing), line_type, frm, out_path)
-%else
-%ifeq PLAN_DATA_TYPE t_POS_PATH
-      paths__interpolate_ppath(segment, (spacing), line_type, frm, out_path)
-%else
-%error 'PLAN_DATA_TYPE must of type t_VEC_PATH or t_POS_PATH'
-%endif
-%endif
     ENDIF
   END get_path_interpolate
 
@@ -814,9 +804,6 @@ ROUTINE NN_graph
 
   END NN_graph
 
---.. warning:: currently `raster_graph` only works for t_VEC_PATH
---             need to implement for t_POS_PATH
-%ifeq PLAN_DATA_TYPE t_VEC_PATH
 ROUTINE raster_graph
   VAR
     neigh : T_RASTQUERY
@@ -960,7 +947,6 @@ ROUTINE raster_graph
     `GRAPH_CLASS_NAME`__change_directional(FALSE)
 
   END raster_graph
-%endif
 
 BEGIN
 END class_name

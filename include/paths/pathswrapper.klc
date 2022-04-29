@@ -159,7 +159,7 @@ ROUTINE move
 
 --public
 
-ROUTINE destructor
+ROUTINE delete
   BEGIN
 %ifeq GENERATE_FULL_PATH TRUE
     --pause for visualization before releasing memory
@@ -174,8 +174,8 @@ ROUTINE destructor
     --clear draw object
     `DRAW_OBJECT_NAME`__clear
     --clear path object
-    `PATH_OBJECT_NAME`__destructor
-  END destructor
+    `PATH_OBJECT_NAME`__delete
+  END delete
 
 ROUTINE set_motion_type
   BEGIN

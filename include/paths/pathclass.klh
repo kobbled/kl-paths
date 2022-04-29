@@ -11,8 +11,8 @@ declare_member(class_name,new,class_name,new)
 ROUTINE new FROM class_name
 declare_member(class_name,init,class_name,init)
 ROUTINE init(coord_frm : XYZWPR; toolOffst : XYZWPR; coord_sys : t_COORD_SYS) FROM class_name
-declare_member(class_name,destructor,class_name,dstr)
-ROUTINE destructor FROM class_name
+declare_member(class_name,delete,class_name,dstr)
+ROUTINE delete FROM class_name
 declare_member(class_name,makeCustom,class_name,mkctm)
 ROUTINE makeCustom(filename : STRING) FROM class_name
 --setters

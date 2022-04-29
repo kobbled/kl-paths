@@ -50,7 +50,6 @@
     "forms",
     "pose",
     "csv",
-    "tof-sensor",
     "multitask",
     "systemlib",
     "ktransw-macros"

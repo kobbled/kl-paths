@@ -1,9 +1,5 @@
 %define PATHPLAN_CONFIG_FILENAME vecpathplan.klt
 
-%define PLAN_DATA_TYPE t_VEC_PATH
-%define PLAN_DATA_NAME v
-%define PLAN_NODE_TYPE VECTOR
-
 --minimum cost for an edge in the path graph
 %define PATH_MIN_COST 1
 --weighting for linking segments
@@ -12,7 +8,6 @@
 %define PATH_LINK_DIAG_COST 4
 %define PATH_LINK_POLY_COST 5
 
-%define INCLUDE_SPEED_CONTROLS FALSE
 %define DEFAULT_SPEED 12
 
 %mode push
@@ -21,7 +16,7 @@
 %define define_pplan_headers(parent) `declare_member(parent,dist_to_weight,parent,d2wt)
 ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE FROM parent
 declare_member(parent,convert2pos,parent,cn2ps)
-ROUTINE convert2pos(v : PLAN_DATA_TYPE; orient : VECTOR) : XYZWPR FROM parent
+ROUTINE convert2pos(v : t_VEC_PATH; orient : VECTOR) : XYZWPR FROM parent
 `
 %define define_pplan_members(parent) `declare_member(parent,dist_to_weight,parent,d2wt)
 ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE
@@ -29,7 +24,7 @@ ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE
     RETURN(TRUNC(dist))
   END dist_to_weight
 declare_member(parent,convert2pos,parent,cn2ps)
-ROUTINE convert2pos(v : PLAN_DATA_TYPE; orient : VECTOR) : XYZWPR
+ROUTINE convert2pos(v : t_VEC_PATH; orient : VECTOR) : XYZWPR
   BEGIN
     -- ( pose__vector_to_pose(frm:v.v, pose__get_orientation(frm), frm.config_data) )
     RETURN( pose__vector_to_pose(v.v, orient, frm.config_data) )
