@@ -1,7 +1,9 @@
 PROGRAM test_pth_mtn
 %NOBUSYLAMP
 %COMMENT = 'test motion paths'
-%NOPAUSE = COMMAND + TPENABLE + ERROR
+%NOPAUSESHFT
+%NOPAUSE = ERROR + TPENABLE + COMMAND
+%NOABORT = ERROR + COMMAND
 
 %define TOOLING_STEP 6
 %define LINKING_STEP 10
@@ -20,6 +22,7 @@ PROGRAM test_pth_mtn
 
 %include systemlib.klt
 %include systemvars.klt
+%include pose.const.klt
 %include draw.klt
 %include pathplan.klt
 %include paths.klt
@@ -95,7 +98,7 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
     polygon[8].coords = VEC2D(-20,60)
 
     --initialize polygon object
-    tstpoly__clear
+    tstpoly__delete
     tstpoly__set_canvas((ZEROPOS(1)))
     tstpoly__append_polygon(polygon)
 
@@ -209,7 +212,7 @@ ROUTINE t_pvert_ID
     --get lines from object
     tstpoly__lines_to_vec_path(lines) ;
 
-    cds = paths__new_coord_sys(PTH_CYLINDER, 3)
+    cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
     tstpth__init(POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG)), &
                  POS(0,0,0,TOOL_ORIENT_UP,pose__set_config(DEFAULT_CONFIG)), cds)
                 
@@ -221,7 +224,7 @@ ROUTINE t_pvert_ID
     tstpth__createPath(lines, contours, origin, ID_CORNER, ONEWAY, FALSE)
     --move through path
     tstpth__set_prog_names(MOVE_DRYRUN)
-    tstpth__movePolyArcFull(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, RETRACT_HEIGHT)
+    tstpth__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, RETRACT_HEIGHT)
     
     --get lists
     tstpth__get_plan(path_plan)
@@ -281,7 +284,7 @@ ROUTINE t_pvert_OD
     --get lines from object
     tstpoly__lines_to_vec_path(lines) ;
 
-    cds = paths__new_coord_sys(PTH_CYLINDER, 3)
+    cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
     tstpth__init(POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG)), &
                  POS(0,0,0,TOOL_ORIENT_DOWN,pose__set_config(DEFAULT_CONFIG)), cds)
                 
@@ -292,7 +295,7 @@ ROUTINE t_pvert_OD
     tstpth__createPath(lines, contours, origin, OD_CORNER, ONEWAY, FALSE)
     --move through path
     tstpth__set_prog_names(MOVE_DRYRUN)
-    tstpth__movePolyArcFull(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
+    tstpth__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
 
     --get lists
     tstpth__get_plan(path_plan)
@@ -309,22 +312,21 @@ ROUTINE t_pvert_OD
 BEGIN
 %ifdef DEBUG_BUILD
   --(log_filename, show_date, show_debug, show_info)
-  usrdis__constructor(LOG_NAME, FALSE, TRUE, TRUE)
+  usrdis__new(LOG_NAME, FALSE, TRUE, TRUE)
   usrdis__clear_file
 %endif
 
-  t_hexagon
+  -- t_hexagon
   -- t_pvert_ID
-  -- t_pvert_OD
-
+  t_pvert_OD
 
   --clean up
-  tstpoly__clear
-  tstpth__destructor
+  tstpoly__delete
+  tstpth__delete
 
 %ifdef DEBUG_BUILD
   usrdis__write_pipe
-  usrdis__destructor
+  usrdis__delete
 %endif
 
 END test_pth_mtn

@@ -17,6 +17,7 @@ PROGRAM test_pth_rot
 %include systemlib.klt
 %include systemvars.klt
 %include draw.klt
+%include pose.const.klt
 %include pathplan.klt
 %include paths.klt
 
@@ -96,7 +97,7 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
     polygon[8].coords = VEC2D(-20,60)
 
     --initialize polygon object
-    tstpoly__clear
+    tstpoly__delete
     tstpoly__set_canvas((ZEROPOS(1)))
     tstpoly__append_polygon(polygon)
 
@@ -105,6 +106,74 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
     tstpoly__raster(PTH_LINETO)
 
   END draw_delta
+
+ROUTINE t_rot_delta
+  VAR
+%define RASTER_ANGLE 0
+%define PASS_OVERLAP 6
+%define NO_WALLINES 1
+
+%define RETRACT_RADIUS 20
+%defeval RETRACT_HEIGHT (RETRACT_RADIUS)
+%define PAD_IDOD 1
+%define START_DIST 150
+%define DRAW_RADIUS 80
+
+%define TOOLING_SPEED 20
+%define LINKING_SPEED 50
+%define TOOLING_STEP 5
+%define LINKING_STEP 10
+    i, status : INTEGER
+    origin : XYZWPR
+    bbox : t_RECT
+    cds : t_COORD_SYS
+    nde : XYZWPR
+  BEGIN
+    --lock group 1
+    LOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
+
+    --set frame
+    pose__set_userframe(USER_FRAME_NO, RBT_GRP)
+    pose__set_userframe(USER_FRAME_NO, ROT_GRP)
+
+    pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
+    pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
+
+    --draw delta
+    tstpoly__new
+    draw_delta(RASTER_ANGLE, PASS_OVERLAP, NO_WALLINES)
+
+    paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
+    --get lines from object
+    tstpoly__lines_to_vec_path(lines) ;
+    --get contours
+    tstpoly__contours_to_vec_path(contours) ;
+
+    cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
+    nde = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
+    tstrot__init(POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG)), &
+                 nde, cds)
+                
+    tstrot__set_idod(PAD_IDOD)
+
+    --generate path
+    origin = POS(0,START_DIST,DRAW_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
+    bbox = tstpoly__get_bounding_box
+    tstrot__createPath(lines, contours, origin, OD_CORNER, ONEWAY, FALSE)
+    --move through raster path
+    tstrot__set_prog_names(MOVE_DRYRUN)
+    tstrot__movePoly(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
+
+    --move through contour
+
+    -- --get lists
+    -- tstrot__get_plan(path_plan)
+    -- tstrot__get_path(pth)
+
+    UNLOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
+
+    RETURN
+  END t_rot_delta
 
 
 ROUTINE t_rot_OD
@@ -159,7 +228,7 @@ ROUTINE t_rot_OD
     --get lines from object
     tstpoly__lines_to_vec_path(lines) ;
 
-    cds = paths__new_coord_sys(PTH_CYLINDER, 3)
+    cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
     nde = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
     tstrot__init(POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG)), &
                  nde, cds)
@@ -236,7 +305,7 @@ ROUTINE t_rot_ID
     --get lines from object
     tstpoly__lines_to_vec_path(lines) ;
 
-    cds = paths__new_coord_sys(PTH_CYLINDER, 3)
+    cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
     nde = POS(0,0,0,TOOL_ORIENT_UP, pose__set_config(DEFAULT_CONFIG))
     tstrot__init(POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG)), &
                  nde, cds)
@@ -264,20 +333,21 @@ ROUTINE t_rot_ID
 BEGIN
 %ifdef DEBUG_BUILD
   --(log_filename, show_date, show_debug, show_info)
-  usrdis__constructor(LOG_NAME, FALSE, TRUE, TRUE)
+  usrdis__new(LOG_NAME, FALSE, TRUE, TRUE)
   usrdis__clear_file
 %endif
 
-  t_rot_OD
-  -- t_rot_ID
+  t_rot_delta
+  --t_rot_OD
+  --t_rot_ID
 
   --clean up
-  -- tstpoly__clear
-  -- tstrot__destructor
+  tstpoly__delete
+  tstrot__delete
 
 %ifdef DEBUG_BUILD
   usrdis__write_pipe
-  usrdis__destructor
+  usrdis__delete
 %endif
 
 END test_pth_rot

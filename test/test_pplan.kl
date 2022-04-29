@@ -84,7 +84,8 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL)
     polygon[8].coords = VEC2D(-20,60)
 
     --initialize polygon object
-    tstpoly__clear
+    tstpln__delete
+    tstpoly__delete
     tstpoly__set_canvas((ZEROPOS(1)))
     tstpoly__append_polygon(polygon)
 
@@ -96,7 +97,8 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL)
 
 ROUTINE draw_multi(rast_ang : REAL ; pitch : REAL)
   BEGIN
-    tstpoly__clear
+    tstpln__delete
+    tstpoly__delete
     tstpoly__set_canvas((ZEROPOS(1)))
 
     --create polygon
@@ -235,8 +237,14 @@ ROUTINE t_rast_neigh : BOOLEAN
 
     query = paths__raster_neighbors(lines[5], TRUE, lines)
 
+%ifdef DEBUG_BUILD
+    usrdis__print(DEBUG, 'neighbors for lines[' + i_to_s(5) + ']:')
+%endif
     FOR i=1 TO ARRAY_LEN(query) DO
       IF NOT UNINIT(query[i].idx) THEN
+%ifdef DEBUG_BUILD
+      usrdis__print(DEBUG, i_to_s(query[i].idx))
+%endif
         act3[i] = query[i].idx
       ELSE
         act3[i] = 0
@@ -245,16 +253,7 @@ ROUTINE t_rast_neigh : BOOLEAN
 
     s_to_iarr('7,3,0,6,8,4', ',', exp3)
 
-    -- query = paths__raster_neighbors(lines[5], TRUE, lines)
-
-    -- WRITE TPDISPLAY(CR)
-    -- FOR i=1 TO ARRAY_LEN(query) DO
-    --   IF NOT UNINIT(query[i].idx) THEN
-    --     WRITE TPDISPLAY(query[i].idx, ',')
-    --   ELSE
-    --     WRITE TPDISPLAY('0,')
-    --   ENDIF
-    -- ENDFOR
+    query = paths__raster_neighbors(lines[5], TRUE, lines)
 
     RETURN(kunit_eq_ari(exp1, act1) AND kunit_eq_ari(exp2, act2) AND &
            kunit_eq_ari(exp3, act3) )
@@ -285,6 +284,7 @@ ROUTINE t_rast_path : BOOLEAN
     tstpoly__lines_to_vec_path(lines)
 
     --generate path
+    tstpln__delete
     clear_list(path_plan)
     tstpln__init(lines, POS(0,0,0,0,0,rast_ang, (ZEROPOS(1).config_data)))
     tstpln__raster_graph(ONEWAY, FALSE, FALSE)
@@ -302,11 +302,11 @@ ROUTINE t_rast_path : BOOLEAN
     s_to_iarr('3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22', ',', exp1)
 
     --generate path
-    tstpln__destructor
+    tstpln__delete
     clear_list(path_plan)
     tstpln__init(lines, POS(0,0,0,0,0,rast_ang, (ZEROPOS(1).config_data)))
     tstpln__raster_graph(ZIGZAG, FALSE, FALSE)
-     --get start node
+    --get start node
     start_corner = 2
     apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
     start_nde = tstpln__closest_point(apprch_pnt)
@@ -374,7 +374,7 @@ ROUTINE t_rast_multi : BOOLEAN
     paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
 
-    tstpln__destructor
+    tstpln__delete
     clear_list(path_plan)
     tstpln__init(lines, POS(0,0,0,0,0,0, (ZEROPOS(1).config_data)))
     tstpln__raster_graph(ONEWAY, TRUE, TRUE)
@@ -544,7 +544,7 @@ BEGIN
 
 %ifdef DEBUG_BUILD
   --(log_filename, show_date, show_debug, show_info)
-  usrdis__constructor(LOG_NAME, FALSE, SHOW_DEBUG, TRUE)
+  usrdis__new(LOG_NAME, FALSE, SHOW_DEBUG, TRUE)
   usrdis__clear_file
 %endif
   kunit_test('test raster NN path plan', t_NN)
@@ -553,18 +553,21 @@ BEGIN
   kunit_test('test raster multi polygons', t_rast_multi)
   kunit_test('test raster multi polygon indep', t_rast_mult2)
   kunit_test('test raster hexagon poly', t_hexagon)
-  -- -- kunit_test('test raster heagon poly', t_temp)
-  -- --kunit_test('test import raster path', t_import)
+  kunit_test('test raster heagon poly', t_temp)
+  kunit_test('test import raster path', t_import)
 
   kunit_done
 
   --clean up
-  -- tstpoly__clear
-  -- tstpln__destructor
+  tstpln__delete
+  tstpoly__delete
+  clear_list(path_plan)
+  paths__clear_vecpath(lines)
+  clear_poly(polygon)
 
 %ifdef DEBUG_BUILD
   usrdis__write_pipe
-  usrdis__destructor
+  usrdis__delete
 %endif
 
 
