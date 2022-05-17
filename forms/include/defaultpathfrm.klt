@@ -1,17 +1,25 @@
+%define FORM_CONFIG_FILENAME defaultpathfrm.klt
+
 -- ** SET MACRO TO ENABLE SCANNING **
 %define ENABLE_SCANNING FALSE
 
+-- pathdraw
 ------------------
+%define PATHDRAW_NAME tspdrw
+%define DRAW_OBJECT_NAME tstpoly
 
 --define 
-%define STATION1_NAME tspthw
-%define STATION1_CNFG defaultwrapperpath.klt
+%define STATION1_PATH tspthw
+%define STATION1_MOTION tspmtn
+%define STATION1_CNFG defaultpath.klt
 
-%define STATION2_NAME tsverw
-%define STATION2_CNFG defaultwrappervert.klt
+--define STATION2_PATH tsverw
+--define STATION2_MOTION tsvmtn
+--define STATION2_CNFG defaultvert.klt
 
-%define STATION3_NAME tsrotw
-%define STATION3_CNFG defaultwrapperrot.klt
+--define STATION3_PATH tsrotw
+--define STATION3_MOTION tsrmtn
+--define STATION3_CNFG defaultrot.klt
 
 --station names
 ------------------
@@ -27,55 +35,3 @@
   END make_station`
 %mode pop
 -----------------
-
-
---scanning
-------------------
-
-%ifeq ENABLE_SCANNING TRUE
-
-%define SCANNING_OBJECT_NAME scan_part
-%define SCANNING_CNFG defaultscan.klt
-
-%mode push
-%mode string QQQ "`" "`" "\\"
-%define define_scan_object(object_name,cnfg_file) `%class object_name('scan_part.klc','scan_part.klh','cnfg_file')`
-%mode pop
-
-
-%endif
-
------------------
-
---path wrapper
-------------------
-%mode push
-%mode string QQQ "`" "`" "\\"
-%define pathswrapper_define(object_name,cnfg_file) `%class object_name('pathswrapper.klc','pathswrapper.klh','cnfg_file')`
-%mode pop
------------------
-
-
---drawing type
-------------------
-%mode push
-%mode string QQQ "$" "$" "\\"
-%define frame_path_station_instructions(station) $
-    SELECT shapeType OF
-      CASE(SHP_PAD):
-        `station`__drawPad(padprm, toolprm, rastprm)
-      CASE(SHP_HEX):
-        `station`__drawHex(hexprm, polyprm, toolprm, rastprm)
-      CASE(SHP_CUST):
-        `station`__drawCustom(filename, polyprm, toolprm, rastprm)
-      ELSE:
-        WRITE TPDISPLAY(CR, 'Shape type not selected properly')
-        display__show
-    ENDSELECT
-
-    `station`__set_motion_type(motion_type)
-    `station`__make(polyprm, toolprm, rastprm, motnprm)
-    --free memory
-    `station`__destructor$
-%mode pop
-------------------
