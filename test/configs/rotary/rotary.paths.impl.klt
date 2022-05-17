@@ -1,0 +1,184 @@
+--include default interface
+%include motion.interface.klt
+
+-- ***********
+-- Define type
+-- ***********
+
+-- for a simple type
+%defeval MOTION_DATA_TYPE t_NODE
+%defeval MOTION_DATA_FILE rbtgp2
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define motion_type(parent) `TYPE
+  t_ROTARY FROM parent = JOINTPOS`ROT_AXES` IN GROUP[ROT_GRP]
+
+  t_NODE FROM parent = STRUCTURE
+    pose : XYZWPR IN GROUP[RBT_GRP]
+    rot  : t_ROTARY
+  ENDSTRUCTURE`
+%mode pop
+
+-- ***********
+-- initialization  
+-- ***********
+
+%defeval DEFAULT_POSE new_pose(0,0,0,0,0,0,0, DEFAULT_CONFIG)
+
+-- ***********
+-- Define interface header
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define impl_motion_head(parent) `declare_member(parent,new_pose,parent,npose)
+ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : STRING) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,make_tool_offset,parent,mktof)
+ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,set_lpos,parent,stlps)
+ROUTINE set_lpos : MOTION_DATA_TYPE FROM parent
+declare_member(parent,tpath2pos,parent,tppse)
+ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,set_posereg,parent,stpr)
+ROUTINE set_posereg(nde : MOTION_DATA_TYPE; reg_no : INTEGER) FROM parent
+declare_member(parent,get_cart,parent,gtcrt)
+ROUTINE get_cart(nde : MOTION_DATA_TYPE) : XYZWPR FROM parent
+declare_member(parent,get_component,parent,gtcmp)
+ROUTINE get_component(nde : MOTION_DATA_TYPE; grp_no : INTEGER; comp_no : INTEGER) : REAL FROM parent
+declare_member(parent,poseMul,parent,psmul)
+ROUTINE poseMul(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,poseInv,parent,psinv)
+ROUTINE poseInv(nde1 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE FROM parent
+`
+
+%mode pop
+
+-- ***********
+-- Define interface
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define impl_motion_members(parent) `declare_member(parent,new_pose,parent,npose)
+ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : STRING) : MOTION_DATA_TYPE
+  VAR
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    nde.pose = POS(x,y,z,w,p,r, pose__set_config(cnfg)) 
+    nde.rot = pose__set_jointpos_axis(ROTARY_JNT, j1)
+
+    RETURN( nde )
+  END new_pose
+
+declare_member(parent,make_tool_offset,parent,mktof)
+ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE
+  VAR
+    i   : INTEGER
+    nde : MOTION_DATA_TYPE
+    arr : ARRAY[ROT_AXES] OF REAL
+  BEGIN
+    nde.pose = ofst
+    --initalize rotary
+    FOR i=1 TO ARRAY_LEN(arr) DO
+      arr[i] = 0
+    ENDFOR
+    nde.rot = pose__set_jointpos(arr)
+
+    RETURN( nde )
+  END make_tool_offset
+
+declare_member(parent,set_lpos,parent,stlps)
+ROUTINE set_lpos : MOTION_DATA_TYPE
+  VAR
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    nde.pose = pose__get_lpos(RBT_GRP)
+    nde.rot = pose__get_jpos(ROT_GRP)
+
+    RETURN( nde )
+  END set_lpos
+
+declare_member(parent,tpath2pos,parent,tppse)
+ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE
+  VAR
+    deg : REAL
+    p : MOTION_DATA_TYPE
+  BEGIN
+    IF (`PATH_OBJECT_NAME`__get_idod = -1) THEN deg = nde.v.r-180 ; ELSE deg = nde.v.r ; ENDIF
+    p.pose = nde.v
+    p.rot = pose__set_jointpos_axis(ROTARY_JNT, ROT_DIRECTION*deg )
+    RETURN(p)
+  END tpath2pos
+
+declare_member(parent,set_posereg,parent,stpr)
+ROUTINE set_posereg(nde : MOTION_DATA_TYPE; reg_no : INTEGER)
+  BEGIN
+    pose__set_posreg_xyz(nde.pose, reg_no, RBT_GRP)
+    pose__set_posreg_joint((nde.rot), reg_no, ROT_GRP)
+  END set_posereg
+
+declare_member(parent,get_cart,parent,gtcrt)
+ROUTINE get_cart(nde : MOTION_DATA_TYPE) : XYZWPR
+  BEGIN
+    RETURN(nde.pose)
+  END get_cart
+
+declare_member(parent,get_component,parent,gtcmp)
+ROUTINE get_component(nde : MOTION_DATA_TYPE; grp_no : INTEGER; comp_no : INTEGER) : REAL
+  VAR
+    status : INTEGER
+    rotary : ARRAY[ROT_AXES] OF REAL
+  BEGIN
+    SELECT grp_no OF
+      CASE(RBT_GRP):
+        SELECT comp_no OF
+          CASE(1):
+            RETURN(nde.pose.x)
+          CASE(2):
+            RETURN(nde.pose.y)
+          CASE(3):
+            RETURN(nde.pose.z)
+          CASE(4):
+            RETURN(nde.pose.w)
+          CASE(5):
+            RETURN(nde.pose.p)
+          CASE(6):
+            RETURN(nde.pose.r)
+          ELSE:
+            karelError(INVALID_TYPE_CODE, 'Component number is not valid for get_component', ER_ABORT)
+        ENDSELECT
+      CASE(ROT_GRP):
+        CNV_JPOS_REL(nde.rot, rotary, status)
+        RETURN(rotary[comp_no])
+      ELSE:
+          karelError(INVALID_TYPE_CODE, 'group number is not valid for get_component', ER_ABORT)
+    ENDSELECT
+
+    RETURN(0)
+  END get_component
+
+declare_member(parent,poseMul,parent,psmul)
+ROUTINE poseMul(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE
+  VAR
+    p : MOTION_DATA_TYPE
+  BEGIN
+    p.pose = nde1.pose:nde2.pose
+    p.rot = nde1.rot
+    RETURN(p)
+  END poseMul
+  
+declare_member(parent,poseInv,parent,psinv)
+ROUTINE poseInv(nde1 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE
+  VAR
+    p : MOTION_DATA_TYPE
+  BEGIN
+    p.pose = INV((nde1.pose))
+    p.rot = nde1.rot
+    RETURN(p)
+  END poseInv
+`
+
+%mode pop

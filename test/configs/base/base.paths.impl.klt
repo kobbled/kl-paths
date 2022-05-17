@@ -1,0 +1,126 @@
+--include default interface
+%include motion.interface.klt
+
+-- ***********
+-- Define type
+-- ***********
+
+-- for a simple type
+%defeval MOTION_DATA_TYPE XYZWPR
+%defeval MOTION_DATA_FILE rbtgp1
+
+-- ***********
+-- initialization  
+-- ***********
+
+%defeval DEFAULT_POSE new_pose(0,0,0,0,0,0, DEFAULT_CONFIG)
+
+-- ***********
+-- Define interface header
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define impl_motion_head(parent) `declare_member(parent,new_pose,parent,npose)
+ROUTINE new_pose(x,y,z,w,p,r : REAL; cnfg : STRING) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,make_tool_offset,parent,mktof)
+ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE  FROM parent
+declare_member(parent,set_lpos,parent,stlps)
+ROUTINE set_lpos : MOTION_DATA_TYPE FROM parent
+declare_member(parent,tpath2pos,parent,tppse)
+ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,set_posereg,parent,stpr)
+ROUTINE set_posereg(nde : MOTION_DATA_TYPE; reg_no : INTEGER) FROM parent
+declare_member(parent,get_cart,parent,gtcrt)
+ROUTINE get_cart(nde : MOTION_DATA_TYPE) : XYZWPR FROM parent
+declare_member(parent,get_component,parent,gtcmp)
+ROUTINE get_component(nde : MOTION_DATA_TYPE; grp_no : INTEGER; comp_no : INTEGER) : REAL FROM parent
+declare_member(parent,poseMul,parent,psmul)
+ROUTINE poseMul(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,poseInv,parent,psinv)
+ROUTINE poseInv(nde1 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE FROM parent
+`
+
+%mode pop
+
+-- ***********
+-- Define interface
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define impl_motion_members(parent) `declare_member(parent,new_pose,parent,npose)
+ROUTINE new_pose(x,y,z,w,p,r : REAL; cnfg : STRING) : MOTION_DATA_TYPE
+  BEGIN
+    RETURN( POS(x,y,z,w,p,r, pose__set_config(cnfg)) )
+  END new_pose
+
+declare_member(parent,make_tool_offset,parent,mktof)
+ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE
+  BEGIN
+    RETURN( ofst )
+  END make_tool_offset
+
+declare_member(parent,set_lpos,parent,stlps)
+ROUTINE set_lpos : MOTION_DATA_TYPE
+  BEGIN
+    RETURN( pose__get_lpos(RBT_GRP) )
+  END set_lpos
+
+declare_member(parent,tpath2pos,parent,tppse)
+ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE
+  BEGIN
+    RETURN(nde.v)
+  END tpath2pos
+
+declare_member(parent,set_posereg,parent,stpr)
+ROUTINE set_posereg(nde : MOTION_DATA_TYPE; reg_no : INTEGER)
+  BEGIN
+    pose__set_posreg_xyz(nde, reg_no, RBT_GRP)
+  END set_posereg
+
+declare_member(parent,get_cart,parent,gtcrt)
+ROUTINE get_cart(nde : MOTION_DATA_TYPE) : XYZWPR
+  BEGIN
+    RETURN(nde)
+  END get_cart
+
+declare_member(parent,get_component,parent,gtcmp)
+ROUTINE get_component(nde : MOTION_DATA_TYPE; grp_no : INTEGER; comp_no : INTEGER) : REAL
+  BEGIN
+    SELECT comp_no OF
+      CASE(1):
+        RETURN(nde.x)
+      CASE(2):
+        RETURN(nde.y)
+      CASE(3):
+        RETURN(nde.z)
+      CASE(4):
+        RETURN(nde.w)
+      CASE(5):
+        RETURN(nde.p)
+      CASE(6):
+        RETURN(nde.r)
+      ELSE:
+        karelError(INVALID_TYPE_CODE, 'Component number is not valid', ER_ABORT)
+    ENDSELECT
+
+    RETURN(0)
+  END get_component
+
+declare_member(parent,poseMul,parent,psmul)
+ROUTINE poseMul(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE
+  BEGIN
+    RETURN(nde1:nde2)
+  END poseMul
+
+declare_member(parent,poseInv,parent,psinv)
+ROUTINE poseInv(nde1 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE
+  BEGIN
+    RETURN(INV((nde1)))
+  END poseInv
+`
+
+%mode pop
