@@ -18,16 +18,17 @@
     "forms/frm_pad.kl"
   ],
   "tp" : [
-    "motion/tp/general/mov_circ_rot.tpp",
-    "motion/tp/general/mov_line_rot.tpp",
-    "motion/tp/general/move_circ.tpp",
-    "motion/tp/general/move_line.tpp",
-    "motion/tp/scanning/mov_scn_rot.tpp",
-    "motion/tp/scanning/mov_scn.tpp",
-    "motion/tp/am/mov_am_circ.tpp",
-    "motion/tp/am/mov_am_crot.tpp",
-    "motion/tp/am/mov_am_line.tpp",
-    "motion/tp/am/mov_am_lrot.tpp"
+    "test/configs/base/tp/move_line.tpp",
+    "test/configs/base/tp/move_circ.tpp",
+    "test/configs/base/tp/mov_scn.tpp",
+    "test/configs/base/tp/mov_am_line.tpp",
+    "test/configs/base/tp/mov_am_circ.tpp",
+    
+    "test/configs/rotary/tp/mov_line_rot.tpp",
+    "test/configs/rotary/tp/mov_circ_rot.tpp",
+    "test/configs/rotary/tp/mov_scn_rot.tpp",
+    "test/configs/rotary/tp/mov_am_lrot.tpp",
+    "test/configs/rotary/tp/mov_am_crot.tpp"
   ],
   "tests" : [
     "test/test_pth_rot.kl"
