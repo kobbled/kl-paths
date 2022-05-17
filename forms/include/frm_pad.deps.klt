@@ -1,0 +1,13 @@
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+--pathclass dependency
+%define paths_object_define(object_name,cnfg_file) `%class object_name('paths.klc','pathclass.klh','cnfg_file')`
+
+--pathmotion dependency
+%define paths_motion_define(object_name,cnfg_file) `%class object_name('motion.klc','motion.klh','cnfg_file')`
+
+--pathdraw dependency
+%define paths_draw_define(object_name,cnfg_file) `%class object_name('pathswrapper.klc','pathswrapper.klh','cnfg_file')`
+
+%mode pop

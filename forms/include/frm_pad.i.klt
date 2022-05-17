@@ -7,7 +7,7 @@
     path_val_arr[1] = '['+ps+']stationTree'
     --
     path_val_arr[2] = '['+ps+']station'
-    path_val_arr[3] = '['+ps+']motion_type'
+    path_val_arr[3] = '['+ps+']program_type'
     path_val_arr[4] = '['+ps+']shapeType'
     path_val_arr[5] = '['+ps+']toolprm.coordSys'
     path_val_arr[6] = '['+ps+']idod_'
@@ -37,10 +37,10 @@
 ROUTINE init_pthList
   BEGIN
     IF UNINIT(station) THEN station = 1 ; ENDIF
-    IF UNINIT(motion_type) THEN motion_type = 1 ; ENDIF
+    IF UNINIT(program_type) THEN program_type = 1 ; ENDIF
     IF UNINIT(shapeType) THEN shapeType = 1 ; ENDIF
     --tool params
-    IF UNINIT(toolprm.coordSys) THEN toolprm.coordSys = 2; ENDIF
+    IF UNINIT(toolprm.coordSys) THEN toolprm.coordSys = PTH_CYLINDER; ENDIF
     IF UNINIT(idod_) THEN idod_ = 1; ENDIF
     IF UNINIT(toolprm.pitch) THEN toolprm.pitch = 0; ENDIF
     IF UNINIT(toolprm.retractDist) THEN toolprm.retractDist = 5; ENDIF

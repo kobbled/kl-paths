@@ -1,9 +1,6 @@
 PROGRAM frm_pad
 %NOLOCKGROUP
 
---** USER MODIFY : Load user template
-%include defaultpathfrm.klt
-
 %include klevkeys.kl
 
 %define prog_str 'frm_pad'
@@ -31,15 +28,27 @@ PROGRAM frm_pad
 %include ppad.kl
 
 %include errors.klt
+%include systemlib.klt
+%include pose.const.klt
 %include pathplan.klt
-%include paths.c.klt
-%include motion.klt
+%include paths.klt
+%include toolpath.structs.klt
 %include lam.klt
+%include frm_pad.deps.klt
+
+--** USER MODIFY : Load user template
+%include defaultpathfrm.klt
+
 
 CONST
   SHP_PAD = 1
   SHP_HEX = 2
   SHP_CUST = 3
+
+--include references to pathdraw
+-- "lines" and "contours" for `MOTION`__createPath
+%include pathswrapper.friend.members.klt
+pathdraw_friends(PATHDRAW_NAME)
 
 VAR
   path_val_arr : ARRAY[23] OF STRING[30]
@@ -50,11 +59,14 @@ VAR
   --tree views
   stationTree, rasterTree, motionTree : BOOLEAN
   station IN CMOS: INTEGER
-  motion_type IN CMOS : INTEGER
+  program_type IN CMOS : INTEGER
   shapeType IN CMOS : INTEGER
   filename IN CMOS : STRING[12]
   idod_ IN CMOS : INTEGER
-  orient : VECTOR
+  -- poses
+  origin : XYZWPR
+  frm : XYZWPR
+  cds : t_COORD_SYS
   --default start corner
   startCorner IN CMOS : INTEGER
   polyprm IN CMOS  : t_PATH_VARS
@@ -72,7 +84,8 @@ VAR
 
 --helper functions
 %from display.klh %import clear, show
-%from paths.klh %import set_orientation
+%from pose.klh %import set_config
+%from paths.klh %import set_orientation, new_coord_sys
 %from systemlib.klh %import VEC
 %include forms.klh
 %include errors.klh
@@ -84,16 +97,24 @@ VAR
 
 --create objects for each workstation
 ---
-pathswrapper_define(STATION1_NAME,STATION1_CNFG)
+--path draw object
+paths_draw_define(PATHDRAW_NAME,FORM_CONFIG_FILENAME)
 
-%ifdef STATION2_NAME
-pathswrapper_define(STATION2_NAME,STATION2_CNFG)
+--motion object
+paths_object_define(STATION1_PATH,STATION1_CNFG)
+paths_motion_define(STATION1_MOTION,STATION1_CNFG)
+
+%ifdef STATION2_CNFG
+paths_object_define(STATION2_PATH,STATION2_CNFG)
+paths_motion_define(STATION2_MOTION,STATION2_CNFG)
 %endif
-%ifdef STATION3_NAME
-pathswrapper_define(STATION3_NAME,STATION3_CNFG)
+%ifdef STATION3_CNFG
+paths_object_define(STATION3_PATH,STATION3_CNFG)
+paths_motion_define(STATION3_MOTION,STATION3_CNFG)
 %endif
-%ifdef STATION4_NAME
-pathswrapper_define(STATION4_NAME,STATION4_CNFG)
+%ifdef STATION4_CNFG
+paths_object_define(STATION4_PATH,STATION4_CNFG)
+paths_motion_define(STATION4_MOTION,STATION4_CNFG)
 %endif
 ---
 
@@ -182,9 +203,24 @@ BEGIN
         WRITE TPDISPLAY(CR, 'Shape type not selected properly')
         display__show
     ENDSELECT
-
+ 
     IF (term_char = ky_f2) THEN
-      SELECT motion_type OF
+
+      -- ** set frames **
+      frm = POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG))
+      -- ..note:: tool offset is defined in motion constructor
+      --          under the `define_tool_offset` member
+      origin = POS((polyprm.xStart), (polyprm.yStart), (polyprm.height), (polyprm.polyAngle*toolprm.idod),0,0, pose__set_config(DEFAULT_CONFIG))
+      --set coordinate system
+      SELECT (toolprm.coordSys) OF
+        CASE(PTH_CYLINDER):
+          cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
+        CASE(PTH_CARTESAN):
+          cds = paths__new_coord_sys(PTH_CARTESAN, Z_AXES)
+      ENDSELECT
+
+      -- ** preprocess functionality **
+      SELECT program_type OF
         --working toolpath
         CASE(MOVE_WORKING):
           b = forms__load(dict_file_work, dict_str_work)
@@ -197,10 +233,10 @@ BEGIN
         --scanning toolpath
 %ifeq ENABLE_SCANNING TRUE
         CASE(MOVE_SCANING):
-          orient = paths__set_orientation(toolprm.coordSys, toolprm.idod)
-          orient = orient - VEC(polyprm.polyAngle, 0, 0)
           --load variables into scanning object
-          `SCANNING_OBJECT_NAME`__init(toolprm.coordSys, 3, orient)
+          -- ..note:: `orient` is unused in scan_part_dyn. Need to make seperate
+          --          header file to exclude this parameter
+          `SCANNING_OBJECT_NAME`__init(toolprm.coordSys, Z_AXES, VEC(0,0,0))
           --enable scanner
           IF NOT task__thread('SCANNING_OBJECT_NAME') THEN
               karelError(RUN_TASK_FAILED, 'scan task did not start',ER_ABORT)
@@ -209,38 +245,100 @@ BEGIN
         --dry run toolpath
         ELSE:
       ENDSELECT
-      
-      --draw shape and raster
-      --move through raster
+
+      -- ** intialize objects **
       SELECT station OF
         CASE(1):
-          frame_path_station_instructions(STATION1_NAME)
-%ifdef STATION2_NAME
+          --initialize pathclass
+            -- coord frm, coordinate system, part origin, idod
+          `STATION1_PATH`__init(frm, cds, origin, toolprm.idod)
+          --intialize motion friend class
+            --tool offset, interpolate flag, program type
+          `STATION1_MOTION`__init2(toolprm, TRUE, program_type)
+%ifdef STATION2_CNFG
         CASE(2):
-          frame_path_station_instructions(STATION2_NAME)
+          `STATION2_PATH`__init(frm, cds, origin, toolprm.idod)
+          `STATION2_MOTION`__init2(toolprm, TRUE, program_type)
 %endif
-%ifdef STATION3_NAME
+%ifdef STATION3_CNFG
         CASE(3):
-          frame_path_station_instructions(STATION3_NAME)
+          `STATION3_PATH`__init(frm, cds, origin, toolprm.idod)
+          `STATION3_MOTION`__init2(toolprm, TRUE, program_type)
 %endif
-%ifdef STATION4_NAME
+%ifdef STATION4_CNFG
         CASE(4):
-          frame_path_station_instructions(STATION4_NAME)
+          `STATION4_PATH`__init(frm, cds, origin, toolprm.idod)
+          `STATION4_MOTION`__init2(toolprm, TRUE, program_type)
 %endif
         ELSE:
           WRITE TPDISPLAY(CR, 'Workstation not selected properly')
           display__show
           ABORT
       ENDSELECT
+      
 
-      SELECT motion_type OF
+      -- ** draw shape, raster, and pathplan  **
+      SELECT shapeType OF
+        CASE(SHP_PAD):
+          `PATHDRAW_NAME`__drawPad(padprm, rastprm)
+        CASE(SHP_HEX):
+          `PATHDRAW_NAME`__drawHex(hexprm, polyprm, rastprm)
+        CASE(SHP_CUST):
+          `PATHDRAW_NAME`__drawCustom(filename, polyprm, rastprm, frm)
+        ELSE:
+          WRITE TPDISPLAY(CR, 'Shape type not selected properly')
+          display__show
+      ENDSELECT
+
+      -- ** move through raster **
+      SELECT station OF
+        CASE(1):
+          --pathplan
+          `STATION1_MOTION`__createPath(lines, contours, rastprm)
+          --run path
+          `STATION1_MOTION`__aquire_groups
+          `STATION1_MOTION`__move(toolprm, motnprm)
+          `STATION1_MOTION`__release_groups
+%ifdef STATION2_CNFG
+        CASE(2):
+          --pathplan
+          `STATION1_MOTION`__createPath(lines, contours, rastprm)
+          --run path
+          `STATION2_MOTION`__aquire_groups
+          `STATION2_MOTION`__move(toolprm, motnprm)
+          `STATION2_MOTION`__release_groups
+%endif
+%ifdef STATION3_CNFG
+        CASE(3):
+          --pathplan
+          `STATION1_MOTION`__createPath(lines, contours, rastprm)
+          --run path
+          `STATION3_MOTION`__aquire_groups
+          `STATION3_MOTION`__move(toolprm, motnprm)
+          `STATION3_MOTION`__release_groups
+%endif
+%ifdef STATION4_CNFG
+        CASE(4):
+          --pathplan
+          `STATION1_MOTION`__createPath(lines, contours, rastprm)
+          --run path
+          `STATION4_MOTION`__aquire_groups
+          `STATION4_MOTION`__move(toolprm, motnprm)
+          `STATION4_MOTION`__release_groups
+%endif
+        ELSE:
+          ABORT
+      ENDSELECT
+
+      -- ** exist sequence **
+      SELECT program_type OF
         --working toolpath
         CASE(MOVE_WORKING):
           lam__stop
         --scanning toolpath
 %ifeq ENABLE_SCANNING TRUE
         CASE(MOVE_SCANING):
-          IF (motion_type = MOVE_SCANING) THEN
+          IF (program_type = MOVE_SCANING) THEN
             --stop scanning process
             `SCANNING_OBJECT_NAME`__set_scan_finished
           ENDIF
@@ -248,6 +346,34 @@ BEGIN
         --dry run toolpath
         ELSE:
       ENDSELECT
+
+      --clean up
+      `PATHDRAW_NAME`__delete
+
+      SELECT station OF
+        CASE(1):
+          `STATION1_PATH`__delete
+          `STATION1_MOTION`__delete
+%ifdef STATION2_CNFG
+        CASE(2):
+          `STATION2_PATH`__delete
+          `STATION2_MOTION`__delete
+%endif
+%ifdef STATION3_CNFG
+        CASE(3):
+          `STATION3_PATH`__delete
+          `STATION3_MOTION`__delete
+%endif
+%ifdef STATION4_CNFG
+        CASE(4):
+          `STATION4_PATH`__delete
+          `STATION4_MOTION`__delete
+%endif
+        ELSE:
+          ABORT
+      ENDSELECT
+
+
 
     ELSE
       WRITE TPDISPLAY(CR, 'Must hit RUN on form to continue')
