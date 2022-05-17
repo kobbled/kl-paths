@@ -36,9 +36,14 @@ PROGRAM frm_pad
 %include lam.klt
 %include frm_pad.deps.klt
 
+%ifdef DEBUG_BUILD
+%define SHOW_DEBUG FALSE
+%define LOG_NAME 'RD:path_debug.DT'
+%include display.c.klt
+%endif
+
 --** USER MODIFY : Load user template
 %include defaultpathfrm.klt
-
 
 CONST
   SHP_PAD = 1
@@ -93,6 +98,11 @@ VAR
 
 %ifeq ENABLE_SCANNING TRUE
 %include multitask.klh
+%endif
+
+%ifdef DEBUG_BUILD
+-- user display log
+%class usrdis('dispclass.klc','dispclass.klh')
 %endif
 
 --create objects for each workstation
@@ -152,6 +162,12 @@ BEGIN
 
   --clear display
   display__clear
+
+%ifdef DEBUG_BUILD
+  --(log_filename, show_date, show_debug, show_info)
+  usrdis__new(LOG_NAME, FALSE, TRUE, TRUE)
+  usrdis__clear_file
+%endif
 
   --load forms
   b = forms__load(dict_file, dict_str)
@@ -217,6 +233,9 @@ BEGIN
           cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
         CASE(PTH_CARTESAN):
           cds = paths__new_coord_sys(PTH_CARTESAN, Z_AXES)
+        ELSE:
+          WRITE TPDISPLAY(CR, 'coordinate system not set')
+          display__show
       ENDSELECT
 
       -- ** preprocess functionality **
@@ -302,7 +321,7 @@ BEGIN
 %ifdef STATION2_CNFG
         CASE(2):
           --pathplan
-          `STATION1_MOTION`__createPath(lines, contours, rastprm)
+          `STATION2_MOTION`__createPath(lines, contours, rastprm)
           --run path
           `STATION2_MOTION`__aquire_groups
           `STATION2_MOTION`__move(toolprm, motnprm)
@@ -311,7 +330,7 @@ BEGIN
 %ifdef STATION3_CNFG
         CASE(3):
           --pathplan
-          `STATION1_MOTION`__createPath(lines, contours, rastprm)
+          `STATION3_MOTION`__createPath(lines, contours, rastprm)
           --run path
           `STATION3_MOTION`__aquire_groups
           `STATION3_MOTION`__move(toolprm, motnprm)
@@ -320,7 +339,7 @@ BEGIN
 %ifdef STATION4_CNFG
         CASE(4):
           --pathplan
-          `STATION1_MOTION`__createPath(lines, contours, rastprm)
+          `STATION4_MOTION`__createPath(lines, contours, rastprm)
           --run path
           `STATION4_MOTION`__aquire_groups
           `STATION4_MOTION`__move(toolprm, motnprm)
@@ -373,7 +392,10 @@ BEGIN
           ABORT
       ENDSELECT
 
-
+%ifdef DEBUG_BUILD
+      usrdis__write_pipe
+      usrdis__delete
+%endif
 
     ELSE
       WRITE TPDISPLAY(CR, 'Must hit RUN on form to continue')

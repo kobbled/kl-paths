@@ -62,8 +62,5 @@
   "tests-depends" : [
     "Strings",
     "KUnit"
-  ],
-  "macros" : [
-    "DEBUG_BUILD"
   ]
 }

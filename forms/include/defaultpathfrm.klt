@@ -9,17 +9,17 @@
 %define DRAW_OBJECT_NAME tstpoly
 
 --define 
-%define STATION1_PATH tspthw
+%define STATION1_PATH tstpth
 %define STATION1_MOTION tspmtn
 %define STATION1_CNFG defaultpath.klt
 
---define STATION2_PATH tsverw
---define STATION2_MOTION tsvmtn
---define STATION2_CNFG defaultvert.klt
+%define STATION2_PATH tstvrt
+%define STATION2_MOTION tsvmtn
+%define STATION2_CNFG defaultvert.klt
 
---define STATION3_PATH tsrotw
---define STATION3_MOTION tsrmtn
---define STATION3_CNFG defaultrot.klt
+%define STATION3_PATH tstrot
+%define STATION3_MOTION tsrmtn
+%define STATION3_CNFG defaultrot.klt
 
 --station names
 ------------------
