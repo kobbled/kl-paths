@@ -1,0 +1,6 @@
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define pathdraw_friends(object_name) `VAR
+  contours FROM object_name: PATH nodedata = t_VEC_PATH
+  lines FROM object_name: PATH nodedata = t_VEC_PATH`
+%mode pop
