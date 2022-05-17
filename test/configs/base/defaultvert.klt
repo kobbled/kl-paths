@@ -1,0 +1,56 @@
+%define CONFIG_FILENAME defaultvert.klt
+
+--save full toolpath for vizualization purposes
+--otherwise go through line by line
+%define GENERATE_FULL_PATH FALSE
+
+--robot group
+%define RBT_GRP 1
+
+--frames
+%define USER_FRAME_NO 7
+%define TOOL_FRAME_NO 3
+
+%define DEFAULT_CONFIG 'F U T, 0, 0, 0'
+
+--group mask decimal corresponds with (gp1,gp2,gp3,gp4)
+--1000 = 1 : 0100 = 2  : 0010 = 4  : 0001 = 8
+--           1100 = 3  : 1010 = 5  : 1001 = 9
+--           1110 = 7  : 1110 = 7  : 1011 = 13
+--           1111 = 15 : 1011 = 13 :
+%define CELL_GRPMASK 1
+
+--import registers
+%include base.regs.klt
+
+--default parameter list
+%define TOOLING_SPEED 12
+%define LINKING_SPEED 50
+%define PAD_IDOD 1
+
+--tool orientation
+%define TOOL_ORIENT_UP 0,0,0
+%define TOOL_ORIENT_DOWN 0,0,180
+
+--motion programs
+%define DRYRUN_LINE_PROG 'MOVE_LINE'
+%define DRYRUN_CIRC_PROG 'MOVE_CIRC'
+%define WORK_LINE_PROG 'MOV_AM_LINE'
+%define WORK_CIRC_PROG 'MOV_AM_CIRC'
+%define SCAN_LINE_PROG 'MOV_SCN'
+
+--planning corner start
+%defeval OD_CORNER RIGHT_BOTTOM
+%defeval ID_CORNER LEFT_BOTTOM
+
+--path implementation
+%include base.paths.impl.klt
+
+--pathplan
+------------------
+%defeval PATH_PLAN_NAME tstpln
+%define PATHPLAN_CONFIG_FILENAME vecpathplan.klt
+
+--pathclass object
+------------------
+%defeval PATH_OBJECT_NAME tstvrt

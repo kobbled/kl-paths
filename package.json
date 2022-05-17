@@ -37,10 +37,14 @@
     "include",
     "include/paths",
     "include/pathplan",
-    "include/rotary",
     "include/motion",
-    "include/lam",
-    "forms/include"
+    "include/lam"
+  ],
+  "tests-includes" : [
+    "forms/include",
+    "test/configs",
+    "test/configs/base",
+    "test/configs/rotary"
   ],
   "depends" : [
     "errors",
@@ -58,5 +62,8 @@
   "tests-depends" : [
     "Strings",
     "KUnit"
+  ],
+  "macros" : [
+    "DEBUG_BUILD"
   ]
 }

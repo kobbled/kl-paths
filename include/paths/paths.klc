@@ -3,6 +3,17 @@ PROGRAM class_name
 %COMMENT = 'path class'
 %NOLOCKGROUP
 
+%ifdef ROT_GRP
+%ifeq ROT_GRP 0
+%undef ROT_GRP
+%endif
+%endif
+%ifdef TRACK_GRP
+%ifeq TRACK_GRP 0
+%undef TRACK_GRP
+%endif
+%endif
+
 %include namespace.m
 
 %include errors.klt
@@ -11,10 +22,8 @@ PROGRAM class_name
 %include paths.klt
 %include pathplan.klt
 %include draw.klt
-
-%ifdef define_paths_types
-define_paths_types(PATH_DATA_TYPE, class_name)
-%endif
+%include toolpath.structs.klt
+%include pathclass.deps.klt
 
 %define BASE_CLASSNAME class_name
 
