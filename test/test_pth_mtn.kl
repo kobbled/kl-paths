@@ -5,15 +5,6 @@ PROGRAM test_pth_mtn
 %NOPAUSE = ERROR + TPENABLE + COMMAND
 %NOABORT = ERROR + COMMAND
 
-%define TOOLING_STEP 6
-%define LINKING_STEP 10
-%define TOOLING_SPEED 50
-%define LINKING_SPEED 100
-
---robot config parameters
-%define USER_FRAME_CUT_NO 9
-%define USER_FRAME_VERT_NO 7
-
 %ifdef DEBUG_BUILD
 %define SHOW_DEBUG FALSE
 %define LOG_NAME 'RD:path_debug.DT'
@@ -25,9 +16,22 @@ PROGRAM test_pth_mtn
 %include pose.const.klt
 %include draw.klt
 %include pathplan.klt
+%include toolpath.structs.klt
 %include paths.klt
 
 VAR
+--pathplan parameters
+%defeval OD_CORNER RIGHT_BOTTOM
+%defeval ID_CORNER LEFT_BOTTOM
+%defeval PLATE_CORNER RIGHT_BOTTOM
+--robot config parameters
+%define USER_FRAME_CUT_NO 9
+%define USER_FRAME_VERT_NO 7
+--motion parameters
+%define TOOLING_STEP 6
+%define LINKING_STEP 10
+%define TOOLING_SPEED 50
+%define LINKING_SPEED 100
   contours : PATH nodedata = t_VEC_PATH
   lines : PATH nodedata = t_VEC_PATH
   polygon : PATH nodedata = t_VERTEX
@@ -42,10 +46,12 @@ VAR
 %from registers.klh %import set_real, set_int
 %include paths.klh
 
---path object
-%class tstpth('paths.klc','pathclass.klh','defaultpath.klt')
 --polygon object
 %class tstpoly('polygon.klc', 'polygon.klh')
+--path object
+%class tstpth('paths.klc','pathclass.klh','defaultpath.klt')
+--motion object
+%class tstmtn('motion.klc','motion.klh','defaultpath.klt')
 
 %ifdef DEBUG_BUILD
 -- user display log
@@ -114,6 +120,7 @@ ROUTINE t_hexagon
 %define num_of_points 5
 %define TOOL_ORIENT 20,0,0
 %define RETRACT_HEIGHT 10
+%define PAD_IDOD 1
     i, status : INTEGER
     rast_ang : INTEGER
     overlap : REAL
@@ -121,6 +128,8 @@ ROUTINE t_hexagon
     bbox : t_RECT
     cds : t_COORD_SYS
     origin : XYZWPR
+    frm : XYZWPR
+    tool : XYZWPR
   BEGIN
 
     --lock group 1
@@ -134,7 +143,6 @@ ROUTINE t_hexagon
     rast_ang = 0
     overlap = 6
     wall_lines = 1
-    origin = POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG))
 
     tstpoly__new
     tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 0)
@@ -146,21 +154,26 @@ ROUTINE t_hexagon
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
     tstpoly__lines_to_vec_path(lines) ; tstpoly__contours_to_vec_path(contours) ;
 
-    cds = paths__new_coord_sys(PTH_CARTESAN, 3)
-    tstpth__init(origin, POS(0,0,0,TOOL_ORIENT,pose__set_config(DEFAULT_CONFIG)), cds)
+    frm = POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG))
+    cds = paths__new_coord_sys(PTH_CARTESAN, Z_AXES)
+    origin = POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG))
+    tool = POS(0,0,0,TOOL_ORIENT,pose__set_config(DEFAULT_CONFIG))
 
-    tstpth__set_idod(1)
+    --initialize pathclass
+      -- coord frm, coordinate system, part origin, idod
+    tstpth__init(frm, cds, origin, PAD_IDOD)
+    --intialize motion friend class
+      --tool offset, interpolate flag, program type
+    tstmtn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
     bbox = tstpoly__get_bounding_box
-    tstpth__createPath(lines, contours, origin, PLATE_CORNER, ONEWAY, FALSE)
+    tstpth__planPath(lines, contours, PLATE_CORNER, ONEWAY, FALSE)
+    
     --move through path
-    tstpth__set_prog_names(MOVE_DRYRUN)
-    tstpth__movePolyFull(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
+    tstmtn__movePolyFull(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
 
-    --get lists
-    tstpth__get_plan(path_plan)
-    tstpth__get_path(pth)
+    UNLOCK_GROUP(math__bitmask(RBT_GRP),status)
 
     RETURN
 
@@ -189,6 +202,8 @@ ROUTINE t_pvert_ID
 %define LINKING_STEP 90
     i, status : INTEGER
     origin : XYZWPR
+    frm : XYZWPR
+    tool : XYZWPR
     bbox : t_RECT
     cds : t_COORD_SYS
   BEGIN
@@ -212,28 +227,30 @@ ROUTINE t_pvert_ID
     --get lines from object
     tstpoly__lines_to_vec_path(lines) ;
 
+    frm = POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
-    tstpth__init(POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG)), &
-                 POS(0,0,0,TOOL_ORIENT_UP,pose__set_config(DEFAULT_CONFIG)), cds)
-                
-    tstpth__set_idod(PAD_IDOD)
+    origin = POS(PAD_START_DEG,0,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
+    tool = POS(0,0,0,TOOL_ORIENT_UP,pose__set_config(DEFAULT_CONFIG))
+
+    --initialize pathclass
+      -- coord frm, coordinate system, part origin, idod
+    tstpth__init(frm, cds, origin, PAD_IDOD)
+    --intialize motion friend class
+      --tool offset, interpolate flag, program type
+    tstmtn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    origin = POS(PAD_START_DEG,0,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
     bbox = tstpoly__get_bounding_box
-    tstpth__createPath(lines, contours, origin, ID_CORNER, ONEWAY, FALSE)
-    --move through path
-    tstpth__set_prog_names(MOVE_DRYRUN)
-    tstpth__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, RETRACT_HEIGHT)
+    tstpth__planPath(lines, contours, ID_CORNER, ONEWAY, FALSE)
     
-    --get lists
-    tstpth__get_plan(path_plan)
-    tstpth__get_path(pth)
+    --move through path
+    tstmtn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, RETRACT_HEIGHT)
 
     -- retract
-    tstpth__get_line(1, TRUE, TRUE, origin, PTH_LINKING, LINKING_STEP, FALSE)
-    tstpth__moveArc(LINKING_SPEED)
+    tstpth__get_line(1, TRUE, TRUE, PTH_LINKING, LINKING_STEP, FALSE)
+    tstmtn__moveArc(LINKING_SPEED)
 
+    UNLOCK_GROUP(math__bitmask(RBT_GRP),status)
 
     RETURN
   END t_pvert_ID
@@ -241,7 +258,6 @@ ROUTINE t_pvert_ID
 
 ROUTINE t_pvert_OD
   VAR
-
 %define PAD_RADIUS 100
 %define PAD_WIDTH 360
 %define PAD_LENGTH 50
@@ -262,6 +278,8 @@ ROUTINE t_pvert_OD
 %define LINKING_STEP 20
     i, status : INTEGER
     origin : XYZWPR
+    frm : XYZWPR
+    tool : XYZWPR
     cds : t_COORD_SYS
   BEGIN
     --lock group 1
@@ -284,27 +302,31 @@ ROUTINE t_pvert_OD
     --get lines from object
     tstpoly__lines_to_vec_path(lines) ;
 
+    frm = POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
-    tstpth__init(POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG)), &
-                 POS(0,0,0,TOOL_ORIENT_DOWN,pose__set_config(DEFAULT_CONFIG)), cds)
-                
-    tstpth__set_idod(PAD_IDOD)
+    origin = POS(PAD_START_DEG,0,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
+    tool = POS(0,0,0,TOOL_ORIENT_DOWN,pose__set_config(DEFAULT_CONFIG))
+
+    --initialize pathclass
+      -- coord frm, coordinate system, part origin, idod
+    tstpth__init(frm, cds, origin, PAD_IDOD)
+    --intialize motion friend class
+      --tool offset, interpolate flag, program type
+    tstmtn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    origin = POS(PAD_START_DEG,0,PAD_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
-    tstpth__createPath(lines, contours, origin, OD_CORNER, ONEWAY, FALSE)
+    tstpth__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
+    --pause
+
     --move through path
-    tstpth__set_prog_names(MOVE_DRYRUN)
-    tstpth__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
-
-    --get lists
-    tstpth__get_plan(path_plan)
-    tstpth__get_path(pth)
-
+    tstmtn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
 
     -- retract
-    tstpth__get_line(1, TRUE, TRUE, origin, PTH_LINKING, LINKING_STEP, FALSE)
-    tstpth__moveArc(LINKING_SPEED)
+    tstpth__get_line(1, TRUE, TRUE, PTH_LINKING, LINKING_STEP, FALSE)
+    --pause
+    tstmtn__moveArc(LINKING_SPEED)
+
+    UNLOCK_GROUP(math__bitmask(RBT_GRP),status)
 
     RETURN
   END t_pvert_OD
@@ -317,12 +339,12 @@ BEGIN
 %endif
 
   -- t_hexagon
-  -- t_pvert_ID
-  t_pvert_OD
+  t_pvert_ID
+  -- t_pvert_OD
 
   --clean up
-  tstpoly__delete
-  tstpth__delete
+  -- tstpoly__delete
+  -- tstpth__delete
 
 %ifdef DEBUG_BUILD
   usrdis__write_pipe

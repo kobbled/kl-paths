@@ -8,6 +8,9 @@ PROGRAM test_pth_rot
 %define TOOLING_SPEED 50
 %define LINKING_SPEED 100
 
+%defeval OD_CORNER RIGHT_BOTTOM
+%defeval ID_CORNER LEFT_BOTTOM
+
 %ifdef DEBUG_BUILD
 %define SHOW_DEBUG FALSE
 %define LOG_NAME 'RD:path_debug.DT'
@@ -19,11 +22,12 @@ PROGRAM test_pth_rot
 %include draw.klt
 %include pose.const.klt
 %include pathplan.klt
+%include toolpath.structs.klt
 %include paths.klt
 
 --include motion type
 %include defaultrot.klt
-define_paths_types(PATH_DATA_TYPE, tstrot)
+motion_type(MOTION_DATA_FILE)
 
 VAR
   contours : PATH nodedata = t_VEC_PATH
@@ -40,11 +44,15 @@ VAR
 %from registers.klh %import set_real, set_int
 %include paths.klh
 
+--robot implementation
+impl_motion_head(MOTION_DATA_FILE)
+
 --polygon object
 %class tstpoly('polygon.klc', 'polygon.klh')
 --path object
 %class tstrot('paths.klc','pathclass.klh','defaultrot.klt')
-define_paths_headers(tstrot)
+--motion object
+%class tstrmn('motion.klc','motion.klh','defaultrot.klt')
 
 %ifdef DEBUG_BUILD
 -- user display log
@@ -125,9 +133,10 @@ ROUTINE t_rot_delta
 %define LINKING_STEP 10
     i, status : INTEGER
     origin : XYZWPR
+    frm : XYZWPR
+    tool : XYZWPR
     bbox : t_RECT
     cds : t_COORD_SYS
-    nde : XYZWPR
   BEGIN
     --lock group 1
     LOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
@@ -149,26 +158,30 @@ ROUTINE t_rot_delta
     --get contours
     tstpoly__contours_to_vec_path(contours) ;
 
+    frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
-    nde = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
-    tstrot__init(POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG)), &
-                 nde, cds)
-                
-    tstrot__set_idod(PAD_IDOD)
+    tool = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
+    origin = POS(0,START_DIST,DRAW_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
+
+    --initialize pathclass
+      -- coord frm, coordinate system, part origin, idod
+    tstrot__init(frm, cds, origin, PAD_IDOD)
+    --intialize motion friend class
+      --tool offset, interpolate flag, program type
+    tstrmn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    origin = POS(0,START_DIST,DRAW_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
     bbox = tstpoly__get_bounding_box
-    tstrot__createPath(lines, contours, origin, OD_CORNER, ONEWAY, FALSE)
+    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
+    
     --move through raster path
-    tstrot__set_prog_names(MOVE_DRYRUN)
-    tstrot__movePoly(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
+    tstrmn__movePoly(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
 
     --move through contour
 
     -- --get lists
     -- tstrot__get_plan(path_plan)
-    -- tstrot__get_path(pth)
+    -- tstrot__get_segment(pth)
 
     UNLOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
 
@@ -201,9 +214,10 @@ ROUTINE t_rot_OD
 %define LINKING_STEP 90
     i, status : INTEGER
     origin : XYZWPR
+    frm : XYZWPR
+    tool : XYZWPR
     bbox : t_RECT
     cds : t_COORD_SYS
-    nde : XYZWPR
   BEGIN
     --lock group 1
     LOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
@@ -228,24 +242,28 @@ ROUTINE t_rot_OD
     --get lines from object
     tstpoly__lines_to_vec_path(lines) ;
 
+    frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
-    nde = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
-    tstrot__init(POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG)), &
-                 nde, cds)
-                
-    tstrot__set_idod(PAD_IDOD)
+    tool = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
+    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,PAD_ANGLE,0,0,pose__set_config(DEFAULT_CONFIG))
+    
+    --initialize pathclass
+      -- coord frm, coordinate system, part origin, idod
+    tstrot__init(frm, cds, origin, PAD_IDOD)
+    --intialize motion friend class
+      --tool offset, interpolate flag, program type
+    tstrmn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,PAD_ANGLE,0,0,pose__set_config(DEFAULT_CONFIG))
     bbox = tstpoly__get_bounding_box
-    tstrot__createPath(lines, contours, origin, OD_CORNER, ONEWAY, FALSE)
+    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
+    
     --move through path
-    tstrot__set_prog_names(MOVE_DRYRUN)
-    tstrot__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
+    tstrmn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
 
     -- --get lists
     -- tstrot__get_plan(path_plan)
-    -- tstrot__get_path(pth)
+    -- tstrot__get_segment(pth)
 
     UNLOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
 
@@ -278,9 +296,10 @@ ROUTINE t_rot_ID
 %define LINKING_STEP 20
     i, status : INTEGER
     origin : XYZWPR
+    frm : XYZWPR
+    tool : XYZWPR
     bbox : t_RECT
     cds : t_COORD_SYS
-    nde : XYZWPR
   BEGIN
     --lock group 1
     LOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
@@ -305,24 +324,27 @@ ROUTINE t_rot_ID
     --get lines from object
     tstpoly__lines_to_vec_path(lines) ;
 
+    frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
-    nde = POS(0,0,0,TOOL_ORIENT_UP, pose__set_config(DEFAULT_CONFIG))
-    tstrot__init(POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG)), &
-                 nde, cds)
-                
-    tstrot__set_idod(PAD_IDOD)
+    tool = POS(0,0,0,TOOL_ORIENT_UP, pose__set_config(DEFAULT_CONFIG))
+    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,PAD_ANGLE,0,0,pose__set_config(DEFAULT_CONFIG))
+    
+    --initialize pathclass
+    tstrot__init(frm, cds, origin, PAD_IDOD)
+    --intialize motion friend class
+    tstrmn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,PAD_ANGLE,0,0,pose__set_config(DEFAULT_CONFIG))
     bbox = tstpoly__get_bounding_box
-    tstrot__createPath(lines, contours, origin, ID_CORNER, ONEWAY, FALSE)
+    tstrot__planPath(lines, contours, ID_CORNER, ONEWAY, FALSE)
+    
     --move through path
-    tstrot__set_prog_names(MOVE_DRYRUN)
-    tstrot__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT) )
+    tstrmn__set_prog_names(MOVE_DRYRUN)
+    tstrmn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT) )
 
     -- --get lists
     -- tstrot__get_plan(path_plan)
-    -- tstrot__get_path(pth)
+    -- tstrot__get_segment(pth)
 
     UNLOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
 
