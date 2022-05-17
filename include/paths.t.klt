@@ -9,12 +9,14 @@ TYPE
     approach : VECTOR
   ENDSTRUCTURE
 
+%ifdef systemlib_t
   t_VEC2D_PATH FROM paths = STRUCTURE
     v : VECTOR2D
     code : SHORT
     polygon : SHORT
     approach : VECTOR
   ENDSTRUCTURE
+%endif
 
   t_POS_PATH FROM paths = STRUCTURE
     v : XYZWPR

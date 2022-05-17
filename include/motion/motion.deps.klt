@@ -1,0 +1,7 @@
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+--pathclass dependency
+%define paths_object_define(object_name,cnfg_file) `%class object_name('paths.klc','pathclass.klh','cnfg_file')`
+
+%mode pop

@@ -21,7 +21,7 @@ PROGRAM paths
 %include draw.rect.klt
 %include pathplan.klt
 %include paths.klt
-%include motion.klt
+%include toolpath.structs.klt
 
 %include errors.klh
 %ifdef DEBUG_BUILD

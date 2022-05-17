@@ -1,0 +1,5 @@
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define pathmake_friends(object_name) `VAR
+  pth FROM object_name : PATH nodedata = t_TOOLPATH`
+%mode pop

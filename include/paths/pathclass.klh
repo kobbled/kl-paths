@@ -10,50 +10,54 @@ header_def -- define class
 declare_member(class_name,new,class_name,new)
 ROUTINE new FROM class_name
 declare_member(class_name,init,class_name,init)
-ROUTINE init(coord_frm : XYZWPR; toolOffst : XYZWPR; coord_sys : t_COORD_SYS) FROM class_name
+ROUTINE init(coord_frm : XYZWPR; coord_sys : t_COORD_SYS; origin : XYZWPR; idod : INTEGER) FROM class_name
 declare_member(class_name,delete,class_name,dstr)
 ROUTINE delete FROM class_name
 declare_member(class_name,makeCustom,class_name,mkctm)
 ROUTINE makeCustom(filename : STRING) FROM class_name
+
 --setters
 declare_member(class_name,set_idod,class_name,stido)
 ROUTINE set_idod(i : INTEGER) FROM class_name
-declare_member(class_name,set_interpolation,class_name,stitp)
-ROUTINE set_interpolation(interp : BOOLEAN) FROM class_name
 declare_member(class_name,set_coordinate_system,class_name,stcrd)
 ROUTINE set_coordinate_system(system : INTEGER ; z_axis : INTEGER) FROM class_name
-declare_member(class_name,set_prog_names,class_name,stprg)
-ROUTINE set_prog_names(prog_typ : INTEGER) FROM class_name
+declare_member(class_name,set_coord_frame,class_name,stcdf)
+ROUTINE set_coord_frame(x,y,z,w,p,r : REAL) FROM class_name
+declare_member(class_name,set_origin,class_name,storg)
+ROUTINE set_origin(x,y,z,w,p,r : REAL) FROM class_name
+declare_member(class_name,define_origin,class_name,dforg)
+ROUTINE define_origin(polyprm : t_PATH_VARS ; toolprm : t_TOOL_VARS) FROM class_name
+
 --getters
+declare_member(class_name,get_idod,class_name,gtido)
+ROUTINE get_idod : INTEGER FROM class_name
 declare_member(class_name,get_path,class_name,gtpth)
 ROUTINE get_path(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,get_plan,class_name,gtpln)
 ROUTINE get_plan(out_path : PATH nodedata = t_INTEGER) FROM class_name
 
-declare_member(class_name,createPath,class_name,crtpt)
-ROUTINE createPath(lines : PATH nodedata = t_VEC_PATH; contours : PATH nodedata = t_VEC_PATH; & 
-               origin : XYZWPR; start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN) FROM class_name
-declare_member(class_name,loadPath,class_name,ldpth)
-ROUTINE loadPath(filename : STRING; origin : XYZWPR; start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN; intrep_tool : BOOLEAN) FROM class_name
+declare_member(class_name,next_toolpath,class_name,ntpth)
+ROUTINE next_toolpath(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
+                      retract_hght : REAL; interp_tool : BOOLEAN) FROM class_name
+declare_member(class_name,get_toolpath,class_name,gttph)
+ROUTINE get_toolpath(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
+                      retract_hght : REAL; interp_tool : BOOLEAN) FROM class_name
+declare_member(class_name,get_midpoint,class_name,gtmpt)
+ROUTINE get_midpoint(start_idx, end_idx : INTEGER; code, typ : INTEGER) : t_TOOLPATH FROM class_name
+
+declare_member(class_name,is_path_end,class_name,ipte)
+-- use to determine if pathplan has been traversed
+ROUTINE is_path_end : BOOLEAN FROM class_name
+declare_member(class_name,planPath,class_name,pthpl)
+ROUTINE planPath(lines : PATH nodedata = t_VEC_PATH; contours : PATH nodedata = t_VEC_PATH; & 
+               start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN) FROM class_name
+declare_member(class_name,planImportPath,class_name,ldpth)
+ROUTINE planImportPath(filename : STRING; start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN; intrep_tool : BOOLEAN) FROM class_name
+
 declare_member(class_name,makeline,class_name,mkln)
 ROUTINE makeline(start_point, end_point : VECTOR; line_typ : INTEGER; line_code : INTEGER; spacing : REAL) FROM class_name
 declare_member(class_name,get_line,class_name,gtln)
-ROUTINE get_line(line_no : INTEGER; revrs_ordr, reverse_line : BOOLEAN; origin: XYZWPR ; &
+ROUTINE get_line(line_no : INTEGER; revrs_ordr, reverse_line : BOOLEAN; &
                  line_typ : INTEGER; spacing : REAL; append : BOOLEAN) FROM class_name
-declare_member(class_name,moveLine,class_name,mvln)
-ROUTINE moveLine(speed : REAL) FROM class_name
-declare_member(class_name,moveArc,class_name,mvac)
-ROUTINE moveArc(speed : REAL) FROM class_name
-declare_member(class_name,movePoly,class_name,mvpy)
-ROUTINE movePoly(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
-                 retract_hght : REAL) FROM class_name
-declare_member(class_name,movePolyFull,class_name,mvpf)
-ROUTINE movePolyFull(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
-                 retract_hght : REAL) FROM class_name
-declare_member(class_name,movePolyArc,class_name,mvpya)
-ROUTINE movePolyArc(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
-                 retract_hght : REAL) FROM class_name
-declare_member(class_name,movePolyArcFull,class_name,mvpaf)
-ROUTINE movePolyArcFull(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
-                 retract_hght : REAL) FROM class_name
+
 %endif --end header

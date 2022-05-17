@@ -1,0 +1,7 @@
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+--pathplan dependency
+%define define_pathplan(object_name,cnfg_file) `%class object_name('pathplan.klc','pathplan.klh','cnfg_file')`
+
+%mode pop

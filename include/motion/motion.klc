@@ -1,0 +1,593 @@
+PROGRAM class_name
+%NOBUSYLAMP
+%COMMENT = 'motion class'
+%NOLOCKGROUP
+
+%ifdef ROT_GRP
+%ifeq ROT_GRP 0
+%undef ROT_GRP
+%endif
+%endif
+%ifdef TRACK_GRP
+%ifeq TRACK_GRP 0
+%undef TRACK_GRP
+%endif
+%endif
+
+%include namespace.m
+
+%include errors.klt
+%include systemlib.klt
+%include draw.klt
+%include paths.klt
+%include toolpath.structs.klt
+%include pathplan.klt
+%include motion.deps.klt
+
+%ifdef motion_type
+motion_type(MOTION_DATA_FILE)
+%endif
+
+%define BASE_CLASSNAME class_name
+
+
+-- include reference to pathmake
+-- "pth". This module is used to move
+-- through this path.
+%include pathclass.friend.members.klt
+pathmake_friends(PATH_OBJECT_NAME)
+
+VAR
+  tool_offset : MOTION_DATA_TYPE
+  --index 1 is for linear motion. index 2 is for circular motion.
+  motion_prog : ARRAY[2] OF STRING[12]
+  --used for setting the motion programs in 'set_prog_names'
+  program_type : INTEGER
+  interpolate : BOOLEAN
+
+%from systemlib.klh %import VEC, VEC2D
+%include errors.klh
+%include pose.klh
+%include paths.klh
+%from registers.klh %import set_real, set_int
+
+--define path object
+paths_object_define(PATH_OBJECT_NAME,CONFIG_FILENAME)
+
+--implement robot config interface
+impl_motion_members(MOTION_DATA_FILE)
+
+%defeval class_name BASE_CLASSNAME
+
+%include motion.klh
+
+--public
+ROUTINE new
+  BEGIN
+    tool_offset = DEFAULT_POSE
+    interpolate = TRUE
+    program_type = 1
+    set_prog_names(program_type)
+  END new
+
+ROUTINE init
+  BEGIN
+    tool_offset = make_tool_offset(toolOffst)
+    interpolate = interp_
+    program_type = prog_typ
+    set_prog_names(program_type)
+  END init
+
+ROUTINE init2
+  BEGIN
+    -- sets tool_offset
+    define_tool_offset(toolprm)
+    interpolate = interp_
+    program_type = prog_typ
+    set_prog_names(program_type)
+  END init2
+
+ROUTINE delete
+  BEGIN
+
+    --unitialize offset pose
+    tool_offset = DEFAULT_POSE
+    --unitialize boolean
+    SET_UNINIT_B('class_name', 'interpolate')
+    --uninit motion programs
+    motion_prog[1] = '' ; motion_prog[2] = ''
+    program_type = 0
+  END delete
+
+
+-- setters
+
+ROUTINE set_interpolation
+  BEGIN
+    interpolate = interp_
+  END set_interpolation
+
+ROUTINE set_tool_offset
+  BEGIN
+    tool_offset = make_tool_offset(toolOffst)
+  END set_tool_offset
+
+ROUTINE add_tool_offset
+  VAR
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    nde = make_tool_offset(add_offset)
+    tool_offset = poseMul(tool_offset, nde)
+  END add_tool_offset
+
+ROUTINE define_tool_offset
+  VAR
+    toolOffst : XYZWPR
+    v : VECTOR
+  BEGIN
+    --define tool offset
+    SELECT (toolprm.coordSys) OF
+      CASE(PTH_CARTESAN):
+        v = VEC(TOOL_ORIENT_UP)
+      CASE(PTH_CYLINDER):
+        IF (toolprm.idod = -1) THEN
+          v = VEC(TOOL_ORIENT_UP)
+        ELSE
+          v = VEC(TOOL_ORIENT_DOWN)
+        ENDIF
+      ELSE:
+    ENDSELECT
+
+    --set tool pitch
+    v.x = v.x + toolprm.pitch
+    --set tool
+    toolOffst = POS(0,0,0,v.x,v.y,v.z,pose__set_config(DEFAULT_CONFIG))
+    --convert cartesian to robot
+    tool_offset = make_tool_offset(toolOffst)
+
+  END define_tool_offset
+
+ROUTINE set_program_type
+  BEGIN
+    program_type = typ
+  END set_program_type
+
+ROUTINE set_prog_names
+  BEGIN
+    SELECT prog_typ OF
+      CASE(MOVE_DRYRUN):
+        motion_prog[1] = DRYRUN_LINE_PROG
+        motion_prog[2] = DRYRUN_CIRC_PROG
+      CASE(MOVE_WORKING):
+        motion_prog[1] = WORK_LINE_PROG
+        motion_prog[2] = WORK_CIRC_PROG
+      CASE(MOVE_SCANING):
+        motion_prog[1] = SCAN_LINE_PROG
+        motion_prog[2] = ''
+      ELSE:
+        motion_prog[1] = ''
+        motion_prog[2] = ''
+        karelError(INVALID_TYPE_CODE,'motion program type in classname must be set before running', ER_ABORT)
+    ENDSELECT
+    
+  END set_prog_names
+
+
+ROUTINE createPath
+  BEGIN
+    `PATH_OBJECT_NAME`__planPath(lines, contours, (rastprm.startCorner), (rastprm.rastType), (rastprm.constrain))
+  END createPath
+
+ROUTINE aquire_groups
+  VAR
+    status : INTEGER
+  BEGIN
+    --lock groups
+    LOCK_GROUP(CELL_GRPMASK, status)
+
+
+    --set frames
+    pose__set_userframe(USER_FRAME_NO, RBT_GRP)
+    pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
+%ifdef ROT_GRP
+    pose__set_userframe(USER_FRAME_NO, ROT_GRP)
+    pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
+%endif
+%ifdef TRACK_GRP
+    pose__set_userframe(USER_FRAME_NO, TRACK_GRP)
+    pose__set_toolframe(TOOL_FRAME_NO, TRACK_GRP)
+%endif
+
+  END aquire_groups
+
+ROUTINE release_groups
+  VAR
+    status : INTEGER
+  BEGIN
+    UNLOCK_GROUP(CELL_GRPMASK,status)
+  END release_groups
+
+--*******
+-- Movement Functions
+--*******
+
+ROUTINE move
+  BEGIN
+    --move though path
+    IF (motnprm.use_arc) THEN
+%ifeq GENERATE_FULL_PATH TRUE
+      movePolyArcFull((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist) )
+%else
+      movePolyArc((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist) )
+%endif
+    ELSE
+%ifeq GENERATE_FULL_PATH TRUE
+      movePolyFull((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist) )
+%else
+      movePoly((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist) )
+%endif
+    ENDIF
+
+%ifndef ROT_GRP
+    --unravel if cylindrical
+    IF (toolprm.coordSys=PTH_CYLINDER) THEN
+      `PATH_OBJECT_NAME`__get_line(1, TRUE, TRUE, PTH_LINKING, (motnprm.link_step), FALSE)
+      IF (motnprm.use_arc) THEN
+        moveArc((motnprm.link_speed))
+      ELSE
+        moveLine((motnprm.link_speed))
+      ENDIF
+    ENDIF
+%endif
+
+  END move
+
+ROUTINE moveLine
+  VAR
+    i : INTEGER
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    --set tool orientation
+    set_posereg(tool_offset, TOOL_OFFSET_REG)
+
+    IF (motion_prog[1] = '') THEN
+      karelError(VAR_UNINIT,'linear motion program in class_name needs to be set', ER_ABORT)
+    ENDIF
+
+    FOR i=1 TO PATH_LEN(pth) DO
+      --set code and type for tp
+      registers__set_int(CODE_REGISTER, (pth[i].code))
+      registers__set_int(TYPE_REGISTER, (pth[i].typ))
+      --set termination for tp
+      SELECT (pth[i].code) OF
+        CASE(PTH_MOVETO,PTH_CLOSE): registers__set_int(TERM_REGISTER, TERM_FINE) ;
+        ELSE: registers__set_int(TERM_REGISTER, TERM_CONT) ;
+      ENDSELECT
+
+      --set pose
+      nde = tpath2pos(pth[i])
+      set_posereg(nde, POSE_REG)
+      --move to pose
+      CALL_PROG(motion_prog[1], 0)
+    ENDFOR
+  END moveLine
+
+ROUTINE moveArc
+  VAR
+    i, status : INTEGER
+    nde, nde_tool : MOTION_DATA_TYPE
+  BEGIN
+    --make tool offset pose to be multiplied in
+    --as circular_move does not allow the use of
+    --the tool_offset modifier
+    nde_tool = poseInv(tool_offset)
+
+    IF (motion_prog[1] = '') OR (motion_prog[2] = '') THEN
+      karelError(VAR_UNINIT,'motion programs in class_name needs to be set', ER_ABORT)
+    ENDIF
+
+    --linear move to start of path
+    --LS program should handle PTH_MOVETO case
+      --set code and type for tp
+    IF PATH_LEN(pth) > 0 THEN
+    --circular move
+      registers__set_int(CODE_REGISTER, PTH_MOVETO)
+      registers__set_int(TYPE_REGISTER, (pth[1].typ))
+      registers__set_int(TERM_REGISTER, TERM_FINE)
+        --set pose
+      nde = tpath2pos(pth[1])
+      nde = poseMul(nde, nde_tool)
+      set_posereg(nde, ARC_REG1)
+        --move to pose
+      CALL_PROG(motion_prog[2], 0)
+    ENDIF
+
+    --for circular motion need to define the next two points for motion
+    --LS program should handle PTH_CLOSE case
+    i = 2
+    WHILE i < PATH_LEN(pth) DO
+      --set code and type for tp
+      SELECT pth[i+1].code OF
+        CASE(PTH_MOVETO,PTH_CLOSE):
+          registers__set_int(CODE_REGISTER, PTH_CLOSE)
+        ELSE:
+          registers__set_int(CODE_REGISTER, (pth[i+1].code))
+      ENDSELECT
+      registers__set_int(TYPE_REGISTER, (pth[i+1].typ))
+      registers__set_int(TERM_REGISTER, TERM_CONT) ;
+
+      --Do not use cicular_move if less than 3 points
+      IF PATH_LEN(pth) < 3 THEN
+      --linear move
+        set_posereg(tool_offset, TOOL_OFFSET_REG)
+        nde = tpath2pos(pth[i])
+        set_posereg(nde, POSE_REG)
+      --move to pose
+        CALL_PROG(motion_prog[1], 0)
+      ELSE
+      --circular move
+        --set midpoint
+        nde = tpath2pos(pth[i])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG1)
+        --set endpoint
+        nde = tpath2pos(pth[i+1])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG2)
+
+        CALL_PROG(motion_prog[2], 0)
+      ENDIF
+
+      i = i + 2
+    ENDWHILE
+  END moveArc
+
+ROUTINE movePoly
+  VAR
+    i : INTEGER
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    --set tool orientation
+    set_posereg(tool_offset, TOOL_OFFSET_REG)
+
+    IF (motion_prog[1] = '') THEN
+      karelError(VAR_UNINIT,'linear motion program in class_name needs to be set', ER_ABORT)
+    ENDIF
+
+    REPEAT
+      `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght, interpolate)
+
+      FOR i=1 TO PATH_LEN(pth) DO
+        --set code and type for tp
+        registers__set_int(CODE_REGISTER, (pth[i].code))
+        registers__set_int(TYPE_REGISTER, (pth[i].typ))
+        --set termination for tp
+        SELECT pth[i].code OF
+          CASE(PTH_MOVETO,PTH_CLOSE): registers__set_int(TERM_REGISTER, TERM_FINE) ;
+          ELSE: registers__set_int(TERM_REGISTER, TERM_CONT) ;
+        ENDSELECT
+
+        --set pose
+        nde = tpath2pos(pth[i])
+        set_posereg(nde, POSE_REG)
+        --move to pose
+        CALL_PROG(motion_prog[1], 0)
+      ENDFOR
+    UNTIL(`PATH_OBJECT_NAME`__is_path_end)
+
+  END movePoly
+
+ROUTINE movePolyFull
+  VAR
+    i : INTEGER
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    --set tool orientation
+    set_posereg(tool_offset, TOOL_OFFSET_REG)
+
+    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght, interpolate)
+
+    IF (motion_prog[1] = '') THEN
+      karelError(VAR_UNINIT,'linear motion program in class_name needs to be set', ER_ABORT)
+    ENDIF
+
+    FOR i=1 TO PATH_LEN(pth) DO
+      --set code and type for tp
+      registers__set_int(CODE_REGISTER, (pth[i].code))
+      registers__set_int(TYPE_REGISTER, (pth[i].typ))
+      --set termination for tp
+      SELECT pth[i].code OF
+        CASE(PTH_MOVETO,PTH_CLOSE): registers__set_int(TERM_REGISTER, TERM_FINE) ;
+        ELSE: registers__set_int(TERM_REGISTER, TERM_CONT) ;
+      ENDSELECT
+
+      --set pose
+      nde = tpath2pos(pth[i])
+      set_posereg(nde, POSE_REG)
+      --move to pose
+      CALL_PROG(motion_prog[1], 0)
+    ENDFOR
+
+  END movePolyFull
+
+ROUTINE movePolyArc
+  VAR
+    i, status : INTEGER
+    nde, nde_tool : MOTION_DATA_TYPE
+  BEGIN
+    --make tool offset pose to be multiplied in
+    --as circular_move does not allow the use of
+    --the tool_offset modifier
+    nde_tool = poseInv(tool_offset)
+
+    IF (motion_prog[1] = '') OR (motion_prog[2] = '') THEN
+      karelError(VAR_UNINIT,'motion programs in class_name needs to be set', ER_ABORT)
+    ENDIF
+
+    REPEAT
+      `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght, interpolate)
+
+      --linear move to start of path
+        --set code and type for tp
+      IF PATH_LEN(pth) > 0 THEN
+      --circular move
+        registers__set_int(CODE_REGISTER, PTH_MOVETO)
+        registers__set_int(TYPE_REGISTER, (pth[1].typ))
+        registers__set_int(TERM_REGISTER, TERM_FINE)
+          --set pose
+        nde = tpath2pos(pth[1])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG1)
+          --move to pose
+        CALL_PROG(motion_prog[2], 0)
+      ENDIF
+
+      --for circular motion need to define the next two points for motion
+      --LS program should handle PTH_CLOSE case
+      i = 2
+      WHILE i < PATH_LEN(pth) DO
+        --Do not use cicular_move if less than 3 points
+        IF PATH_LEN(pth) < 3 THEN
+        --linear move
+          set_posereg(tool_offset, TOOL_OFFSET_REG)
+
+          registers__set_int(CODE_REGISTER, PTH_CLOSE)
+          registers__set_int(TYPE_REGISTER, (pth[i].typ))
+          registers__set_int(TERM_REGISTER, TERM_FINE)
+
+          nde = tpath2pos(pth[i])
+          set_posereg(nde, POSE_REG)
+          --move to pose
+          CALL_PROG(motion_prog[1], 0)
+        ELSE
+        --circular move
+          --set code and type for tp
+          SELECT pth[i+1].code OF
+            CASE(PTH_MOVETO,PTH_CLOSE):
+              registers__set_int(CODE_REGISTER, PTH_CLOSE)
+            ELSE:
+              registers__set_int(CODE_REGISTER, (pth[i+1].code))
+          ENDSELECT
+          registers__set_int(TYPE_REGISTER, (pth[i+1].typ))
+          registers__set_int(TERM_REGISTER, TERM_CONT)
+
+          --set midpoint
+          nde = tpath2pos(pth[i])
+          nde = poseMul(nde, nde_tool)
+          set_posereg(nde, ARC_REG1)
+          --set endpoint
+          nde = tpath2pos(pth[i+1])
+          nde = poseMul(nde, nde_tool)
+          set_posereg(nde, ARC_REG2)
+
+          CALL_PROG(motion_prog[2], 0)
+        ENDIF
+
+        i = i + 2
+      ENDWHILE
+
+    UNTIL(`PATH_OBJECT_NAME`__is_path_end)
+
+  END movePolyArc
+
+ROUTINE movePolyArcFull
+  VAR
+    i : INTEGER
+    startCode,endCode : INTEGER
+    nde, nde_tool : MOTION_DATA_TYPE
+  BEGIN
+    --make tool offset pose to be multiplied in
+    --as circular_move does not allow the use of
+    --the tool_offset modifier
+    nde_tool = poseInv(tool_offset)
+
+    --set tool orientation
+    set_posereg(tool_offset, TOOL_OFFSET_REG)
+
+    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght, interpolate)
+
+    startCode = pth[1].code
+    endCode = paths__opposite_code(startCode)
+
+    IF (motion_prog[1] = '') OR (motion_prog[2] = '') THEN
+      karelError(VAR_UNINIT,'motion programs in class_name needs to be set', ER_ABORT)
+    ENDIF
+
+    i = 1
+    WHILE i < PATH_LEN(pth) DO
+      IF pth[i].code = startCode THEN
+      --circular move
+        registers__set_int(CODE_REGISTER, PTH_MOVETO)
+        registers__set_int(TYPE_REGISTER, (pth[i].typ))
+        registers__set_int(TERM_REGISTER, TERM_FINE)
+          --set pose
+        nde = tpath2pos(pth[i])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG1)
+          --move to pose
+        CALL_PROG(motion_prog[2], 0)
+
+        endCode = paths__opposite_code(startCode)
+
+        i = i + 1
+      ELSE IF pth[i].code = endCode THEN
+      --linear move
+        registers__set_int(CODE_REGISTER, PTH_CLOSE)
+        registers__set_int(TYPE_REGISTER, (pth[i].typ))
+        registers__set_int(TERM_REGISTER, TERM_FINE)
+        set_posereg(tool_offset, TOOL_OFFSET_REG)
+
+        --set pose
+        nde = tpath2pos(pth[i])
+        set_posereg(nde, POSE_REG)
+        --move to pose
+        CALL_PROG(motion_prog[1], 0)
+
+        i = i + 1
+      ELSE IF pth[i+1].code = endCode THEN
+      --circular move
+        registers__set_int(CODE_REGISTER, PTH_CLOSE)
+        registers__set_int(TYPE_REGISTER, (pth[i+1].typ))
+        registers__set_int(TERM_REGISTER, TERM_CONT)
+
+        --set midpoint
+        nde = tpath2pos(pth[i])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG1)
+        --set endpoint
+        nde = tpath2pos(pth[i+1])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG2)
+        --move to pose
+        CALL_PROG(motion_prog[2], 0)
+        
+        IF (i + 2) < PATH_LEN(pth) THEN
+          startCode = pth[i + 2].code
+        ENDIF
+        i = i + 2
+      ELSE
+        registers__set_int(CODE_REGISTER, (pth[i+1].code))
+        registers__set_int(TYPE_REGISTER, (pth[i+1].typ))
+        registers__set_int(TERM_REGISTER, TERM_CONT)
+
+        --set midpoint
+        nde = tpath2pos(pth[i])
+        nde = poseMul(nde, nde_tool)
+        set_posereg(nde, ARC_REG1)
+        --set endpoint
+        nde = tpath2pos(pth[i+1])
+        set_posereg(nde, ARC_REG2)
+        --move to pose
+        CALL_PROG(motion_prog[2], 0)
+
+        i = i + 2
+      ENDIF
+      ENDIF
+      ENDIF
+    ENDWHILE
+
+  END movePolyArcFull
+
+
+BEGIN
+END class_name

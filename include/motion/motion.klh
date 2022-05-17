@@ -1,0 +1,61 @@
+--header
+%include header_guard.m
+--oop
+%include namespace.m
+
+--start header file
+header_if -- ifndef class
+header_def -- define class
+
+--initializations
+declare_member(class_name,new,class_name,new)
+ROUTINE new FROM class_name
+declare_member(class_name,init,class_name,init)
+ROUTINE init(toolOffst : XYZWPR; interp_ : BOOLEAN; prog_typ : INTEGER) FROM class_name
+declare_member(class_name,init2,class_name,init2)
+ROUTINE init2(toolprm : t_TOOL_VARS; interp_ : BOOLEAN; prog_typ : INTEGER) FROM class_name
+declare_member(class_name,delete,class_name,dstr)
+ROUTINE delete FROM class_name
+--setters
+declare_member(class_name,set_interpolation,class_name,stitp)
+ROUTINE set_interpolation(interp_ : BOOLEAN) FROM class_name
+declare_member(class_name,set_tool_offset,class_name,sttof)
+ROUTINE set_tool_offset(toolOffst : XYZWPR) FROM class_name
+declare_member(class_name,add_tool_offset,class_name,adtof)
+ROUTINE add_tool_offset(add_offset : XYZWPR) FROM class_name
+declare_member(class_name,define_tool_offset,class_name,dftof)
+ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) FROM class_name
+declare_member(class_name,set_program_type,class_name,stpgr)
+ROUTINE set_program_type(typ : INTEGER) FROM class_name
+declare_member(class_name,set_prog_names,class_name,stprg)
+ROUTINE set_prog_names(prog_typ : INTEGER) FROM class_name
+--set groups
+declare_member(class_name,aquire_groups,class_name,aqgrp)
+ROUTINE aquire_groups FROM class_name
+declare_member(class_name,release_groups,class_name,rlgrp)
+ROUTINE release_groups FROM class_name
+--path creation
+declare_member(class_name,createPath,class_name,crpth)
+ROUTINE createPath(lines : PATH nodedata = t_VEC_PATH; contours : PATH nodedata = t_VEC_PATH; rastprm : t_PATH_RAST) FROM class_name
+--movements
+declare_member(class_name,move,class_name,move)
+ROUTINE move(toolprm : t_TOOL_VARS ; motnprm : t_MOTION_PRM ) FROM class_name
+declare_member(class_name,moveLine,class_name,mvln)
+ROUTINE moveLine(speed : REAL) FROM class_name
+declare_member(class_name,moveArc,class_name,mvac)
+ROUTINE moveArc(speed : REAL) FROM class_name
+declare_member(class_name,movePoly,class_name,mvpy)
+ROUTINE movePoly(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
+                 retract_hght : REAL) FROM class_name
+declare_member(class_name,movePolyFull,class_name,mvpf)
+ROUTINE movePolyFull(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
+                 retract_hght : REAL) FROM class_name
+declare_member(class_name,movePolyArc,class_name,mvpya)
+ROUTINE movePolyArc(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
+                 retract_hght : REAL) FROM class_name
+declare_member(class_name,movePolyArcFull,class_name,mvpaf)
+ROUTINE movePolyArcFull(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
+                 retract_hght : REAL) FROM class_name
+
+
+%endif --end header

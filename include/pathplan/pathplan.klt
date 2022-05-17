@@ -10,9 +10,9 @@
 %define CASCADEFILL 5
 
 --corner defintions
-%define LEFT_BOTTOM 1
-%define RIGHT_BOTTOM 2
-%define RIGHT_TOP 3
-%define LEFT_TOP 4
+%defeval LEFT_BOTTOM 1
+%defeval RIGHT_BOTTOM 2
+%defeval RIGHT_TOP 3
+%defeval LEFT_TOP 4
 
 %endif --pathplan_t

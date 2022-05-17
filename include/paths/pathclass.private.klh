@@ -4,13 +4,6 @@
 --oop
 %include namespace.m
 
-declare_member(class_name,next_toolpath,class_name,ntpth)
-ROUTINE next_toolpath(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
-                      retract_hght : REAL; interp_tool : BOOLEAN) FROM class_name
-declare_member(class_name,get_toolpath,class_name,gttph)
-ROUTINE get_toolpath(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
-                      retract_hght : REAL; interp_tool : BOOLEAN) FROM class_name
-declare_member(class_name,get_midpoint,class_name,gtmpt)
-ROUTINE get_midpoint(start_idx, end_idx : INTEGER; code, typ : INTEGER) : t_TOOLPATH FROM class_name
+
 
 %endif --pathclass_private_h
