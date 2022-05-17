@@ -1,7 +1,6 @@
-%ifndef motion_types_t
-%define motion_types_t
+%ifndef toolpath_structs_t
+%define toolpath_structs_t
 
---motion types
 TYPE
   t_PATH_VARS FROM paths = STRUCTURE
     xStart : REAL
@@ -49,4 +48,4 @@ TYPE
     points : INTEGER
   ENDSTRUCTURE
 
-%endif --motion_types_t
+%endif --toolpath_structs_t
