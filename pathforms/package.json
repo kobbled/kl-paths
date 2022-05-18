@@ -24,16 +24,18 @@
     "template"
   ],
   "depends" : [
+    "ktransw-macros",
+    "systemlib",
     "errors",
     "display",
-    "math",
-    "graph",
-    "draw",
     "forms",
-    "pose",
-    "csv",
     "multitask",
-    "systemlib",
-    "ktransw-macros"
+    "pose",
+    "tof-sensor",
+    "pathlib",
+    "pathdraw",
+    "pathmake",
+    "pathmotion",
+    "lam"
   ]
 }
