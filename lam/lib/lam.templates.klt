@@ -1,0 +1,4 @@
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define lam_templates(template_file) `%include template_file`
+%mode pop

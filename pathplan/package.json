@@ -1,0 +1,36 @@
+{
+  "manver" : "1",
+  "project" : "pathplan",
+  "description" : "pathplan",
+  "version" : "0.0.1",
+  "license" : "MIT",
+  "author" : "kobbled",
+  "source" : [
+    "lib/pathlib.kl"
+  ],
+  "includes" : [
+    "lib"
+  ],
+  "tests" : [
+    "test/test_pplan.kl",
+    "test/data/slice0032.csv"
+  ],
+  "tests-includes" : [
+    "test/config"
+  ],
+  "tests-depends" : [
+    "display",
+    "kunit"
+  ],
+  "depends" : [
+    "ktransw-macros",
+    "errors",
+    "systemlib",
+    "math",
+    "graph",
+    "draw",
+    "pose",
+    "csv",
+    "pathlib"
+  ]
+}

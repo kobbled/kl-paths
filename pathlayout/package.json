@@ -1,0 +1,16 @@
+{
+  "manver" : "1",
+  "project" : "pathlayout",
+  "description" : "pathlayout",
+  "version" : "0.0.1",
+  "license" : "MIT",
+  "author" : "kobbled",
+  "includes" : [
+    "lib"
+  ],
+  "depends" : [
+    "ktransw-macros",
+    "errors",
+    "systemlib"
+  ]
+}

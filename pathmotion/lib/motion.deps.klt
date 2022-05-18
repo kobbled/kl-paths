@@ -1,0 +1,7 @@
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+--pathclass dependency
+%define path_make_define(object_name,cnfg_file) `%class object_name('pathmake.klc','pathmake.klh','cnfg_file')`
+
+%mode pop

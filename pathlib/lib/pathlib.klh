@@ -1,0 +1,78 @@
+%ifndef pathlib_h
+%define pathlib_h
+
+%include namespace.m
+
+%define prog_name paths
+%define prog_name_alias paths
+
+--clear functions
+declare_function(prog_name,clear_vecpath,prog_name_alias,cvpth)
+ROUTINE paths__clear_vecpath(p : PATH nodedata = t_VEC_PATH) FROM paths
+declare_function(prog_name,clear_pospath,prog_name_alias,cppth)
+ROUTINE paths__clear_pospath(p : PATH nodedata = t_POS_PATH) FROM paths
+declare_function(prog_name,clear_toolpath,prog_name_alias,ctpth)
+ROUTINE paths__clear_toolpath(p : PATH nodedata = t_TOOLPATH) FROM paths
+declare_function(prog_name,clear_vec,prog_name_alias,crvec)
+ROUTINE paths__clear_vec(p : PATH nodedata = t_VECTOR) FROM paths
+declare_function(prog_name,clear_pos,prog_name_alias,crpos)
+ROUTINE paths__clear_pos(p : PATH nodedata = t_POSE) FROM paths
+
+--initializers
+declare_function(prog_name,new_vpath,prog_name_alias,nvpth)
+ROUTINE paths__new_vpath(v : VECTOR ; code : INTEGER ; polygon : INTEGER) : t_VEC_PATH FROM paths
+declare_function(prog_name,new_ppath,prog_name_alias,nppth)
+ROUTINE paths__new_ppath(v : XYZWPR ; code : INTEGER ; polygon : INTEGER) : t_POS_PATH FROM paths
+declare_function(prog_name,new_tpath,prog_name_alias,ntpth)
+ROUTINE paths__new_tpath(v : XYZWPR ; code : INTEGER ; typ : INTEGER) : t_TOOLPATH FROM paths
+declare_function(prog_name,new_coord_sys,prog_name_alias,ncord)
+ROUTINE paths__new_coord_sys(system : INTEGER ; z_axis : INTEGER) : t_COORD_SYS FROM paths
+declare_function(prog_name,set_orientation,prog_name_alias,storn)
+ROUTINE paths__set_orientation(crd_sys : INTEGER; idod : INTEGER) : VECTOR FROM paths
+
+--planning functions
+declare_function(prog_name,opposite_code,prog_name_alias,ocde)
+ROUTINE paths__opposite_code(code : INTEGER) : INTEGER FROM paths
+declare_function(prog_name,raster_neighbors,prog_name_alias,rstnn)
+ROUTINE paths__raster_neighbors(point : t_VEC_PATH ;  polygon_dep : BOOLEAN ; data : PATH nodedata = t_VEC_PATH) : T_RASTQUERY FROM paths
+declare_function(prog_name,raster_neighbors_ppath,prog_name_alias,rstnp)
+ROUTINE paths__raster_neighbors_ppath(point : t_POS_PATH ;  polygon_dep : BOOLEAN ; data : PATH nodedata = t_POS_PATH) : T_RASTQUERY FROM paths
+declare_function(prog_name,get_opposite_polygon_corner,prog_name_alias,gopc)
+ROUTINE paths__get_opposite_polygon_corner(point_idx : INTEGER ; data : PATH nodedata = t_VEC_PATH; stackedtop : BOOLEAN) : INTEGER FROM paths
+declare_function(prog_name,total_polygons,prog_name_alias,totp)
+ROUTINE paths__total_polygons(data : PATH nodedata = t_VEC_PATH) : INTEGER FROM paths
+declare_function(prog_name,filter_polygon,prog_name_alias,fltp)
+ROUTINE paths__filter_polygon(data : PATH nodedata = t_VEC_PATH; polygon : INTEGER; out_path : PATH nodedata = t_VEC_PATH) FROM paths
+declare_function(prog_name,calc_bounding_box,prog_name_alias,gtbx)
+ROUTINE paths__calc_bounding_box(data : PATH nodedata = t_VEC_PATH) : t_RECT FROM paths
+declare_function(prog_name,map_to_bounding_box,prog_name_alias,mpbb)
+ROUTINE paths__map_to_bounding_box(data : PATH nodedata = t_VEC_PATH; bboxs : PATH nodedata = t_RECT) FROM paths
+--conversion functions
+declare_function(prog_name,interpolate_vpath,prog_name_alias,inrvp)
+ROUTINE paths__interpolate_vpath(vpath : PATH nodedata = t_VEC_PATH; spacing : REAL; line_type : INTEGER ; &
+                                 ref_frame : XYZWPR; out_path : PATH nodedata = t_VEC_PATH) FROM paths
+declare_function(prog_name,interpolate_ppath,prog_name_alias,inrpp)
+ROUTINE paths__interpolate_ppath(vpath : PATH nodedata = t_POS_PATH; spacing : REAL; line_type : INTEGER ; & 
+                                 ref_frame : XYZWPR; out_path : PATH nodedata = t_POS_PATH) FROM paths
+declare_function(prog_name,interpolate_toolpath,prog_name_alias,inrtp)
+ROUTINE paths__interpolate_toolpath(vpath : PATH nodedata = t_TOOLPATH; spacing : REAL; line_type : INTEGER ; &
+                                 ref_frame : XYZWPR; out_path : PATH nodedata = t_TOOLPATH) FROM paths
+declare_function(prog_name,vpath_to_vec,prog_name_alias,vp2v)
+ROUTINE paths__vpath_to_vec(vpath : PATH nodedata = t_VEC_PATH ; ref_frame : XYZWPR; out_path : PATH nodedata = t_VECTOR) FROM paths
+declare_function(prog_name,vpath_to_pos,prog_name_alias,vp2p)
+ROUTINE paths__vpath_to_pos(vpath : PATH nodedata = t_VEC_PATH ; ref_frame : XYZWPR; out_path : PATH nodedata = t_POSE) FROM paths
+
+declare_function(prog_name,offset_toolpath,prog_name_alias,ofstt)
+ROUTINE paths__offset_toolpath(p : PATH nodedata = t_TOOLPATH ; offset_pos : XYZWPR; filter_code, filter_typ : INTEGER) FROM paths
+
+--convert coordinate systems
+declare_function(prog_name,cylindrical_to_cartesian,prog_name_alias,cy2cr)
+ROUTINE paths__cylindrical_to_cartesian(p : PATH nodedata = t_TOOLPATH ; ref_frame : XYZWPR; z_axis : INTEGER) FROM paths
+declare_function(prog_name,cylindrical_to_cartesian_mm,prog_name_alias,cymcr)
+ROUTINE paths__cylindrical_to_cartesian_mm(p : PATH nodedata = t_TOOLPATH; ref_frame : XYZWPR; radius : REAL; z_axis : INTEGER) FROM paths
+declare_function(prog_name,polar_to_cartesian,prog_name_alias,pl2cr)
+ROUTINE paths__polar_to_cartesian(p : PATH nodedata = t_TOOLPATH ; ref_frame : XYZWPR; z_axis : INTEGER) FROM paths
+declare_function(prog_name,polar_to_cartesian_mm,prog_name_alias,plmcr)
+ROUTINE paths__polar_to_cartesian_mm(p : PATH nodedata = t_TOOLPATH ; ref_frame : XYZWPR; z_axis : INTEGER) FROM paths
+
+%endif --pathlib_h

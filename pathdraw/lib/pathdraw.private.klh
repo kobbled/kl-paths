@@ -1,0 +1,10 @@
+%ifndef pathdraw_private_h
+%define pathdraw_private_h
+
+--oop
+%include namespace.m
+
+declare_member(class_name,raster,class_name,rast)
+ROUTINE raster(rastprm : t_PATH_RAST) FROM class_name
+
+%endif --pathdraw_private_h

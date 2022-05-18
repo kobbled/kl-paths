@@ -1,0 +1,953 @@
+PROGRAM class_name
+%NOBUSYLAMP
+%COMMENT = 'pathplan'
+%NOLOCKGROUP
+
+%include namespace.m
+
+%include errors.klt
+%include systemlib.klt
+%include systemvars.klt
+%include draw.rect.klt
+%include pathplan.klt
+%include pathlib.klt
+%include pathplan.deps.klt
+
+%include kd_tree.klt
+define_kd_types(KDTREE_QUERY_TYPE,KD_CLASS_NAME,KDTREE_COMPARE_TYPE)
+%include graph.klt
+graph_type_define(GRAPH_CLASS_NAME)
+
+%define BASE_CLASSNAME class_name
+
+VAR
+  frm : XYZWPR
+  pnt_orient : VECTOR
+  current : INTEGER
+  pth : PATH nodedata = t_VEC_PATH
+  segment : PATH nodedata = t_VEC_PATH
+  tool_segment : PATH nodedata = t_TOOLPATH
+  bboxs : PATH nodedata = t_RECT
+  tracked : PATH nodedata = TRACKED_TYPE
+  visited : PATH nodedata = t_BOOL
+  plan : PATH nodedata = t_INTEGER
+
+%include errors.klh
+%include pathlib.klh
+%from math.klh %import norm2
+%from systemlib.klh %import VEC, VEC2D
+%from pose.klh %import vector_to_pose, get_orientation
+
+--kd tree
+define_kdtree(KD_CLASS_NAME,PATHPLAN_CONFIG_FILENAME)
+define_kd_headers(KD_CLASS_NAME)
+--graph
+define_graph_class(GRAPH_CLASS_NAME,PATHPLAN_CONFIG_FILENAME)
+define_graphs_headers(GRAPH_CLASS_NAME)
+
+-- sensor csv file
+%class csvpth('csvclass.klc','csvclass.klh')
+
+%defeval class_name BASE_CLASSNAME
+
+%include pathplan.klh
+%include pathplan.private.klh
+
+-- **** MUST BE DEFINED IN TEMPLATE FILE (.klt)
+define_pplan_members(class_name)
+
+--private
+
+ROUTINE clear_path
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    i = PATH_LEN(p)
+    WHILE PATH_LEN(p) > 0 DO
+		  DELETE_NODE(p,i,status)
+      CHK_STAT(status)
+      i = i - 1
+	  ENDWHILE
+  END clear_path
+
+ROUTINE clear_plan
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    current = 0
+
+    i = PATH_LEN(plan)
+    WHILE PATH_LEN(plan) > 0 DO
+		  DELETE_NODE(plan,i,status)
+      CHK_STAT(status)
+      i = i - 1
+	  ENDWHILE
+  END clear_plan
+
+ROUTINE clear_bbox
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    i = PATH_LEN(b)
+    WHILE PATH_LEN(b) > 0 DO
+		  DELETE_NODE(b,i,status)
+      CHK_STAT(status)
+      i = i - 1
+	  ENDWHILE
+  END clear_bbox
+
+ROUTINE clear_visited
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    i = PATH_LEN(visited)
+    WHILE PATH_LEN(visited) > 0 DO
+		  DELETE_NODE(visited,i,status)
+      CHK_STAT(status)
+      i = i - 1
+	  ENDWHILE
+  END clear_visited
+
+ROUTINE reset_visited
+  VAR
+    i : INTEGER
+  BEGIN
+    FOR i=1 TO PATH_LEN(visited) DO
+      visited[i].v = FALSE
+    ENDFOR
+  END reset_visited
+
+ROUTINE clear_tracked
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    i = PATH_LEN(tracked)
+    WHILE PATH_LEN(tracked) > 0 DO
+		  DELETE_NODE(tracked,i,status)
+      CHK_STAT(status)
+      i = i - 1
+	  ENDWHILE
+  END clear_tracked
+
+ROUTINE clear_toolpath
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    i = PATH_LEN(p)
+    WHILE PATH_LEN(p) > 0 DO
+		  DELETE_NODE(p,i,status)
+      CHK_STAT(status)
+      i = i - 1
+	  ENDWHILE
+  END clear_toolpath
+
+ROUTINE init_tracked
+  VAR
+    i,status : INTEGER
+  BEGIN
+    FOR i=1 TO PATH_LEN(tracked) DO
+      tracked[i].prev_node = 0
+      tracked[i].cost_so_far = GRAPH_MAX_COST
+    ENDFOR
+  END init_tracked
+
+ROUTINE update_unvisited
+  VAR
+    i : INTEGER
+  BEGIN
+    FOR i=1 TO PATH_LEN(pth) DO
+      IF visited[i].v = FALSE THEN
+        tracked[i].cost_so_far = dist_to_weight(`KD_CLASS_NAME`__distance(nde, pth[i]))
+      ELSE
+        --reset tracked of visited nodes to avoid. 
+        tracked[i].cost_so_far = GRAPH_MAX_COST
+      ENDIF
+    ENDFOR
+  END update_unvisited
+
+ROUTINE build_support_members
+  VAR
+    i, status : INTEGER
+  BEGIN
+    --create kd tree
+    `KD_CLASS_NAME`__create_filtered(pth, (ZEROPOS(1)))
+    --initalize graph
+    `GRAPH_CLASS_NAME`__new(PATH_LEN(pth),FALSE)
+
+    --build tracked and visited
+    FOR i=1 TO PATH_LEN(pth) DO
+      APPEND_NODE(visited,status)
+      APPEND_NODE(tracked,status)
+      CHK_STAT(status)
+    ENDFOR
+  END build_support_members
+
+ROUTINE min_tracked
+  VAR
+    i : INTEGER
+    min_idx : INTEGER
+    min_val : GRAPH_EDGE_VTYPE
+    adj_list : GRAPH_ADJ_LIST_NAME
+  BEGIN
+    --get adjacency list
+    adj_list = `GRAPH_CLASS_NAME`__get_adjacencies(nde_i)
+
+    min_val = GRAPH_MAX_COST
+    min_idx = 0
+
+    i = 1
+    --first look in adjacency list, and find edge with the
+    --lowest cost.
+    IF (NOT UNINIT(adj_list[i].GRAPH_NODE_NAME)) THEN
+    REPEAT
+      IF (visited[adj_list[i].GRAPH_NODE_NAME].v = FALSE) AND &
+         (adj_list[i].GRAPH_EDGE_NAME < min_val) THEN
+        min_val = adj_list[i].GRAPH_EDGE_NAME
+        min_idx = adj_list[i].GRAPH_NODE_NAME
+      ENDIF
+      i = i + 1
+    UNTIL(UNINIT(adj_list[i].GRAPH_NODE_NAME) OR (i = ARRAY_LEN(adj_list)) )
+    ENDIF
+
+    --If adjacency list is empty, or all nodes have been visited
+    --find next nearest neighbor that has not been visited
+    IF NOT (min_val < GRAPH_MAX_COST) THEN
+      update_unvisited(pth[nde_i])
+
+      FOR i=1 TO PATH_LEN(tracked) DO
+        IF (visited[i].v = FALSE) AND (tracked[i].cost_so_far < min_val) AND &
+           ((pth[i].code = PTH_MOVETO) OR (pth[i].code = PTH_CLOSE)) THEN
+          min_val = tracked[i].cost_so_far
+          min_idx = i
+        ENDIF
+      ENDFOR
+      -- add nearest neighbor to adjacency list
+      IF min_idx > 0 THEN
+        `GRAPH_CLASS_NAME`__addEdge(nde_i, min_idx, min_val)
+      ENDIF
+    ENDIF
+
+    RETURN(min_idx)
+  END min_tracked
+
+ROUTINE graph_path_lines
+  VAR
+    i,j : INTEGER
+    nde1, nde2 : GRAPH_ADJ_TYPE
+  BEGIN
+    --connect endpoints of pth together in path
+    --by forcing and edge between them in the graph
+    --with the lowest cost.
+    FOR i=start TO emd DO
+      --find opposite end of line
+      IF (pth[i].code = PTH_MOVETO) THEN
+        j = i
+        --link path through graph
+        REPEAT
+          `GRAPH_CLASS_NAME`__addEdge(j, j+1, PATH_MIN_COST)
+          j = j + 1
+        UNTIL(pth[j].code = PTH_CLOSE)
+      ENDIF
+    ENDFOR
+  END graph_path_lines
+
+ROUTINE next_path_util
+  VAR
+    i,j : INTEGER
+    st, ed : INTEGER
+    dir : INTEGER
+    status : INTEGER
+    adj_list : GRAPH_ADJ_LIST_NAME
+  BEGIN
+    --clear out line
+    clear_path(out_path)
+
+    current = current + 1
+
+    IF current < PATH_LEN(plan) THEN
+      st = plan[current].v
+      ed = plan[current + 1].v
+
+      --which direction is path moving through list
+      IF st < ed THEN
+        dir = 1
+      ELSE
+        dir = -1
+      ENDIF
+
+      --check contiguous path between st and ed.
+      i = st
+      REPEAT
+        i = i + dir
+      UNTIL((pth[i].code = PTH_MOVETO) OR (pth[i].code = PTH_CLOSE) OR (i = ed))
+
+      --if path is not contiguous, it is a linking path. only include
+      --start and end nodes
+      IF i <> ed THEN
+
+        APPEND_NODE(out_path,status)
+        APPEND_NODE(out_path,status)
+        out_path[1] = pth[st]
+        out_path[2] = pth[ed]
+        RETURN(PTH_LINKING)
+      ELSE
+      --is a contiguous path. include points between st and ed
+      --
+        IF st > ed THEN
+          FOR j=st DOWNTO ed DO
+            APPEND_NODE(out_path,status)
+            out_path[PATH_LEN(out_path)] = pth[j]
+          ENDFOR
+        ELSE
+          FOR j=st TO ed DO
+            APPEND_NODE(out_path,status)
+            out_path[PATH_LEN(out_path)] = pth[j]
+          ENDFOR
+        ENDIF
+        
+        -- check graph if path is a tooling path or a linking path
+        -- do so by looking through adjacency list and checking that
+        -- path has PATH_MIN_COST indicating a connected line.
+        adj_list = `GRAPH_CLASS_NAME`__get_adjacencies(st)
+        j = 0
+        REPEAT
+          j = j + 1
+        UNTIL( adj_list[j].GRAPH_NODE_NAME = ed )
+
+        --tooling path
+        IF (adj_list[j].GRAPH_EDGE_NAME = PATH_MIN_COST) THEN
+          RETURN(PTH_TOOLING)
+        --linking path
+        ELSE
+          RETURN(PTH_LINKING)
+        ENDIF
+      ENDIF
+
+    ENDIF
+
+    RETURN(PTH_LINKING)
+
+  END next_path_util
+
+--public
+
+ROUTINE new
+  BEGIN
+    --clear paths
+    clear_path(pth)
+    clear_bbox(bboxs)
+    clear_visited
+    clear_tracked
+
+    --initialize members
+    frm = coord_frame
+    current = 0
+    pnt_orient = VEC(0,0,0)
+
+  END new
+
+ROUTINE init
+  VAR
+    i, status : INTEGER
+  BEGIN
+    --clear paths
+    clear_path(pth)
+    clear_bbox(bboxs)
+    clear_visited
+    clear_tracked
+    --initialize members
+    frm = coord_frame
+    COPY_PATH(p, 0, 0, pth, status)
+    current = 0
+    pnt_orient = VEC(0,0,0)
+
+    --build kd tree, and start visited
+    -- and tracked lists
+    build_support_members
+
+  END init
+
+ROUTINE delete
+  BEGIN
+    clear_path(pth)
+    clear_visited
+    clear_tracked
+    clear_plan
+    clear_bbox(bboxs)
+    current = 0
+    pnt_orient = VEC(0,0,0)
+
+    `KD_CLASS_NAME`__clear
+    `GRAPH_CLASS_NAME`__delete
+  END delete
+
+ROUTINE importPath
+  VAR
+    i : INTEGER
+    b : BOOLEAN
+    unint_r : ARRAY[5] OF REAL
+    r : ARRAY[5] OF REAL
+    prev_line, line_cnt : INTEGER
+    status : INTEGER
+  BEGIN
+    csvpth__constructor(filename, ',', '')
+    csvpth__open
+    --read header
+    --(x,y,z,depth)
+    csvpth__read_header
+
+    clear_path(segment)
+    clear_path(pth)
+
+    prev_line = 0
+    REPEAT
+      b = csvpth__read_rarr(r, unint_r)
+      IF b THEN
+        APPEND_NODE(pth, status)
+        pth[PATH_LEN(pth)].v = VEC(r[1], r[2], r[3])
+        pth[PATH_LEN(pth)].polygon = 1
+
+        -- --store depth info
+        -- APPEND_NODE(depths, status)
+        -- depths[PATH_LEN(depths)].v = r[4]
+
+        line_cnt = TRUNC(r[5])
+        IF line_cnt <> prev_line THEN
+          pth[PATH_LEN(pth)].code = PTH_MOVETO
+          IF PATH_LEN(pth) > 1 THEN
+            pth[PATH_LEN(pth)-1].code = PTH_CLOSE
+          ENDIF
+        ELSE
+          pth[PATH_LEN(pth)].code = PTH_LINETO
+        ENDIF
+
+        prev_line = line_cnt
+      ENDIF
+    UNTIL(NOT b)
+
+    --close path
+    pth[PATH_LEN(pth)].code = PTH_CLOSE
+
+    csvpth__close
+    csvpth__clear
+
+    --build kd tree, and start visited
+    -- and tracked lists
+    build_support_members
+
+  END importPath
+
+ROUTINE append_path
+  VAR
+    i, status : INTEGER
+    prev_len : INTEGER
+  BEGIN
+    prev_len = PATH_LEN(pth)
+
+    FOR i=1 TO PATH_LEN(p) DO
+      APPEND_NODE(pth,status)
+      pth[PATH_LEN(pth)] = p[i]
+      --add node to graph
+      `GRAPH_CLASS_NAME`__append
+      -- add to tracked list
+      APPEND_NODE(visited,status)
+      APPEND_NODE(tracked,status)
+      CHK_STAT(status)
+    ENDFOR
+
+    IF add_to_kd THEN
+      --create kd tree
+      `KD_CLASS_NAME`__create_filtered(pth, (ZEROPOS(1)))
+    ENDIF
+
+    --add new paths to graph
+    graph_path_lines(prev_len+1, PATH_LEN(pth))
+  END append_path
+
+ROUTINE append_path_arr
+  VAR
+    i, status : INTEGER
+    prev_len : INTEGER
+  BEGIN
+    prev_len = PATH_LEN(pth)
+
+    FOR i=1 TO ARRAY_LEN(p) DO
+      APPEND_NODE(pth,status)
+      pth[PATH_LEN(pth)] = p[i]
+      --add node to graph
+      `GRAPH_CLASS_NAME`__append
+      -- add to tracked list
+      APPEND_NODE(visited,status)
+      APPEND_NODE(tracked,status)
+    ENDFOR
+
+    IF add_to_kd THEN
+      --create kd tree
+      `KD_CLASS_NAME`__create_filtered(pth, (ZEROPOS(1)))
+    ENDIF
+
+    --add new paths to graph
+    graph_path_lines(prev_len+1, PATH_LEN(pth))
+  END append_path_arr
+
+ROUTINE set_orientation
+  BEGIN
+    pnt_orient = v
+  END set_orientation
+
+ROUTINE get_plan
+  VAR
+    status : INTEGER
+  BEGIN
+    COPY_PATH(plan, 0, 0, out_path, status)
+    CHK_STAT(status)
+  END get_plan
+
+ROUTINE reset_path
+  BEGIN
+    current = 0
+  END reset_path
+
+ROUTINE next_path
+  VAR
+    pth_typ : INTEGER
+  BEGIN
+    pth_typ = next_path_util(segment)
+
+    RETURN(pth_typ)
+  END next_path
+
+ROUTINE next_toolpath
+  VAR
+    i, status : INTEGER
+    pth_typ : INTEGER
+  BEGIN
+    pth_typ = next_path_util(segment)
+
+    --clear out line
+    clear_toolpath(tool_segment)
+
+    FOR i=1 TO PATH_LEN(segment) DO
+      APPEND_NODE(tool_segment, status)
+      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient)
+      tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
+      tool_segment[PATH_LEN(tool_segment)].typ = pth_typ
+      tool_segment[PATH_LEN(tool_segment)].speed = DEFAULT_SPEED
+    ENDFOR
+
+    RETURN(pth_typ)
+
+  END next_toolpath
+
+--set line number of generator if not wanting to start
+--generator from the start
+ROUTINE set_line
+  VAR
+    i, status : INTEGER
+    dummy : INTEGER
+  BEGIN
+    --if reverse_order count line numbers from
+    --end to start
+    -- ..note:: current - 1, as currnet + 1 is added in
+    --          next_path_util
+    IF revrs_ordr THEN
+      current = PATH_LEN(plan) - line_no - 1
+    ELSE
+      current = line_no - 1
+    ENDIF
+
+    --get path segment
+    dummy = next_path_util(segment)
+
+    --clear out line
+    clear_toolpath(tool_segment)
+    --convert to t_TOOLPATH
+    FOR i=1 TO PATH_LEN(segment) DO
+      APPEND_NODE(tool_segment, status)
+      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient)
+      tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
+      tool_segment[PATH_LEN(tool_segment)].typ = line_typ
+    ENDFOR
+    
+  END set_line
+
+ROUTINE reverse_toolpath
+  VAR
+    status : INTEGER
+  BEGIN
+    COPY_PATH(tool_segment, PATH_LEN(tool_segment), 1, out_path, status)
+  END reverse_toolpath
+
+ROUTINE is_path_end
+  BEGIN
+    IF (current < PATH_LEN(plan)) THEN
+      RETURN(FALSE)
+    ELSE
+      RETURN(TRUE)
+    ENDIF
+  END is_path_end
+
+ROUTINE get_path_segement
+  VAR
+    i, status : INTEGER
+  BEGIN
+    IF NOT append THEN
+      clear_path(out_path)
+    ENDIF
+
+    FOR i=1 TO PATH_LEN(segment) DO
+      APPEND_NODE(out_path, status)
+      out_path[PATH_LEN(out_path)] = segment[i]
+      out_path[PATH_LEN(out_path)].v = frm:segment[i].v
+    ENDFOR
+
+  END get_path_segement
+
+ROUTINE get_path
+  VAR
+    status : INTEGER
+  BEGIN
+    COPY_PATH(pth, 0, 0, out_path, status)
+  END get_path
+
+ROUTINE get_neighbors
+  BEGIN
+    RETURN(paths__raster_neighbors(pth[idx], poly_depend, pth))
+  END get_neighbors
+
+ROUTINE get_toolpath
+  VAR
+    status : INTEGER
+  BEGIN
+    COPY_PATH(tool_segment, 0, 0, out_path, status)
+  END get_toolpath
+
+ROUTINE get_endpoints
+  VAR
+    endpnts : ARRAY[2] OF t_TOOLPATH
+  BEGIN
+    IF PATH_LEN(tool_segment) > 0 THEN
+      --startpoint
+      endpnts[1] = tool_segment[1]
+      endpnts[1].v = frm:tool_segment[1].v
+      --endpoint
+      endpnts[2] = tool_segment[PATH_LEN(tool_segment)]
+      endpnts[2].v = frm:tool_segment[PATH_LEN(tool_segment)].v
+    ENDIF
+
+    RETURN(endpnts)
+  END get_endpoints
+
+ROUTINE get_path_interpolate
+  BEGIN
+    IF NOT append THEN
+      clear_path(out_path)
+    ENDIF
+
+    IF PATH_LEN(segment) > 0 THEN
+      paths__interpolate_vpath(segment, (spacing), line_type, frm, out_path)
+    ENDIF
+  END get_path_interpolate
+
+ROUTINE get_toolpath_interpolate
+  BEGIN
+    IF NOT append THEN
+      clear_toolpath(out_path)
+    ENDIF
+
+    IF PATH_LEN(tool_segment) > 0 THEN
+      paths__interpolate_toolpath(tool_segment, (spacing), line_type, frm, out_path)
+    ENDIF
+  END get_toolpath_interpolate
+
+ROUTINE closest_point
+  VAR
+    neigh : ARRAY[MAX_NEIGHBORS] OF KDTREE_QUERY_TYPE
+  BEGIN
+    --if points are overlapping, do not exclude overlaping point.
+    --can happen if bounding box intersects convex hull
+    `KD_CLASS_NAME`__disable_search_filter
+    `KD_CLASS_NAME`__kth_nearest_neighbors(point, 1)
+    neigh = `KD_CLASS_NAME`__get_query_idx
+    `KD_CLASS_NAME`__enable_search_filter
+
+    RETURN(neigh[1].idx)
+  END closest_point
+
+ROUTINE closest_bounding_box
+  VAR
+    i, idx : INTEGER
+    val, val2 : REAL
+    min_val, min_val2 : REAL
+    v : VECTOR
+    box : t_RECT
+  BEGIN
+    --calc bounding box
+    box = paths__calc_bounding_box(pth)
+
+    idx = 1
+    min_val = GRAPH_MAX_COST
+    min_val2 = GRAPH_MAX_COST
+    FOR i=1 TO PATH_LEN(pth) DO
+      v = pth[i].v ; v.z = 0
+      val = ABS(box.vec[2]@(v-box.verts[vert]))
+      --find point with most perpendicular vector to box corner
+      --as well as the closest point.
+      --this will be the point closest to the bounding box edge
+      IF (val <= min_val) THEN
+        IF (val < min_val) THEN
+          min_val2 = GRAPH_MAX_COST
+        ENDIF
+        IF math__norm2(v-box.verts[vert]) < min_val2 THEN
+          min_val = val
+          min_val2 = math__norm2(v-box.verts[vert])
+          idx = i
+        ENDIF
+      ENDIF
+    ENDFOR
+
+    RETURN(idx)
+  END closest_bounding_box
+
+ROUTINE filter_polygon
+  BEGIN
+    paths__filter_polygon(pth, polygon, segment)
+  END filter_polygon
+
+ROUTINE calc_bounding_boxes
+  VAR
+    i, status : INTEGER
+    total_poly : INTEGER
+  BEGIN
+    total_poly = paths__total_polygons(pth)
+
+    clear_bbox(bboxs)
+    FOR i=1 TO total_poly DO
+      paths__filter_polygon(pth, i, segment)
+      APPEND_NODE(bboxs, status)
+      bboxs[PATH_LEN(bboxs)] = paths__calc_bounding_box(segment)
+    ENDFOR
+
+    --clear segment
+    clear_path(segment)
+
+  END calc_bounding_boxes
+
+
+ROUTINE MST
+  VAR
+    i,j : INTEGER
+    u : INTEGER
+    new_cost : GRAPH_EDGE_VTYPE
+    status : INTEGER
+  BEGIN
+    IF UNINIT(start_node) OR (start_node = 0) THEN start_node = 1 ; ENDIF
+
+    reset_visited
+    init_tracked
+    clear_plan
+
+    --add start node to path and mark as visited
+    APPEND_NODE(plan, status)
+    plan[PATH_LEN(plan)].v = start_node
+    visited[start_node].v = TRUE
+
+    u = start_node
+    FOR i=1 TO PATH_LEN(pth) DO
+      --pick node with the minimum weight in adjacency list.
+      --if no edges, or all adjacencies have been visisted find
+      --the next unvisited nearest neighbor
+      u = min_tracked(u)
+      
+      IF u > 0 THEN
+        --mark as visited
+        visited[u].v = TRUE
+
+        --add to path list
+        APPEND_NODE(plan, status)
+        plan[PATH_LEN(plan)].v = u
+      ENDIF
+    ENDFOR
+
+  END MST
+
+
+ROUTINE NN_graph
+  VAR
+%define PATH_KTH_NEIGHBORS 2
+    neigh : ARRAY[MAX_NEIGHBORS] OF KDTREE_QUERY_TYPE
+    i,j : INTEGER
+  BEGIN
+    --graph edges through paths. This uses PATH_MIN_COST to force
+    --MST or a-star through these routes first.
+    graph_path_lines(1, PATH_LEN(pth))
+    
+    --Find kth nearest neighbors for all nodes and build out graph
+    FOR i=1 TO PATH_LEN(pth) DO
+      `KD_CLASS_NAME`__kth_nearest_neighbors(pth[i], PATH_KTH_NEIGHBORS)
+      neigh = `KD_CLASS_NAME`__get_query_idx
+
+      j=1
+      --add all neighbors as weighted edges to graph
+      IF (NOT UNINIT(neigh[j].idx)) THEN
+      REPEAT
+        `GRAPH_CLASS_NAME`__addEdge(i, (neigh[j].idx), dist_to_weight(neigh[j].value))
+        j = j + 1
+      UNTIL(UNINIT(neigh[j].idx) OR (j = MAX_NEIGHBORS ) )
+      ENDIF
+    ENDFOR
+
+  END NN_graph
+
+ROUTINE raster_graph
+  VAR
+    neigh : T_RASTQUERY
+    polyidx : INTEGER
+    i : INTEGER
+    b : BOOLEAN
+    polygon : INTEGER
+  BEGIN
+    --graph edges through paths. This uses PATH_MIN_COST to force
+    --MST or a-star through these routes first.
+    graph_path_lines(1, PATH_LEN(pth))
+
+    --change to directional graph
+    `GRAPH_CLASS_NAME`__change_directional(TRUE)
+
+    --map points to bounding box(es) for path planning
+    calc_bounding_boxes
+    paths__map_to_bounding_box(pth, bboxs)
+
+    --compute raster graph for each endpoint
+    FOR i=1 TO PATH_LEN(pth) DO
+
+      SELECT pth[i].code OF
+        CASE(PTH_MOVETO,PTH_CLOSE):
+      
+          neigh = paths__raster_neighbors(pth[i], poly_depend, pth)
+
+          --add all neighbors as weighted edges to graph
+          --graph not dependant on polygons
+          IF NOT poly_depend THEN
+            --if left or right neighbor, use as link
+            IF (NOT UNINIT(neigh[3].idx)) THEN
+              `GRAPH_CLASS_NAME`__addEdge(i, (neigh[3].idx), PATH_LINK_SIDE_COST)
+            ENDIF
+            IF (NOT UNINIT(neigh[4].idx)) THEN
+              `GRAPH_CLASS_NAME`__addEdge(i, (neigh[4].idx), PATH_LINK_SIDE_COST)
+            ENDIF
+          --graph dependent on polygons
+          ELSE
+            --if left or right neighbor on same poly, use as link
+            IF (NOT UNINIT(neigh[3].idx)) THEN
+              IF pth[neigh[3].idx].polygon = pth[i].polygon THEN
+                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[3].idx), PATH_LINK_SIDE_COST)
+              --if neighbor is on a different polygon 
+              ELSE
+                --at top or bottom of polygon find the right neighbor of the next
+                --polygon. Find the opposite corner of the polygon. Add this to
+                --the graph 
+                IF strict_dir THEN
+                  IF (UNINIT(neigh[1].idx) OR UNINIT(neigh[2].idx)) THEN
+                    polyidx = paths__get_opposite_polygon_corner(neigh[3].idx, pth, FALSE)
+                    `GRAPH_CLASS_NAME`__addEdge(i, polyidx, PATH_LINK_POLY_COST)
+                  ENDIF
+                ENDIF
+              ENDIF
+            ENDIF
+            IF (NOT UNINIT(neigh[4].idx)) THEN
+              IF pth[neigh[4].idx].polygon = pth[i].polygon THEN
+                `GRAPH_CLASS_NAME`__addEdge(i, (neigh[4].idx), PATH_LINK_SIDE_COST)
+              --if neighbor is on a different polygon 
+              ELSE
+                --at top or bottom of polygon record the left neighbor
+                IF strict_dir THEN
+                  IF (UNINIT(neigh[1].idx) OR UNINIT(neigh[2].idx)) THEN
+                    polyidx = paths__get_opposite_polygon_corner(neigh[4].idx, pth, FALSE)
+                    `GRAPH_CLASS_NAME`__addEdge(i, polyidx, PATH_LINK_POLY_COST)
+                  ENDIF
+                ENDIF
+              ENDIF
+            ENDIF
+            --If polygons are stacked vertically check up/down positions for
+            --opposite corners of the next polygon
+            IF strict_dir AND (NOT UNINIT(neigh[1].idx)) THEN
+              IF ((UNINIT(neigh[3].idx) OR UNINIT(neigh[4].idx)) AND (pth[neigh[1].idx].polygon <> pth[i].polygon)) THEN
+                polyidx = paths__get_opposite_polygon_corner(neigh[1].idx, pth, TRUE)
+                `GRAPH_CLASS_NAME`__addEdge(i, polyidx, PATH_LINK_POLY_COST)
+              ENDIF
+            ENDIF
+            IF strict_dir AND (NOT UNINIT(neigh[2].idx)) THEN
+              IF ((UNINIT(neigh[3].idx) OR UNINIT(neigh[4].idx)) AND (pth[neigh[2].idx].polygon <> pth[i].polygon)) THEN
+                polyidx = paths__get_opposite_polygon_corner(neigh[2].idx, pth, TRUE)
+                `GRAPH_CLASS_NAME`__addEdge(i, polyidx, PATH_LINK_POLY_COST)
+              ENDIF
+            ENDIF
+
+          ENDIF
+
+          SELECT raster_type OF
+            --use diagonals
+            CASE(ONEWAY):
+              IF poly_depend THEN
+                IF (NOT UNINIT(neigh[5].idx)) THEN
+                  IF pth[neigh[5].idx].polygon = pth[i].polygon THEN
+                    `GRAPH_CLASS_NAME`__addEdge(i, (neigh[5].idx), PATH_LINK_DIAG_COST)
+                  ENDIF
+                ENDIF
+                IF (NOT UNINIT(neigh[6].idx)) THEN
+                  IF pth[neigh[6].idx].polygon = pth[i].polygon THEN
+                    `GRAPH_CLASS_NAME`__addEdge(i, (neigh[6].idx), PATH_LINK_DIAG_COST)
+                  ENDIF
+                ENDIF
+              ELSE
+                IF (NOT UNINIT(neigh[5].idx)) THEN
+                  `GRAPH_CLASS_NAME`__addEdge(i, (neigh[5].idx), PATH_LINK_DIAG_COST)
+                ENDIF
+                IF (NOT UNINIT(neigh[6].idx)) THEN
+                    `GRAPH_CLASS_NAME`__addEdge(i, (neigh[6].idx), PATH_LINK_DIAG_COST)
+                ENDIF
+              ENDIF
+            -- use up/down
+            CASE(ZIGZAG):
+              IF poly_depend THEN
+                IF (NOT UNINIT(neigh[1].idx)) THEN
+                  IF pth[neigh[1].idx].polygon = pth[i].polygon THEN
+                    `GRAPH_CLASS_NAME`__addEdge(i, (neigh[1].idx), PATH_LINK_VERT_COST)
+                  ENDIF
+                ENDIF
+                IF (NOT UNINIT(neigh[2].idx)) THEN
+                  IF pth[neigh[2].idx].polygon = pth[i].polygon THEN
+                    `GRAPH_CLASS_NAME`__addEdge(i, (neigh[2].idx), PATH_LINK_VERT_COST)
+                  ENDIF
+                ENDIF
+              ELSE
+                IF (NOT UNINIT(neigh[1].idx)) THEN
+                  `GRAPH_CLASS_NAME`__addEdge(i, (neigh[1].idx), PATH_LINK_VERT_COST)
+                ENDIF
+                IF (NOT UNINIT(neigh[2].idx)) THEN
+                  `GRAPH_CLASS_NAME`__addEdge(i, (neigh[2].idx), PATH_LINK_VERT_COST)
+                ENDIF
+              ENDIF
+            ELSE:
+              karelError(INVALID_INDEX,'raster type not set correctly. See pathplan.klt.', ER_ABORT)
+          ENDSELECT
+
+        ELSE:
+      ENDSELECT
+
+    ENDFOR
+
+    --change graph back to bidirectional
+    `GRAPH_CLASS_NAME`__change_directional(FALSE)
+
+  END raster_graph
+
+BEGIN
+END class_name

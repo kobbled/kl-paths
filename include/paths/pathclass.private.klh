@@ -1,9 +1,0 @@
-%ifndef pathclass_private_h
-%define pathclass_private_h
-
---oop
-%include namespace.m
-
-
-
-%endif --pathclass_private_h

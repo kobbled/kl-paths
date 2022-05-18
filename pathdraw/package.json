@@ -1,0 +1,19 @@
+{
+  "manver" : "1",
+  "project" : "pathdraw",
+  "description" : "drawing paths",
+  "version" : "0.0.1",
+  "license" : "MIT",
+  "author" : "kobbled",
+  "includes" : [
+    "lib"
+  ],
+  "depends" : [
+    "ktransw-macros",
+    "errors",
+    "systemlib",
+    "draw",
+    "pose",
+    "pathlib"
+  ]
+}

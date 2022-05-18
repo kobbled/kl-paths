@@ -1,0 +1,9 @@
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+--kdtree dependency
+%define define_kdtree(object_name,cnfg_file) `%class object_name('kd_tree.klc','kd_tree.klh','cnfg_file')`
+--graph dependency
+%define define_graph_class(object_name,cnfg_file) `%class object_name('graph.klc','graph.klh','cnfg_file')`
+
+%mode pop

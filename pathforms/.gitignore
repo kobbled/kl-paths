@@ -1,0 +1,11 @@
+*.swp
+robot.ini
+bin/
+build/
+debug/
+old/
+pcus.KL
+phex.KL
+ppad.KL
+ppth.KL
+work.KL

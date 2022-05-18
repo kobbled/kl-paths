@@ -1,0 +1,21 @@
+{
+  "manver" : "1",
+  "project" : "lam",
+  "description" : "lam lib",
+  "version" : "0.0.1",
+  "license" : "MIT",
+  "author" : "kobbled",
+  "source" : [
+    "lib/lam.kl"
+  ],
+  "includes" : [
+    "lib"
+  ],
+  "tests-includes" : [
+    "template"
+  ],
+  "depends" : [
+    "ktransw-macros",
+    "registers"
+  ]
+}

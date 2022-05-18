@@ -1,0 +1,32 @@
+{
+  "manver" : "1",
+  "project" : "pathlib",
+  "description" : "path lib",
+  "version" : "0.0.1",
+  "license" : "MIT",
+  "author" : "kobbled",
+  "source" : [
+    "lib/pathlib.kl"
+  ],
+  "includes" : [
+    "lib",
+    "types"
+  ],
+  "tests" : [
+    "test/test_paths.kl"
+  ],
+  "tests-depends" : [
+    "kunit"
+  ],
+  "depends" : [
+    "ktransw-macros",
+    "errors",
+    "systemlib",
+    "Strings",
+    "math",
+    "display",
+    "draw",
+    "pose",
+    "pathplan"
+  ]
+}

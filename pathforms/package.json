@@ -1,0 +1,39 @@
+{
+  "manver" : "1",
+  "project" : "pathforms",
+  "description" : "pathforms",
+  "version" : "0.0.1",
+  "license" : "MIT",
+  "author" : "kobbled",
+  "source" : [
+    "lib/frm_pad.kl"
+  ],
+  "forms" : [
+    "forms/gspptheg.ftx",
+    "forms/gsppadeg.ftx",
+    "forms/gsphexeg.ftx",
+    "forms/gspcuseg.ftx",
+    "forms/gsworkeg.ftx"
+  ],
+  "tp" : [
+    "tp/frm_pad_del.ls"
+  ],
+  "includes" : [
+    "lib",
+    "forms",
+    "template"
+  ],
+  "depends" : [
+    "errors",
+    "display",
+    "math",
+    "graph",
+    "draw",
+    "forms",
+    "pose",
+    "csv",
+    "multitask",
+    "systemlib",
+    "ktransw-macros"
+  ]
+}

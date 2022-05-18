@@ -1,2 +1,0 @@
-%include paths.c.klt
-%include paths.t.klt

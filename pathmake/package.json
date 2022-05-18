@@ -1,0 +1,25 @@
+{
+  "manver" : "1",
+  "project" : "pathmake",
+  "description" : "pathmake",
+  "version" : "0.0.1",
+  "license" : "MIT",
+  "author" : "kobbled",
+  "includes" : [
+    "lib"
+  ],
+  "depends" : [
+    "ktransw-macros",
+    "systemlib",
+    "errors",
+    "registers",
+    "pose",
+    "draw",
+    "pathlib",
+    "pathplan"
+  ],
+  "tests-depends" : [
+    "display",
+    "KUnit"
+  ]
+}

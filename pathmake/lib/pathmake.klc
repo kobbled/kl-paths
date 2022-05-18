@@ -1,0 +1,380 @@
+PROGRAM class_name
+%NOBUSYLAMP
+%COMMENT = 'pathmake'
+%NOLOCKGROUP
+
+%ifdef ROT_GRP
+%ifeq ROT_GRP 0
+%undef ROT_GRP
+%endif
+%endif
+%ifdef TRACK_GRP
+%ifeq TRACK_GRP 0
+%undef TRACK_GRP
+%endif
+%endif
+
+%include namespace.m
+
+%include errors.klt
+%include systemlib.klt
+%include systemvars.klt
+%include pathlib.klt
+%include pathplan.klt
+%include draw.klt
+%include toolpath.structs.klt
+%include pathmake.deps.klt
+
+%define BASE_CLASSNAME class_name
+
+VAR
+  frm : XYZWPR
+  idod_ : INTEGER
+  coord_system : t_COORD_SYS
+  origin_ : XYZWPR
+  line_endpnts : PATH nodedata = t_TOOLPATH
+  pth : PATH nodedata = t_TOOLPATH
+
+%include errors.klh
+%include pose.klh
+%include pathlib.klh
+%from registers.klh %import set_real, set_int
+%from systemlib.klh %import VEC, VEC2D
+
+--path plan
+define_pathplan(PATH_PLAN_NAME,PATHPLAN_CONFIG_FILENAME)
+define_pplan_headers(PATH_PLAN_NAME)
+
+%defeval class_name BASE_CLASSNAME
+
+%include pathmake.klh
+
+--private
+
+--public
+
+ROUTINE next_toolpath
+-- Retrieves the next path in the pathplan
+-- handles the linking path for cylindrical cartesian, and rotary
+%ifdef ROT_GRP
+  VAR
+    endpnts : ARRAY[2] OF t_TOOLPATH
+    status : INTEGER
+%endif
+  BEGIN
+    SELECT `PATH_PLAN_NAME`__next_toolpath OF
+      CASE(PTH_TOOLING):
+        IF interp_tool THEN
+          `PATH_PLAN_NAME`__get_toolpath_interpolate(tool_step, PTH_LINETO, FALSE, pth)
+        ENDIF
+        registers__set_real(SPEED_REGISTER, tool_speed)
+      CASE(PTH_LINKING):
+%ifdef ROT_GRP
+          --If rotary group (ROT_GRP) and line is < 90 deg
+          --only include endpoints in line. If path is 0->360
+          --it will not rotate all the way back around
+          endpnts = `PATH_PLAN_NAME`__get_endpoints
+          IF UNINIT(endpnts[1].v) THEN
+            paths__clear_toolpath(pth)
+          ELSE
+            IF(ABS(endpnts[2].v.x-endpnts[1].v.x) < 270) THEN
+              `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, FALSE, pth)
+            ELSE
+              paths__clear_toolpath(pth)
+              APPEND_NODE(pth,status)
+              pth[PATH_LEN(pth)] = endpnts[1]
+              APPEND_NODE(pth,status)
+              pth[PATH_LEN(pth)] = endpnts[2]
+            ENDIF
+          ENDIF
+%else
+          `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, FALSE, pth)
+%endif
+        registers__set_real(SPEED_REGISTER, link_speed)
+    ENDSELECT
+
+    --raise if linking
+    paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
+    
+    --convert to cartesian
+    SELECT (coord_system.system) OF
+      CASE(PTH_CYLINDER):
+        paths__cylindrical_to_cartesian(pth, frm, (coord_system.z_axis))
+      CASE(PTH_POLAR):
+        paths__polar_to_cartesian(pth, frm, (coord_system.z_axis))
+      ELSE:
+    ENDSELECT
+  END next_toolpath
+
+ROUTINE get_toolpath
+-- Retrieves the full path from the pathplan
+-- handles the linking path for cylindrical cartesian, and rotary
+%ifdef ROT_GRP
+  VAR
+    endpnts : ARRAY[2] OF t_TOOLPATH
+    status : INTEGER
+%endif
+  BEGIN
+    paths__clear_toolpath(pth)
+    REPEAT
+      SELECT (`PATH_PLAN_NAME`__next_toolpath) OF
+        CASE(PTH_TOOLING):
+          IF interp_tool THEN
+            `PATH_PLAN_NAME`__get_toolpath_interpolate(tool_step, PTH_LINETO, TRUE, pth)
+          ENDIF
+          registers__set_real(SPEED_REGISTER, tool_speed)
+        CASE(PTH_LINKING):
+%ifdef ROT_GRP
+          --If rotary group (ROT_GRP) and line is < 90 deg
+          --only include endpoints in line. If path is 0->360
+          --it will not rotate all the way back around
+          endpnts = `PATH_PLAN_NAME`__get_endpoints
+          IF NOT UNINIT(endpnts[1].v) THEN
+            IF(ABS(endpnts[2].v.x-endpnts[1].v.x) < 270) THEN
+              `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, TRUE, pth)
+            ELSE
+              APPEND_NODE(pth,status)
+              pth[PATH_LEN(pth)] = endpnts[1]
+              APPEND_NODE(pth,status)
+              pth[PATH_LEN(pth)] = endpnts[2]
+            ENDIF
+          ENDIF
+%else
+          `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, TRUE, pth)
+%endif
+          registers__set_real(SPEED_REGISTER, link_speed)
+      ENDSELECT
+    UNTIL( `PATH_PLAN_NAME`__is_path_end )
+
+    --raise linking path
+    paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
+
+    --convert to cartesian
+    SELECT (coord_system.system) OF
+      CASE(PTH_CYLINDER):
+        paths__cylindrical_to_cartesian(pth, frm, (coord_system.z_axis))
+      CASE(PTH_POLAR):
+        paths__polar_to_cartesian(pth, frm, (coord_system.z_axis))
+      ELSE:
+    ENDSELECT
+  END get_toolpath
+
+ROUTINE get_midpoint
+  VAR
+    nde : t_TOOLPATH
+    v, o : VECTOR
+  BEGIN
+    --load start point meta data
+    nde.code = code ; nde.typ = typ;
+
+    v = 0.5*pose__pose_to_vector(pth[end_idx].v) + 0.5*pose__pose_to_vector(pth[start_idx].v)
+    o = 0.5*pose__get_orientation(pth[end_idx].v) + 0.5*pose__get_orientation(pth[start_idx].v)
+    nde.v = POS(v.x, v.y, v.z, o.x, o.y, o.z, pth[end_idx].v.config_data)
+
+    RETURN(nde)
+  END get_midpoint
+
+
+
+ROUTINE new
+  BEGIN
+    paths__clear_toolpath(line_endpnts)
+    paths__clear_toolpath(pth)
+
+    frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
+    origin_ = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
+
+    set_coordinate_system(PTH_CARTESAN, 3)
+  END new
+
+ROUTINE init
+  BEGIN
+    paths__clear_toolpath(line_endpnts)
+    paths__clear_toolpath(pth)
+
+    frm = coord_frm
+    origin_ = origin
+
+    coord_system = coord_sys
+
+    --registers preset in template
+    set_idod(idod)
+  END init
+
+ROUTINE delete
+  VAR
+    unit_sys : t_COORD_SYS
+  BEGIN
+    paths__clear_toolpath(line_endpnts)
+    paths__clear_toolpath(pth)
+
+    coord_system = unit_sys
+    idod_ = 0
+
+    origin_ = (ZEROPOS(1))
+
+    frm = (ZEROPOS(1))
+
+    --free path plan
+    `PATH_PLAN_NAME`__delete
+  END delete
+
+ROUTINE set_idod
+  BEGIN
+    idod_ = i
+  END set_idod
+
+ROUTINE set_coordinate_system
+  BEGIN
+    coord_system.system = system
+    coord_system.z_axis = z_axis
+  END set_coordinate_system
+
+ROUTINE set_coord_frame
+  BEGIN
+    frm = POS(x,y,z,w,p,r, pose__set_config(DEFAULT_CONFIG))
+  END set_coord_frame
+
+ROUTINE set_origin
+  BEGIN
+    origin_ = POS(x,y,z,w,p,r, pose__set_config(DEFAULT_CONFIG))
+  END set_origin
+
+ROUTINE define_origin
+  BEGIN
+    origin_ = POS((polyprm.xStart), (polyprm.yStart), (polyprm.height), (polyprm.polyAngle*toolprm.idod),0,0, pose__set_config(DEFAULT_CONFIG))
+  END define_origin
+
+ROUTINE get_idod
+  BEGIN
+    RETURN(idod_)
+  END get_idod
+
+ROUTINE get_path
+  VAR
+    status : INTEGER
+  BEGIN
+    COPY_PATH(pth, 0, 0, out_path, status)
+  END get_path
+
+ROUTINE get_plan
+  VAR
+    status : INTEGER
+  BEGIN
+    `PATH_PLAN_NAME`__get_plan(out_path)
+  END get_plan
+
+ROUTINE is_path_end
+  BEGIN
+    RETURN(`PATH_PLAN_NAME`__is_path_end)
+  END is_path_end
+
+ROUTINE planPath
+  VAR
+    orient : VECTOR
+  BEGIN
+    `PATH_PLAN_NAME`__init(lines, origin_)
+    IF raster_type = NEARESTNEIGHBOR THEN
+      `PATH_PLAN_NAME`__NN_graph
+    ELSE
+      --(poly_depend, strict_dir)
+      `PATH_PLAN_NAME`__raster_graph(raster_type, poly_depend, TRUE)
+    ENDIF
+
+    IF PATH_LEN(contours) > 0 THEN
+      --append contours after to not include in rastering process
+      -- (add to kd tree) = FALSE
+      `PATH_PLAN_NAME`__append_path(contours, FALSE)
+    ENDIF
+
+    `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
+
+    --set point orientation
+    orient = paths__set_orientation((coord_system.system), idod_)
+    orient = orient - VEC(origin_.w, origin_.p, origin_.r)
+    `PATH_PLAN_NAME`__set_orientation( orient )
+
+  END planPath
+
+ROUTINE planImportPath
+  BEGIN
+    `PATH_PLAN_NAME`__new(origin_)
+    `PATH_PLAN_NAME`__importPath(filename)
+
+    IF raster_type = NEARESTNEIGHBOR THEN
+      `PATH_PLAN_NAME`__NN_graph
+    ELSE
+      --(poly_depend, strict_dir)
+      `PATH_PLAN_NAME`__raster_graph(raster_type, poly_depend, TRUE)
+    ENDIF
+
+    `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
+
+    --set point orientation
+    `PATH_PLAN_NAME`__set_orientation( paths__set_orientation((coord_system.system), idod_) )
+
+  END planImportPath
+
+
+ROUTINE makeline
+  VAR
+    status : INTEGER
+  BEGIN
+    paths__clear_toolpath(line_endpnts)
+    --add start point
+    APPEND_NODE(line_endpnts,status)
+    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(start_point, paths__set_orientation((coord_system.system), idod_), frm.config_data), PTH_MOVETO, line_typ)
+    --add end point
+    APPEND_NODE(line_endpnts,status)
+    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(end_point, paths__set_orientation((coord_system.system), idod_), frm.config_data), PTH_CLOSE, line_typ)
+
+    paths__clear_toolpath(pth)
+    paths__interpolate_toolpath(line_endpnts, (spacing), line_code, POS(0,0,0,0,0,0,frm.config_data), pth)
+
+    IF UNINIT(coord_system.system) THEN
+      karelError(VAR_UNINIT,'coordinate system must be set in class_name', ER_ABORT)
+    ENDIF
+
+    SELECT (coord_system.system) OF
+      CASE(PTH_CYLINDER):
+        paths__cylindrical_to_cartesian(pth, frm, (coord_system.z_axis))
+      CASE(PTH_POLAR):
+        paths__polar_to_cartesian(pth, frm, (coord_system.z_axis))
+      ELSE:
+    ENDSELECT
+
+  END makeline
+
+ROUTINE get_line
+  BEGIN
+    paths__clear_toolpath(line_endpnts)
+    --get line
+    `PATH_PLAN_NAME`__set_line(line_no, revrs_ordr, line_typ)
+
+    IF reverse_line THEN
+      `PATH_PLAN_NAME`__reverse_toolpath(line_endpnts)
+    ELSE
+      `PATH_PLAN_NAME`__get_toolpath(line_endpnts)
+    ENDIF
+
+    IF NOT append THEN
+      paths__clear_toolpath(pth)
+    ENDIF
+    paths__interpolate_toolpath(line_endpnts, (spacing), PTH_LINETO, origin_, pth)
+
+    IF UNINIT(coord_system.system) THEN
+      karelError(VAR_UNINIT,'coordinate system must be set in class_name', ER_ABORT)
+    ENDIF
+
+    SELECT (coord_system.system) OF
+      CASE(PTH_CYLINDER):
+        paths__cylindrical_to_cartesian(pth, frm, (coord_system.z_axis))
+      CASE(PTH_POLAR):
+        paths__polar_to_cartesian(pth, frm, (coord_system.z_axis))
+      ELSE:
+    ENDSELECT
+
+  END get_line
+
+BEGIN
+END class_name
