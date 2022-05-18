@@ -21,7 +21,7 @@
 %define CELL_GRPMASK 1
 
 --import registers
-%include base.regs.klt
+%include pathmotion.regs.klt
 
 --default parameter list
 %define TOOLING_SPEED 12
@@ -43,12 +43,12 @@
 %defeval PLATE_CORNER RIGHT_BOTTOM
 
 --path implementation
-%include base.paths.impl.klt
+%include motion.interface.klt
 
 --pathplan
 ------------------
 %define PATH_PLAN_NAME tstpln
-%define PATHPLAN_CONFIG_FILENAME vecpathplan.klt
+%define PATHPLAN_CONFIG_FILENAME pathplan.template.klt
 
 --pathclass object
 ------------------

@@ -17,7 +17,8 @@
     "draw",
     "pose",
     "pathlib",
-    "pathplan"
+    "pathplan",
+    "pathmake"
   ],
   "tests" : [
     "test/test_pth_mtn.kl",

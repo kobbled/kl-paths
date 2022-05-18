@@ -1,0 +1,17 @@
+%ifndef pathmotion_regs_t
+%define pathmotion_regs_t
+
+--default register list
+--registers
+%define SPEED_REGISTER 200
+%define TERM_REGISTER 255
+%define TYPE_REGISTER 253
+%define CODE_REGISTER 259
+--position registers
+%define TOOL_OFFSET_REG 20
+%define POSE_REG 85
+%define ARC_REG1 80
+%define ARC_REG2 81
+%define ARC_REG3 82
+
+%endif -- pathmotion_regs_t

@@ -16,7 +16,7 @@
     "test/test_paths.kl"
   ],
   "tests-depends" : [
-    "kunit"
+    "KUnit"
   ],
   "depends" : [
     "ktransw-macros",

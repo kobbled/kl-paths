@@ -8,6 +8,6 @@
 %define path_motion_define(object_name,cnfg_file) `%class object_name('motion.klc','motion.klh','cnfg_file')`
 
 --pathdraw dependency
-%define path_draw_define(object_name,cnfg_file) `%class object_name('pathswrapper.klc','pathswrapper.klh','cnfg_file')`
+%define path_draw_define(object_name,cnfg_file) `%class object_name('pathdraw.klc','pathdraw.klh','cnfg_file')`
 
 %mode pop

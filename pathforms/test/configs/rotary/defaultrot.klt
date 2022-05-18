@@ -1,0 +1,69 @@
+%define CONFIG_FILENAME defaultrot.klt
+
+--save full toolpath for vizualization purposes
+--otherwise go through line by line
+%define GENERATE_FULL_PATH FALSE
+
+--robot group
+%define RBT_GRP 1
+--rotary group
+%define ROT_GRP 2
+--frames
+%define USER_FRAME_NO 2
+%define TOOL_FRAME_NO 3
+
+%define DEFAULT_CONFIG 'F U T, 0, 0, 0'
+
+--group mask decimal corresponds with (gp1,gp2,gp3,gp4)
+--1000 = 1 : 0100 = 2  : 0010 = 4  : 0001 = 8
+--           1100 = 3  : 1010 = 5  : 1001 = 9
+--           1110 = 7  : 1110 = 7  : 1011 = 13
+--           1111 = 15 : 1011 = 13 :
+%define CELL_GRPMASK 3
+
+-- *********
+--rotary parameters
+%define ROT_AXES 1
+%define ROTARY_JNT 1 
+%define ROT_DIRECTION -1
+-- *********
+
+--import registers
+%include base.regs.klt
+
+--default parameter list
+%define TOOLING_SPEED 12
+%define LINKING_SPEED 50
+%define PAD_IDOD 1
+
+--motion programs
+%define DRYRUN_LINE_PROG 'MOV_LINE_ROT'
+%define DRYRUN_CIRC_PROG 'MOV_CIRC_ROT'
+%define WORK_LINE_PROG 'MOV_AM_LROT'
+%define WORK_CIRC_PROG 'MOV_AM_CROT'
+%define SCAN_LINE_PROG 'MOV_SCN_ROT'
+
+--planning corner start
+%defeval OD_CORNER RIGHT_BOTTOM
+%defeval ID_CORNER LEFT_BOTTOM
+
+--dynamic userframe variables
+%define CD_PAIR 1
+%define LEADER_FRM 1
+%define DEFAULT_LEADER POS(0,0,0,0,0,0, (ZEROPOS(1).Config_data))
+
+--tool orientation
+%define TOOL_ORIENT_UP 0,0,0
+%define TOOL_ORIENT_DOWN 0,0,180
+
+--path implementation
+%include rotary.paths.impl.klt
+
+--pathplan
+------------------
+%defeval PATH_PLAN_NAME tstpln
+%define PATHPLAN_CONFIG_FILENAME vecpathplan.klt
+
+--pathclass object
+------------------
+%defeval PATH_OBJECT_NAME tstrot

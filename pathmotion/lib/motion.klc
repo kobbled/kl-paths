@@ -34,7 +34,7 @@ motion_type(MOTION_DATA_FILE)
 -- include reference to pathmake
 -- "pth". This module is used to move
 -- through this path.
-%include pathclass.friend.members.klt
+%include pathmake.friend.members.klt
 pathmake_friends(PATH_OBJECT_NAME)
 
 VAR

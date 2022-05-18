@@ -1,4 +1,4 @@
-%define CONFIG_FILENAME defaultpath.klt
+%define CONFIG_FILENAME defaultvert.klt
 
 --save full toolpath for vizualization purposes
 --otherwise go through line by line
@@ -8,7 +8,7 @@
 %define RBT_GRP 1
 
 --frames
-%define USER_FRAME_NO 9
+%define USER_FRAME_NO 7
 %define TOOL_FRAME_NO 3
 
 %define DEFAULT_CONFIG 'F U T, 0, 0, 0'
@@ -40,16 +40,17 @@
 %define SCAN_LINE_PROG 'MOV_SCN'
 
 --planning corner start
-%defeval PLATE_CORNER RIGHT_BOTTOM
+%defeval OD_CORNER RIGHT_BOTTOM
+%defeval ID_CORNER LEFT_BOTTOM
 
 --path implementation
 %include base.paths.impl.klt
 
 --pathplan
 ------------------
-%define PATH_PLAN_NAME tstpln
+%defeval PATH_PLAN_NAME tstpln
 %define PATHPLAN_CONFIG_FILENAME vecpathplan.klt
 
 --pathclass object
 ------------------
-%define PATH_OBJECT_NAME tstpth
+%defeval PATH_OBJECT_NAME tstvrt

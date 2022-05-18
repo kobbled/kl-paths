@@ -52,7 +52,7 @@ CONST
 
 --include references to pathdraw
 -- "lines" and "contours" for `MOTION`__createPath
-%include pathswrapper.friend.members.klt
+%include pathdraw.friend.members.klt
 pathdraw_friends(PATHDRAW_NAME)
 
 VAR

@@ -5,9 +5,6 @@
   "version" : "0.0.1",
   "license" : "MIT",
   "author" : "kobbled",
-  "source" : [
-    "lib/pathlib.kl"
-  ],
   "includes" : [
     "lib"
   ],
@@ -20,7 +17,7 @@
   ],
   "tests-depends" : [
     "display",
-    "kunit"
+    "KUnit"
   ],
   "depends" : [
     "ktransw-macros",

@@ -8,6 +8,9 @@
 
 %define DEFAULT_SPEED 12
 
+--used in dependencies
+%define PATHPLAN_CONFIG_FILENAME vecpathplan.klt
+
 --kd tree
 ------------------
 %defeval KD_CLASS_NAME pthkd

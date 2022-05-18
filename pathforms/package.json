@@ -37,5 +37,10 @@
     "pathmake",
     "pathmotion",
     "lam"
+  ],
+  "tests-includes" :[
+    "test/configs",
+    "test/configs/base",
+    "test/configs/rotary"
   ]
 }
