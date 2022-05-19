@@ -1,18 +1,8 @@
-PROGRAM lam
+PROGRAM class_name
 %NOBUSYLAMP
-%COMMENT = 'lam functions'
+%COMMENT = 'lam'
 %NOLOCKGROUP
 %NOPAUSE = COMMAND + TPENABLE + ERROR
-
--- ** USER DEFINED ** modify if needed
-%include lam.templates.klt
-
-%ifdef LAM_CNFG
---default config when not specified
-%define LAM_CNFG default_lam_param.klt
-%endif
-
-lam_templates(LAM_CNFG)
 
 %include lam.klt
 
@@ -23,7 +13,7 @@ VAR
 %from registers.klh %import set_real, set_int
 %include lam.klh
 
-ROUTINE lam__set_registers
+ROUTINE set_registers
   BEGIN
     --laser params
     registers__set_int(LASER_POWER_REG, (lsrprm.power))
@@ -34,24 +24,24 @@ ROUTINE lam__set_registers
     registers__set_real(POWDER1_GASF_REG, (powprm.lpm))
     registers__set_real(POWDER1_FLOW_RATE_REG, (powprm.flow_rate))
     registers__set_real(POWDER1_THICKNESS_REG, (powprm.height))
-  END lam__set_registers
+  END set_registers
 
-ROUTINE lam__start
+ROUTINE start
   BEGIN
     --enable laser
     CALL_PROG(LASER_ENABLE_PROG, 0)
     --enable extruder
     CALL_PROG(EXTRUDER_START_PROG, 0)
 
-  END lam__start
+  END start
 
-ROUTINE lam__stop
+ROUTINE stop
   BEGIN
     --disable extruder
     CALL_PROG(EXTRUDER_STOP_PROG, 0)
     --disable laser
     CALL_PROG(LASER_DISABLE_PROG, 0)
-  END lam__stop
+  END stop
 
 BEGIN
-END lam
+END class_name

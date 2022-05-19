@@ -1,0 +1,8 @@
+PROGRAM test_lam
+%NOLOCKGROUP
+
+--lam object
+%class tstlam('lam.klc','lam.klh','default_lam_param.klt')
+
+BEGIN
+END test_lam

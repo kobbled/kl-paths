@@ -5,14 +5,14 @@
   "version" : "0.0.1",
   "license" : "MIT",
   "author" : "kobbled",
-  "source" : [
-    "lib/lam.kl"
-  ],
   "includes" : [
     "lib"
   ],
+  "tests" : [
+    "test/test_lam.kl"
+  ],
   "tests-includes" : [
-    "template"
+    "test/config"
   ],
   "depends" : [
     "ktransw-macros",
