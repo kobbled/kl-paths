@@ -10,4 +10,7 @@
 --pathdraw dependency
 %define path_draw_define(object_name,cnfg_file) `%class object_name('pathdraw.klc','pathdraw.klh','cnfg_file')`
 
+--lam dependency
+%define lam_define(object_name,cnfg_file) `%class object_name('lam.klc','lam.klh','cnfg_file')`
+
 %mode pop

@@ -5,9 +5,6 @@
   "version" : "0.0.1",
   "license" : "MIT",
   "author" : "kobbled",
-  "source" : [
-    "lib/frm_pad.kl"
-  ],
   "forms" : [
     "forms/gspptheg.ftx",
     "forms/gsppadeg.ftx",
@@ -38,9 +35,25 @@
     "pathmotion",
     "lam"
   ],
+  "tests" :[
+    "test/test_form.kl"
+  ],
   "tests-includes" :[
     "test/configs",
     "test/configs/base",
     "test/configs/rotary"
+  ],
+  "tests-tp" : [
+    "test/configs/base/tp/move_line.tpp",
+    "test/configs/base/tp/move_circ.tpp",
+    "test/configs/base/tp/mov_scn.tpp",
+    "test/configs/base/tp/mov_am_line.tpp",
+    "test/configs/base/tp/mov_am_circ.tpp",
+    
+    "test/configs/rotary/tp/mov_line_rot.tpp",
+    "test/configs/rotary/tp/mov_circ_rot.tpp",
+    "test/configs/rotary/tp/mov_scn_rot.tpp",
+    "test/configs/rotary/tp/mov_am_lrot.tpp",
+    "test/configs/rotary/tp/mov_am_crot.tpp"
   ]
 }

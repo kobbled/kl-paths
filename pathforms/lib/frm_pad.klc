@@ -1,10 +1,8 @@
-PROGRAM frm_pad
+PROGRAM class_name
 %NOLOCKGROUP
+%COMMENT = 'pathform'
 
 %include klevkeys.kl
-
-%define prog_str 'frm_pad'
-%define work_prog 'lam'
 
 --user forms for defining main parameters
 %define dict_file 'gspptheg'
@@ -42,9 +40,6 @@ PROGRAM frm_pad
 %include display.c.klt
 %endif
 
---** USER MODIFY : Load user template
-%include defaultpathfrm.klt
-
 CONST
   SHP_PAD = 1
   SHP_HEX = 2
@@ -54,6 +49,8 @@ CONST
 -- "lines" and "contours" for `MOTION`__createPath
 %include pathdraw.friend.members.klt
 pathdraw_friends(PATHDRAW_NAME)
+
+%define BASE_CLASSNAME class_name
 
 VAR
   path_val_arr : ARRAY[23] OF STRING[30]
@@ -81,8 +78,8 @@ VAR
   padprm  IN CMOS  : t_PAD_VARS
   hexprm IN CMOS   : t_HEX_VARS
   --work parameters
-  lsrprm FROM lam : t_LASER
-  powprm FROM lam : t_POWDER
+  lsrprm FROM LAM_NAME : t_LASER
+  powprm FROM LAM_NAME : t_POWDER
 
   b : BOOLEAN
   term_char FROM forms : INTEGER
@@ -94,7 +91,6 @@ VAR
 %from systemlib.klh %import VEC
 %include forms.klh
 %include errors.klh
-%include lam.klh
 
 %ifeq ENABLE_SCANNING TRUE
 %include multitask.klh
@@ -109,6 +105,9 @@ VAR
 ---
 --path draw object
 path_draw_define(PATHDRAW_NAME,FORM_CONFIG_FILENAME)
+
+--lam object
+lam_define(LAM_NAME,LAM_CNFG)
 
 --motion object
 path_make_define(STATION1_PATH,STATION1_CNFG)
@@ -134,11 +133,13 @@ define_scan_object(SCANNING_OBJECT_NAME,SCANNING_CNFG)
 ---
 %endif
 
+%defeval class_name BASE_CLASSNAME
+
 -- ** define form arrays
 %include frm_pad.i.klt
-make_path_indicies(prog_str)
-make_pad_indicies(prog_str)
-make_work_indicies(work_prog)
+make_path_indicies('class_name')
+make_pad_indicies('class_name')
+make_work_indicies('LAM_NAME')
 -- USER DEFINED ROUTINE
 define_station_names(station_name)
 
@@ -246,8 +247,8 @@ BEGIN
           forms__show(dict_str_work, work_val_arr)
 
           IF (term_char = ky_f1) THEN
-            lam__set_registers
-            lam__start
+            `LAM_NAME`__set_registers
+            `LAM_NAME`__start
           ENDIF
         --scanning toolpath
 %ifeq ENABLE_SCANNING TRUE
@@ -353,7 +354,7 @@ BEGIN
       SELECT program_type OF
         --working toolpath
         CASE(MOVE_WORKING):
-          lam__stop
+          `LAM_NAME`__stop
         --scanning toolpath
 %ifeq ENABLE_SCANNING TRUE
         CASE(MOVE_SCANING):
@@ -412,4 +413,4 @@ BEGIN
 
 
 
-END frm_pad
+END class_name

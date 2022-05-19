@@ -24,6 +24,7 @@
 
 -- lam
 ------------------
+%define LAM_NAME tstlam
 %define LAM_CNFG default_lam_param.klt
 
 --station names
