@@ -32,7 +32,7 @@ PROGRAM class_name
 %include pathlib.klt
 %include toolpath.structs.klt
 %include lam.klt
-%include frm_pad.deps.klt
+%include pathform.deps.klt
 
 %ifdef DEBUG_BUILD
 %define SHOW_DEBUG FALSE
@@ -136,7 +136,7 @@ define_scan_object(SCANNING_OBJECT_NAME,SCANNING_CNFG)
 %defeval class_name BASE_CLASSNAME
 
 -- ** define form arrays
-%include frm_pad.i.klt
+%include pathform.i.klt
 make_path_indicies('class_name')
 make_pad_indicies('class_name')
 make_work_indicies('LAM_NAME')

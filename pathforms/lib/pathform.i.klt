@@ -36,6 +36,7 @@
 
 ROUTINE init_pthList
   BEGIN
+    IF UNINIT(stationTree) THEN stationTree = TRUE ; ENDIF
     IF UNINIT(station) THEN station = 1 ; ENDIF
     IF UNINIT(program_type) THEN program_type = 1 ; ENDIF
     IF UNINIT(shapeType) THEN shapeType = 1 ; ENDIF
@@ -45,6 +46,7 @@ ROUTINE init_pthList
     IF UNINIT(toolprm.pitch) THEN toolprm.pitch = 0; ENDIF
     IF UNINIT(toolprm.retractDist) THEN toolprm.retractDist = 5; ENDIF
     --raster params
+    IF UNINIT(rasterTree) THEN rasterTree = TRUE ; ENDIF
     IF UNINIT(rastprm.rastType) THEN rastprm.rastType = 1; ENDIF
     IF UNINIT(startCorner) THEN startCorner = 1; ENDIF
     IF UNINIT(rastprm.constrain) THEN rastprm.constrain = FALSE; ENDIF
@@ -54,6 +56,7 @@ ROUTINE init_pthList
     IF UNINIT(rastprm.angle) THEN rastprm.angle = 0; ENDIF
     IF UNINIT(rastprm.contours) THEN rastprm.contours = 0; ENDIF
     --motion params
+    IF UNINIT(motionTree) THEN motionTree = TRUE ; ENDIF
     IF UNINIT(motnprm.tool_speed) THEN motnprm.tool_speed = 12; ENDIF
     IF UNINIT(motnprm.link_speed) THEN motnprm.link_speed = 40; ENDIF
     IF UNINIT(motnprm.tool_step) THEN motnprm.tool_step = 90; ENDIF

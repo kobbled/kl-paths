@@ -4,6 +4,9 @@
 #include fkeys.fh
 #include pathparams.fh
 
+* include template.fh file including the form template information
+#include pathform.template.fh
+
 .kl ppth
 .form
 $-,ppth
@@ -42,7 +45,7 @@ $-,ppth_fkey     *function key labels
 #eval tf_keys
 * station names
 $-,enum_station
-    "frm_pad" &new_line * program name of variable
+    "FORM_NAME" &new_line * program name of variable
     "station_name" &new_line * variable name containing choices
 * pathparams
 #eval define_form_shapes

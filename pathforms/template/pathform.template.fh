@@ -1,0 +1,8 @@
+#ifndef pathformtemplate_h
+#define pathformtemplate_h
+
+* ..warning:: NEED TO SET AS THE SAME NAME AS THE OBJECT CREATED
+*             TO RUN THE FORM
+#define FORM_NAME frmpad
+
+#endif * pathformtemplate_h

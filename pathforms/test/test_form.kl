@@ -2,7 +2,7 @@ PROGRAM test_form
 %NOLOCKGROUP
 
 --lam object
-%class frmpad('frm_pad.klc','frm_pad.klh','defaultpathfrm.klt')
+%class frmpad('pathform.klc','pathform.klh','defaultpathfrm.klt')
 
 BEGIN
 END test_form
