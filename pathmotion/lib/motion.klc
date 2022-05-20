@@ -157,13 +157,25 @@ ROUTINE set_prog_names
     SELECT prog_typ OF
       CASE(MOVE_DRYRUN):
         motion_prog[1] = DRYRUN_LINE_PROG
+%ifdef DRYRUN_CIRC_PROG
         motion_prog[2] = DRYRUN_CIRC_PROG
+%else
+        motion_prog[2] = ''
+%endif
       CASE(MOVE_WORKING):
         motion_prog[1] = WORK_LINE_PROG
+%ifdef WORK_CIRC_PROG
         motion_prog[2] = WORK_CIRC_PROG
+%else
+        motion_prog[2] = ''
+%endif
       CASE(MOVE_SCANING):
         motion_prog[1] = SCAN_LINE_PROG
+%ifdef SCAN_CIRC_PROG
+        motion_prog[2] = SCAN_CIRC_PROG
+%else
         motion_prog[2] = ''
+%endif
       ELSE:
         motion_prog[1] = ''
         motion_prog[2] = ''
