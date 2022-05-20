@@ -1,7 +1,7 @@
 {
   "manver" : "1",
-  "project" : "pathlayout",
-  "description" : "Define a generic file layout to pass into a path object",
+  "project" : "pathgen",
+  "description" : "Generator/iterator for moving through paths from TP.",
   "version" : "0.0.1",
   "license" : "MIT",
   "author" : "kobbled",

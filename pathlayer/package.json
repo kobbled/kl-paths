@@ -1,7 +1,7 @@
 {
   "manver" : "1",
-  "project" : "pathlayout",
-  "description" : "Define a generic file layout to pass into a path object",
+  "project" : "pathlayer",
+  "description" : "Layering draw path objects",
   "version" : "0.0.1",
   "license" : "MIT",
   "author" : "kobbled",

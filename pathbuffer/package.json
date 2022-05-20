@@ -1,7 +1,7 @@
 {
   "manver" : "1",
-  "project" : "pathlayout",
-  "description" : "Define a generic file layout to pass into a path object",
+  "project" : "pathbuffer",
+  "description" : "Buffer through paths defined in an external file",
   "version" : "0.0.1",
   "license" : "MIT",
   "author" : "kobbled",
