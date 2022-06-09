@@ -68,7 +68,8 @@ ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : STRING) : MOTION_DATA_TYPE
     nde : MOTION_DATA_TYPE
   BEGIN
     nde.pose = POS(x,y,z,w,p,r, pose__set_config(cnfg)) 
-    nde.rot = pose__set_jointpos_axis(ROTARY_JNT, j1)
+    nde.rot = pose__zero_jointpos
+    nde.rot = pose__set_jointpos_axis((nde.rot), ROTARY_JNT, j1)
 
     RETURN( nde )
   END new_pose
@@ -109,7 +110,8 @@ ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE
   BEGIN
     IF (`PATH_OBJECT_NAME`__get_idod = -1) THEN deg = nde.v.r-180 ; ELSE deg = nde.v.r ; ENDIF
     p.pose = nde.v
-    p.rot = pose__set_jointpos_axis(ROTARY_JNT, ROT_DIRECTION*deg )
+    p.rot = pose__zero_jointpos
+    p.rot = pose__set_jointpos_axis((p.rot), ROTARY_JNT, ROT_DIRECTION*deg )
     RETURN(p)
   END tpath2pos
 

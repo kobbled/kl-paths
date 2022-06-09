@@ -18,6 +18,7 @@ PROGRAM class_name
 
 %include errors.klt
 %include systemlib.klt
+%include math.klt
 %include draw.klt
 %include pathlib.klt
 %include toolpath.structs.klt
@@ -50,6 +51,7 @@ VAR
 %include pose.klh
 %include pathlib.klh
 %from registers.klh %import set_real, set_int
+%from strings.klh %import pose_to_s, joint_to_s
 
 --define path object
 path_make_define(PATH_OBJECT_NAME,CONFIG_FILENAME)
@@ -241,7 +243,7 @@ ROUTINE move
     ENDIF
 
 %ifndef ROT_GRP
-    --unravel if cylindrical
+    --unravel if cylindrical at end of program
     IF (toolprm.coordSys=PTH_CYLINDER) THEN
       `PATH_OBJECT_NAME`__get_line(1, TRUE, TRUE, PTH_LINKING, (motnprm.link_step), FALSE)
       IF (motnprm.use_arc) THEN

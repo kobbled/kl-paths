@@ -59,8 +59,8 @@ ROUTINE init_pthList
     IF UNINIT(motionTree) THEN motionTree = TRUE ; ENDIF
     IF UNINIT(motnprm.tool_speed) THEN motnprm.tool_speed = 12; ENDIF
     IF UNINIT(motnprm.link_speed) THEN motnprm.link_speed = 40; ENDIF
-    IF UNINIT(motnprm.tool_step) THEN motnprm.tool_step = 90; ENDIF
-    IF UNINIT(motnprm.link_step) THEN motnprm.link_step = 90; ENDIF
+    IF UNINIT(motnprm.tool_step) THEN motnprm.tool_step = 45; ENDIF
+    IF UNINIT(motnprm.link_step) THEN motnprm.link_step = 45; ENDIF
     IF UNINIT(motnprm.use_arc) THEN motnprm.use_arc = TRUE; ENDIF
 
     IF UNINIT(polyprm.polyRotation) THEN polyprm.polyRotation = 0 ; ENDIF

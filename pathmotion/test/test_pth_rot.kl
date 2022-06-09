@@ -359,9 +359,9 @@ BEGIN
   usrdis__clear_file
 %endif
 
-  t_rot_delta
+  --t_rot_delta
   --t_rot_OD
-  --t_rot_ID
+  t_rot_ID
 
   --clean up
   tstpoly__delete
