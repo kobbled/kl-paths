@@ -2,7 +2,7 @@
 %define toolpath_structs_t
 
 TYPE
-  t_PATH_VARS FROM paths = STRUCTURE
+  t_PATH_VARS FROM t_paths = STRUCTURE
     xStart : REAL
     yStart : REAL
     height : REAL
@@ -10,14 +10,21 @@ TYPE
     polyRotation : REAL
   ENDSTRUCTURE
 
-  t_TOOL_VARS FROM paths = STRUCTURE
+  t_TOOL_VEC FROM t_paths = STRUCTURE
+    x : REAL
+    y : REAL
+    z : REAL
+  ENDSTRUCTURE
+
+  t_TOOL_VARS FROM t_paths = STRUCTURE
     retractDist : REAL
     pitch : REAL
     idod : INTEGER
     coordSys : INTEGER
+    orient : t_TOOL_VEC
   ENDSTRUCTURE
 
-  t_PATH_RAST FROM paths = STRUCTURE
+  t_PATH_RAST FROM t_paths = STRUCTURE
     overlap : REAL
     line_width : REAL
     angle : REAL
@@ -28,7 +35,7 @@ TYPE
     constrain : BOOLEAN
   ENDSTRUCTURE
 
-  t_MOTION_PRM FROM paths = STRUCTURE
+  t_MOTION_PRM FROM t_paths = STRUCTURE
     tool_speed : REAL
     link_speed : REAL
     tool_step : INTEGER
@@ -36,14 +43,14 @@ TYPE
     use_arc   : BOOLEAN
   ENDSTRUCTURE
 
-  t_PAD_VARS FROM paths = STRUCTURE
+  t_PAD_VARS FROM t_paths = STRUCTURE
     width : REAL
     length : REAL
     separation : REAL
     no_of_pads : INTEGER
   ENDSTRUCTURE
 
-  t_HEX_VARS FROM paths = STRUCTURE
+  t_HEX_VARS FROM t_paths = STRUCTURE
     radius : REAL
     points : INTEGER
   ENDSTRUCTURE

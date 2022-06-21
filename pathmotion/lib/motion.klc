@@ -125,25 +125,9 @@ ROUTINE add_tool_offset
 ROUTINE define_tool_offset
   VAR
     toolOffst : XYZWPR
-    v : VECTOR
   BEGIN
-    --define tool offset
-    SELECT (toolprm.coordSys) OF
-      CASE(PTH_CARTESAN):
-        v = VEC(TOOL_ORIENT_UP)
-      CASE(PTH_CYLINDER):
-        IF (toolprm.idod = -1) THEN
-          v = VEC(TOOL_ORIENT_UP)
-        ELSE
-          v = VEC(TOOL_ORIENT_DOWN)
-        ENDIF
-      ELSE:
-    ENDSELECT
-
-    --set tool pitch
-    v.x = v.x + toolprm.pitch
     --set tool
-    toolOffst = POS(0,0,0,v.x,v.y,v.z,pose__set_config(DEFAULT_CONFIG))
+    toolOffst = POS(0, 0, 0,(toolprm.orient.x + toolprm.pitch), toolprm.orient.y, toolprm.orient.z, pose__set_config(DEFAULT_CONFIG))
     --convert cartesian to robot
     tool_offset = make_tool_offset(toolOffst)
 
