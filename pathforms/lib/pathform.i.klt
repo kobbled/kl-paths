@@ -23,22 +23,23 @@
     path_val_arr[13] = '['+ps+']rasterTree'
     --
     path_val_arr[14] = '['+ps+']rastprm.rastType'
-    path_val_arr[15] = '['+ps+']rastprm.angle'
-    path_val_arr[16] = '['+ps+']rastprm.overlap'
-    path_val_arr[17] = '['+ps+']rastprm.dir'
-    path_val_arr[18] = '['+ps+']rastprm.line_width'
-    path_val_arr[19] = '['+ps+']rastprm.contours'
-    path_val_arr[20] = '['+ps+']rastprm.constrain'
-    path_val_arr[21] = '['+ps+']startCorner'
+    path_val_arr[15] = '['+ps+']rastprm.constrain'
+    path_val_arr[16] = '['+ps+']rastprm.onBoundary'
+    path_val_arr[17] = '['+ps+']rastprm.angle'
+    path_val_arr[18] = '['+ps+']rastprm.overlap'
+    path_val_arr[19] = '['+ps+']rastprm.dir'
+    path_val_arr[20] = '['+ps+']rastprm.line_width'
+    path_val_arr[21] = '['+ps+']rastprm.contours'
+    path_val_arr[22] = '['+ps+']startCorner'
     --motion params
-    path_val_arr[22] = '['+ps+']motionTree'
+    path_val_arr[23] = '['+ps+']motionTree'
     --
-    path_val_arr[23] = '['+ps+']toolprm.retractDist'
-    path_val_arr[24] = '['+ps+']motnprm.tool_speed'
-    path_val_arr[25] = '['+ps+']motnprm.link_speed'
-    path_val_arr[26] = '['+ps+']motnprm.tool_step'
-    path_val_arr[27] = '['+ps+']motnprm.link_step'
-    path_val_arr[28] = '['+ps+']motnprm.use_arc'
+    path_val_arr[24] = '['+ps+']toolprm.retractDist'
+    path_val_arr[25] = '['+ps+']motnprm.tool_speed'
+    path_val_arr[26] = '['+ps+']motnprm.link_speed'
+    path_val_arr[27] = '['+ps+']motnprm.tool_step'
+    path_val_arr[28] = '['+ps+']motnprm.link_step'
+    path_val_arr[29] = '['+ps+']motnprm.use_arc'
   END frm_pthList
 
 ROUTINE init_pthList
@@ -58,8 +59,9 @@ ROUTINE init_pthList
     --raster params
     IF UNINIT(rasterTree) THEN rasterTree = TRUE ; ENDIF
     IF UNINIT(rastprm.rastType) THEN rastprm.rastType = 1; ENDIF
-    IF UNINIT(startCorner) THEN startCorner = 1; ENDIF
     IF UNINIT(rastprm.constrain) THEN rastprm.constrain = FALSE; ENDIF
+    IF UNINIT(rastprm.onBoundary) THEN rastprm.onBoundary = TRUE; ENDIF
+    IF UNINIT(startCorner) THEN startCorner = 1; ENDIF
     IF UNINIT(rastprm.overlap) THEN rastprm.overlap = 3.5; ENDIF
     IF UNINIT(rastprm.dir) THEN rastprm.dir = 1; ENDIF
     IF UNINIT(rastprm.line_width) THEN rastprm.line_width = 0; ENDIF
