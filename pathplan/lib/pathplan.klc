@@ -5,6 +5,11 @@ PROGRAM class_name
 
 %include namespace.m
 
+
+%ifdef DEBUG_BUILD
+%include display.c.klt
+%endif
+
 %include errors.klt
 %include systemlib.klt
 %include systemvars.klt
@@ -31,12 +36,19 @@ VAR
   tracked : PATH nodedata = TRACKED_TYPE
   visited : PATH nodedata = t_BOOL
   plan : PATH nodedata = t_INTEGER
+%ifdef DEBUG_BUILD
+  seg_start, pth_idx : INTEGER
+%endif
 
 %include errors.klh
 %include pathlib.klh
-%from math.klh %import norm2
+%from math.klh %import norm, norm2
 %from systemlib.klh %import VEC, VEC2D
-%from pose.klh %import vector_to_pose, get_orientation
+%from pose.klh %import pose_to_vector, vector_to_pose, get_orientation
+
+%ifdef DEBUG_BUILD
+%include strings.klh
+%endif
 
 --kd tree
 define_kdtree(KD_CLASS_NAME,PATHPLAN_CONFIG_FILENAME)
@@ -47,6 +59,11 @@ define_graphs_headers(GRAPH_CLASS_NAME)
 
 -- sensor csv file
 %class csvpth('csvclass.klc','csvclass.klh')
+
+%ifdef DEBUG_BUILD
+-- user display log
+%class usrdis('dispclass.klc','dispclass.klh')
+%endif
 
 %defeval class_name BASE_CLASSNAME
 
@@ -76,7 +93,7 @@ ROUTINE clear_plan
     i : INTEGER
     status : INTEGER
   BEGIN
-    current = 0
+    current = 1
 
     i = PATH_LEN(plan)
     WHILE PATH_LEN(plan) > 0 DO
@@ -264,15 +281,39 @@ ROUTINE next_path_util
     dir : INTEGER
     status : INTEGER
     adj_list : GRAPH_ADJ_LIST_NAME
+    cont : BOOLEAN
   BEGIN
     --clear out line
     clear_path(out_path)
 
-    current = current + 1
-
     IF current < PATH_LEN(plan) THEN
       st = plan[current].v
-      ed = plan[current + 1].v
+
+      -- a contiguous path 
+      -- (15         -> 16         -> 17         -> 18         -> 19)
+      -- (PTH_MOVETO -> PTH_LINETO -> PTH_CURVE3 -> PTH_LINETO -> PTH_CLOSE)
+      -- needs to be considered, as the `plan` list needs to visit every node in the graph
+      -- so a contiguous path will just go to the next node. The traversal below will find 
+      -- the end node of the path. 
+      i = current
+
+      REPEAT
+        i = i + 1
+        ed = plan[i].v
+      UNTIL((pth[ed].code = PTH_MOVETO) OR (pth[ed].code = PTH_CLOSE))
+
+      -- ..warning:: might have to change this logic as it is assuming a raster line
+      --             only has two points, and the next node will be the termination
+      --             of a line.
+      IF ed = plan[current + 1].v THEN
+        cont = FALSE
+      ELSE
+        cont = TRUE
+      ENDIF
+
+      -- set global `current` to the end node of a path. This is done to keep
+      -- track of where we are in the pth list every time `next_toolpath` is called
+      current = i
 
       --which direction is path moving through list
       IF st < ed THEN
@@ -310,6 +351,11 @@ ROUTINE next_path_util
             out_path[PATH_LEN(out_path)] = pth[j]
           ENDFOR
         ENDIF
+
+        -- if contiguous path assume path is a tooling path
+        IF cont THEN
+          RETURN(PTH_TOOLING)
+        ENDIF
         
         -- check graph if path is a tooling path or a linking path
         -- do so by looking through adjacency list and checking that
@@ -319,6 +365,8 @@ ROUTINE next_path_util
         REPEAT
           j = j + 1
         UNTIL( adj_list[j].GRAPH_NODE_NAME = ed )
+
+        WRITE TPDISPLAY('cost: ', adj_list[j].GRAPH_NODE_NAME, CR)
 
         --tooling path
         IF (adj_list[j].GRAPH_EDGE_NAME = PATH_MIN_COST) THEN
@@ -347,8 +395,12 @@ ROUTINE new
 
     --initialize members
     frm = coord_frame
-    current = 0
+    current = 1
     pnt_orient = VEC(0,0,0)
+
+%ifdef DEBUG_BUILD
+    seg_start = 0
+%endif
 
   END new
 
@@ -364,8 +416,12 @@ ROUTINE init
     --initialize members
     frm = coord_frame
     COPY_PATH(p, 0, 0, pth, status)
-    current = 0
+    current = 1
     pnt_orient = VEC(0,0,0)
+
+%ifdef DEBUG_BUILD
+    seg_start = 0
+%endif
 
     --build kd tree, and start visited
     -- and tracked lists
@@ -380,7 +436,7 @@ ROUTINE delete
     clear_tracked
     clear_plan
     clear_bbox(bboxs)
-    current = 0
+    current = 1
     pnt_orient = VEC(0,0,0)
 
     `KD_CLASS_NAME`__clear
@@ -511,7 +567,7 @@ ROUTINE get_plan
 
 ROUTINE reset_path
   BEGIN
-    current = 0
+    current = 1
   END reset_path
 
 ROUTINE next_path
@@ -533,9 +589,15 @@ ROUTINE next_toolpath
     --clear out line
     clear_toolpath(tool_segment)
 
+%ifdef DEBUG_BUILD
+    seg_start = seg_start + 1
+    usrdis__print(INFO, 'Seg_' + i_to_s(seg_start) + ' : ' + i_to_s(pth_typ))
+    pth_idx = 1
+%endif
+
     FOR i=1 TO PATH_LEN(segment) DO
       APPEND_NODE(tool_segment, status)
-      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient)
+      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment, i, pnt_orient, frm)
       tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
       tool_segment[PATH_LEN(tool_segment)].typ = pth_typ
       tool_segment[PATH_LEN(tool_segment)].speed = DEFAULT_SPEED
@@ -570,7 +632,7 @@ ROUTINE set_line
     --convert to t_TOOLPATH
     FOR i=1 TO PATH_LEN(segment) DO
       APPEND_NODE(tool_segment, status)
-      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient)
+      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment, i, pnt_orient, frm)
       tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
       tool_segment[PATH_LEN(tool_segment)].typ = line_typ
     ENDFOR

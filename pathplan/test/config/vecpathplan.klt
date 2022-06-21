@@ -13,12 +13,12 @@
 
 --kd tree
 ------------------
-%defeval KD_CLASS_NAME pthkd
+%defeval KD_CLASS_NAME tstkd
 %include kd_vec_raster.klt
 
 --graph
 ------------------
-%defeval GRAPH_CLASS_NAME pthgh
+%defeval GRAPH_CLASS_NAME tstgh
 %include default_graph_weight2.klt
 
 --maximum number of adjacencies per node

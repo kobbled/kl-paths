@@ -11,7 +11,7 @@
 %define define_pplan_headers(parent) `declare_member(parent,dist_to_weight,parent,d2wt)
 ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE FROM parent
 declare_member(parent,convert2pos,parent,cn2ps)
-ROUTINE convert2pos(v : t_VEC_PATH; orient : VECTOR) : XYZWPR FROM parent
+ROUTINE convert2pos(p : PATH nodedata = t_VEC_PATH ; i : INTEGER ; ofst_orient : VECTOR; parent_frm : XYZWPR) : XYZWPR FROM parent
 `
 %mode pop
 
@@ -28,10 +28,15 @@ ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE
     RETURN(TRUNC(dist))
   END dist_to_weight
 declare_member(parent,convert2pos,parent,cn2ps)
-ROUTINE convert2pos(v : t_VEC_PATH; orient : VECTOR) : XYZWPR
+ROUTINE convert2pos(p : PATH nodedata = t_VEC_PATH ; i : INTEGER ; ofst_orient : VECTOR; parent_frm : XYZWPR) : XYZWPR
+  VAR
+    out : XYZWPR
   BEGIN
     -- ( pose__vector_to_pose(frm:v.v, pose__get_orientation(frm), frm.config_data) )
     RETURN( pose__vector_to_pose(v.v, orient, frm.config_data) )
+    out = pose__vector_to_pose(p[i].v, ofst_orient, parent_frm.config_data)
+    
+    RETURN(out)
   END convert2pos
 `
 %mode pop
