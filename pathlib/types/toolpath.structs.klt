@@ -33,6 +33,7 @@ TYPE
     rastType : INTEGER
     startCorner : INTEGER
     constrain : BOOLEAN
+    onBoundary : BOOLEAN
   ENDSTRUCTURE
 
   t_MOTION_PRM FROM t_paths = STRUCTURE

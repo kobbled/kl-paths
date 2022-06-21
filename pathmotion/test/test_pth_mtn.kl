@@ -104,7 +104,7 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
     polygon[8].coords = VEC2D(-20,60)
 
     --initialize polygon object
-    tstpoly__delete
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__set_canvas((ZEROPOS(1)))
     tstpoly__append_polygon(polygon)
 
@@ -144,7 +144,7 @@ ROUTINE t_hexagon
     overlap = 6
     wall_lines = 1
 
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 0)
     --get raster lines
     --     (start_angle, dir, wall_lines, line_width, line_pitch)
@@ -215,7 +215,7 @@ ROUTINE t_pvert_ID
     pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
 
     --draw pads
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
 
     --get raster lines
@@ -290,7 +290,7 @@ ROUTINE t_pvert_OD
     pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
 
     --draw pads
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
 
     --get raster lines

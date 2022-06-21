@@ -291,7 +291,7 @@ def parsePath(args):
 def parsePath3D(args):
   parsefile = folder_files +'/' + SAVE_DIRECTORY + '/' + args.rbt_fl + '.VA'
 
-  pattern_map = rf"Field: {TOOLPATH_VARNAME}\.NODEDATA\[(\d+)\]\.{TOOLPATH_SUFFIX} Access: RW: XYZWPR =\s*Group\:\s{TOOLPATH_GROUP}\s*Config\:\s[A-Z]\s[A-Z]\s[A-Z],\s\d,\s\d,\s\d\s*(.*)\s*(.*)\s*Field: {TOOLPATH_VARNAME}\.NODEDATA\[(\d+)\]\.SPEED Access: RW: REAL = Uninitialized\s*Field: PTH.NODEDATA\[\d+\].{TOOLPATH_CODE} Access: RW: SHORT = (\d+)\s*Field: PTH.NODEDATA\[\d+\].{TOOLPATH_TYPE} Access: RW: SHORT = (\d+)"
+  pattern_map = rf"Field: {TOOLPATH_VARNAME}\.NODEDATA\[(\d+)\]\.{TOOLPATH_SUFFIX} Access: RW: XYZWPR =\s*Group\:\s{TOOLPATH_GROUP}\s*Config\:\s[A-Z]\s[A-Z]\s[A-Z],\s\d,\s\d,\s\d\s*(.*)\s*(.*)\s*Field: {TOOLPATH_VARNAME}\.NODEDATA\[(\d+)\]\.SPEED Access: RW: REAL = -?[\d.]+e[+-]?\d+?\s*Field: PTH.NODEDATA\[\d+\].{TOOLPATH_CODE} Access: RW: SHORT = (\d+)\s*Field: PTH.NODEDATA\[\d+\].{TOOLPATH_TYPE} Access: RW: SHORT = (\d+)"
   patternxyz = r"X:\s*(-?\d{0,3}\.\d{1,3})\s*Y:\s*(-?\d{0,3}\.\d{1,3})\s*Z:\s*(-?\d{0,3}\.\d{1,3})"
   patternwpr = r"W:\s*(-?\d{0,3}\.\d{1,3})\s*P:\s*(-?\d{0,3}\.\d{1,3})\s*R:\s*(-?\d{0,3}\.\d{1,3})"
 

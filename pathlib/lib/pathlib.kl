@@ -21,7 +21,6 @@ PROGRAM paths
 %include draw.rect.klt
 %include pathplan.klt
 %include pathlib.klt
-%include toolpath.structs.klt
 
 %include errors.klh
 %ifdef DEBUG_BUILD
@@ -678,11 +677,11 @@ ROUTINE paths__raster_neighbors
 
 %ifdef DEBUG_BUILD
     s_to_arr('up,down,right,left,dup,ddown',',',str_arr)
-    usrdis__print(INFO, ' ')
-    usrdis__print(INFO,'Neighbors for Point: ' + vec_to_s(point.v, ','))
+    usrdis__print(DEBUG, ' ')
+    usrdis__print(DEBUG,'Neighbors for Point: ' + vec_to_s(point.v, ','))
     FOR i=1 TO ARRAY_LEN(str_arr) DO
       IF NOT UNINIT(query[i].idx) THEN
-        usrdis__print(INFO,str_arr[i] + ' NN' + i_to_s(query[i].idx) +':' + vec_to_s(data[query[i].idx].v, ',') + ' dist: ' + r_to_s(query[i].value))
+        usrdis__print(DEBUG,str_arr[i] + ' NN' + i_to_s(query[i].idx) +':' + vec_to_s(data[query[i].idx].v, ',') + ' dist: ' + r_to_s(query[i].value))
       ENDIF
     ENDFOR
 %endif

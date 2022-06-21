@@ -105,7 +105,7 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
     polygon[8].coords = VEC2D(-20,60)
 
     --initialize polygon object
-    tstpoly__delete
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__set_canvas((ZEROPOS(1)))
     tstpoly__append_polygon(polygon)
 
@@ -149,7 +149,7 @@ ROUTINE t_rot_delta
     pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
 
     --draw delta
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     draw_delta(RASTER_ANGLE, PASS_OVERLAP, NO_WALLINES)
 
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
@@ -230,7 +230,7 @@ ROUTINE t_rot_OD
     pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
 
     --draw pads
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
 
     --get raster lines
@@ -312,7 +312,7 @@ ROUTINE t_rot_ID
     pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
 
     --draw pads
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
 
     --get raster lines

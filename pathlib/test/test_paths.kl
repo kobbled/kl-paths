@@ -93,7 +93,7 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
 
     --initialize polygon object
     tstpln__delete
-    tstpoly__set_canvas((ZEROPOS(1)))
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__append_polygon(polygon)
 
     --raster polygon
@@ -168,17 +168,17 @@ ROUTINE t_flat_pnts : BOOLEAN
       j = j + 1
     ENDWHILE
 
-    exp_path[1] = POS(140,140,30,-180,0,0, (ZEROPOS(1).config_data))
-    exp_path[2] = POS(146,140,30,-180,0,0, (ZEROPOS(1).config_data))
-    exp_path[3] = POS(158,140,30,-180,0,0, (ZEROPOS(1).config_data))
-    exp_path[4] = POS(147,142,30,-180,0,0, (ZEROPOS(1).config_data))
-    exp_path[5] = POS(126,146,30,-180,0,0, (ZEROPOS(1).config_data))
-    exp_path[6] = POS(106,150,30,-180,0,0, (ZEROPOS(1).config_data))
-    exp_path[7] = POS(112,150,30,-180,0,0, (ZEROPOS(1).config_data))
-    exp_path[8] = POS(124,150,30,-180,0,0, (ZEROPOS(1).config_data))
-    exp_path[9] = POS(136,150,30,-180,0,0, (ZEROPOS(1).config_data))
-    exp_path[10] = POS(148,150,30,-180,0,0, (ZEROPOS(1).config_data))
-    exp_path[11] = POS(154,150,30,-180,0,0, (ZEROPOS(1).config_data))
+    exp_path[1] = POS(147.6, 142.0, 30.0, -180.0, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(126.8, 146.0, 30.0, -180.0, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(106.0, 150.0, 30.0, -180.0, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(112.0, 150.0, 30.0, -180.0, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(124.0, 150.0, 30.0, -180.0, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(136.0, 150.0, 30.0, -180.0, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(148.0, 150.0, 30.0, -180.0, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(154.0, 150.0, 30.0, -180.0, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(132.0, 155.0, 30.0, -180.0, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(110.0, 160.0, 30.0, -180.0, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(116.7, 160.0, 30.0, -180.0, 0.0, 0.0, (ZEROPOS(1).config_data))
 
     RETURN(kunit_eq_arp(exp_path, act_path))
 
@@ -296,7 +296,7 @@ ROUTINE t_pads : BOOLEAN
     -- ** drawing **
     --draw pads
     clear_poly(polygon)
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(50,0) )
 
@@ -386,7 +386,7 @@ ROUTINE t_lpads : BOOLEAN
     -- ** drawing **
     --draw pads
     clear_poly(polygon)
-    tstpoly__new
+    tstpoly__INIT((ZEROPOS(1)), TRUE)
     tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(50,0) )
 
@@ -473,7 +473,7 @@ ROUTINE t_cyld_yaxe : BOOLEAN
 
     --draw polygon
     clear_poly(polygon)
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     draw_delta(0, 10, 1)
     
       --get bounding box
@@ -522,17 +522,17 @@ ROUTINE t_cyld_yaxe : BOOLEAN
       j = j + 1
     ENDWHILE
 
-    exp_path[1] = POS(139.933,140,49.003,-180,11.459,0, (ZEROPOS(1).config_data))
-    exp_path[2] = POS(145.728,140,47.462,-180,18.335,0, (ZEROPOS(1).config_data))
-    exp_path[3] = POS(156.559,140,42.363,-180,32.086,0, (ZEROPOS(1).config_data))
-    exp_path[4] = POS(147.239,142,46.934,-180,20.168,0, (ZEROPOS(1).config_data))
-    exp_path[5] = POS(126.802,146,49.898,-180,-3.667,0, (ZEROPOS(1).config_data))
-    exp_path[6] = POS(106.911,150,44.350,-180,-27.502,0, (ZEROPOS(1).config_data))
-    exp_path[7] = POS(112.386,150,46.795,-180,-20.626,0, (ZEROPOS(1).config_data))
-    exp_path[8] = POS(124.014,150,49.640,-180,-6.875,0, (ZEROPOS(1).config_data))
-    exp_path[9] = POS(135.986,150,49.640,-180,6.875,0, (ZEROPOS(1).config_data))
-    exp_path[10] = POS(147.614,150,46.795,-180,20.626,0, (ZEROPOS(1).config_data))
-    exp_path[11] = POS(153.089,150,44.350,-180,27.502,0, (ZEROPOS(1).config_data))
+    exp_path[1] = POS(147.2, 142.0, 46.9, -180.0, 20.2, 0.0, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(126.8, 146.0, 49.9, -180.0, -3.7, 0.0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(106.9, 150.0, 44.4, -180.0, -27.5, 0.0, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(112.4, 150.0, 46.8, -180.0, -20.6, 0.0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(124.0, 150.0, 49.6, -180.0, -6.9, 0.0, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(136.0, 150.0, 49.6, -180.0, 6.9, 0.0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(147.6, 150.0, 46.8, -180.0, 20.6, 0.0, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(153.1, 150.0, 44.4, -180.0, 27.5, 0.0, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(132.0, 155.0, 50.0, -180.0, 2.3, 0.0, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(110.5, 160.0, 46.1, -180.0, -22.9, 0.0, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(116.8, 160.0, 48.2, -180.0, -15.3, 0.0, (ZEROPOS(1).config_data))
 
     RETURN(kunit_eq_arp(exp_path, act_path))
 
@@ -557,7 +557,7 @@ ROUTINE t_cyld_xaxe : BOOLEAN
 
     --draw polygon
     clear_poly(polygon)
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     draw_delta(0, 10, 1)
     
       --get bounding box
@@ -606,17 +606,17 @@ ROUTINE t_cyld_xaxe : BOOLEAN
       j = j + 1
     ENDWHILE
 
-    exp_path[1] = POS(170.0, 90.1, 49.0, -168.5, 0.0, 0.0, (ZEROPOS(1).config_data))
-    exp_path[2] = POS(170.0, 84.3, 47.5, -161.7, 0.0, 0.0, (ZEROPOS(1).config_data))
-    exp_path[3] = POS(170.0, 73.4, 42.4, -147.9, 0.0, 0.0, (ZEROPOS(1).config_data))
-    exp_path[4] = POS(172.0, 82.8, 46.9, -159.8, 0.0, 0.0, (ZEROPOS(1).config_data))
-    exp_path[5] = POS(176.0, 103.2, 49.9, -183.7, 0.0, 0.0, (ZEROPOS(1).config_data))
-    exp_path[6] = POS(180.0, 123.1, 44.4, -207.5, 0.0, 0.0, (ZEROPOS(1).config_data))
-    exp_path[7] = POS(180.0, 117.6, 46.8, -200.6, 0.0, 0.0, (ZEROPOS(1).config_data))
-    exp_path[8] = POS(180.0, 106.0, 49.6, -186.9, 0.0, 0.0, (ZEROPOS(1).config_data))
-    exp_path[9] = POS(180.0, 94.0, 49.6, -173.1, 0.0, 0.0, (ZEROPOS(1).config_data))
-    exp_path[10] = POS(180.0, 82.4, 46.8, -159.4, 0.0, 0.0, (ZEROPOS(1).config_data))
-    exp_path[11] = POS(180.0, 76.9, 44.4, -152.5, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[1] = POS(172.0, 82.8, 46.9, -159.8, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(176.0, 103.2, 49.9, -183.7, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(180.0, 123.1, 44.4, -207.5, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(180.0, 117.6, 46.8, -200.6, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(180.0, 106.0, 49.6, -186.9, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(180.0, 94.0, 49.6, -173.1, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(180.0, 82.4, 46.8, -159.4, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(180.0, 76.9, 44.4, -152.5, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(185.0, 98.0, 50.0, -177.7, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(190.0, 119.5, 46.1, -202.9, 0.0, 0.0, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(190.0, 113.2, 48.2, -195.3, 0.0, 0.0, (ZEROPOS(1).config_data))
 
     RETURN(kunit_eq_arp(exp_path, act_path))
 
@@ -642,7 +642,7 @@ ROUTINE t_cyld_zaxe : BOOLEAN
 
     --draw polygon
     clear_poly(polygon)
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     draw_delta(0, 10, 1)
     
       --get bounding box
@@ -692,17 +692,17 @@ ROUTINE t_cyld_zaxe : BOOLEAN
       j = j + 1
     ENDWHILE
 
-    exp_path[1] = POS(139.9, 239.0, 40.0, -90.0, 0.0, -191.5, (ZEROPOS(1).config_data))
-    exp_path[2] = POS(145.7, 237.5, 40.0, -90.0, 0.0, -198.3, (ZEROPOS(1).config_data))
-    exp_path[3] = POS(156.6, 232.4, 40.0, -90.0, 0.0, -212.1, (ZEROPOS(1).config_data))
-    exp_path[4] = POS(147.2, 236.9, 42.0, -90.0, 0.0, -200.2, (ZEROPOS(1).config_data))
-    exp_path[5] = POS(126.8, 239.9, 46.0, -90.0, 0.0, -176.3, (ZEROPOS(1).config_data))
-    exp_path[6] = POS(106.9, 234.3, 50.0, -90.0, 0.0, -152.5, (ZEROPOS(1).config_data))
-    exp_path[7] = POS(112.4, 236.8, 50.0, -90.0, 0.0, -159.4, (ZEROPOS(1).config_data))
-    exp_path[8] = POS(124.0, 239.6, 50.0, -90.0, 0.0, -173.1, (ZEROPOS(1).config_data))
-    exp_path[9] = POS(136.0, 239.6, 50.0, -90.0, 0.0, -186.9, (ZEROPOS(1).config_data))
-    exp_path[10] = POS(147.6, 236.8, 50.0, -90.0, 0.0, -200.6, (ZEROPOS(1).config_data))
-    exp_path[11] = POS(153.1, 234.3, 50.0, -90.0, 0.0, -207.5, (ZEROPOS(1).config_data))
+    exp_path[1] = POS(147.2, 236.9, 42.0, -90.0, 0.0, -200.2, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(126.8, 239.9, 46.0, -90.0, 0.0, -176.3, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(106.9, 234.3, 50.0, -90.0, 0.0, -152.5, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(112.4, 236.8, 50.0, -90.0, 0.0, -159.4, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(124.0, 239.6, 50.0, -90.0, 0.0, -173.1, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(136.0, 239.6, 50.0, -90.0, 0.0, -186.9, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(147.6, 236.8, 50.0, -90.0, 0.0, -200.6, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(153.1, 234.3, 50.0, -90.0, 0.0, -207.5, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(132.0, 240.0, 55.0, -90.0, 0.0, -182.3, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(110.5, 236.1, 60.0, -90.0, 0.0, -157.1, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(116.8, 238.2, 60.0, -90.0, 0.0, -164.7, (ZEROPOS(1).config_data))
 
     RETURN(kunit_eq_arp(exp_path, act_path))
 
@@ -734,7 +734,7 @@ ROUTINE t_pvert_OD : BOOLEAN
     -- ** drawing **
     --draw pads
     clear_poly(polygon)
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0) )
 
     --get raster lines
@@ -829,7 +829,7 @@ ROUTINE t_pvert_ID : BOOLEAN
     -- ** drawing **
     --draw pads
     clear_poly(polygon)
-    tstpln__delete
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0) )
 
@@ -969,17 +969,17 @@ ROUTINE t_pol_pnts : BOOLEAN
       j = j + 1
     ENDWHILE
 
-    exp_path[1] = POS(137.4, 140.3, 93.8, 137.7, 9.5, 0.0, (ZEROPOS(1).config_data))
-    exp_path[2] = POS(141.3, 134.8, 84.0, 135.8, 18.3, 0.0, (ZEROPOS(1).config_data))
-    exp_path[3] = POS(149.1, 134.8, 80.4, 135.8, 32.1, 0.0, (ZEROPOS(1).config_data))
-    exp_path[4] = POS(143.2, 138.8, 93.8, 139.7, 16.8, 0.0, (ZEROPOS(1).config_data))
-    exp_path[5] = POS(127.4, 135.7, 98.1, 143.5, -3.1, 0.0, (ZEROPOS(1).config_data))
-    exp_path[6] = POS(110.3, 132.4, 96.5, 147.3, -22.9, 0.0, (ZEROPOS(1).config_data))
-    exp_path[7] = POS(115.2, 127.0, 89.4, 147.3, -20.6, 0.0, (ZEROPOS(1).config_data))
-    exp_path[8] = POS(125.0, 127.0, 91.8, 147.3, -6.9, 0.0, (ZEROPOS(1).config_data))
-    exp_path[9] = POS(135.0, 127.0, 91.8, 147.3, 6.9, 0.0, (ZEROPOS(1).config_data))
-    exp_path[10] = POS(144.8, 127.0, 89.4, 147.3, 20.6, 0.0, (ZEROPOS(1).config_data))
-    exp_path[11] = POS(149.7, 132.4, 96.5, 147.3, 22.9, 0.0, (ZEROPOS(1).config_data))
+    exp_path[1] = POS(143.2, 138.8, 93.8, 139.7, 16.8, 0.0, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(127.4, 135.7, 98.1, 143.5, -3.1, 0.0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(110.3, 132.4, 96.5, 147.3, -22.9, 0.0, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(115.2, 127.0, 89.4, 147.3, -20.6, 0.0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(125.0, 127.0, 91.8, 147.3, -6.9, 0.0, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(135.0, 127.0, 91.8, 147.3, 6.9, 0.0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(144.8, 127.0, 89.4, 147.3, 20.6, 0.0, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(149.7, 132.4, 96.5, 147.3, 22.9, 0.0, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(131.8, 128.1, 103.0, 152.1, 1.9, 0.0, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(112.0, 123.6, 102.1, 156.8, -19.1, 0.0, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(117.7, 118.1, 95.0, 158.8, -15.3, 0.0, (ZEROPOS(1).config_data))
 
     RETURN(kunit_eq_arp(exp_path, act_path))
 
@@ -988,11 +988,11 @@ ROUTINE t_pol_pnts : BOOLEAN
 BEGIN
 %ifdef DEBUG_BUILD
   --(log_filename, show_date, show_debug, show_info)
-  usrdis__new(LOG_NAME, FALSE, TRUE, TRUE)
+  usrdis__new(LOG_NAME, FALSE, FALSE, TRUE)
   usrdis__clear_file
 %endif
 
-  --** use kunit
+  -- ** use kunit
   -- flat paths
   kunit_test('draw delta path', t_flat_pnts)
   kunit_test('hexagon path', t_hex_pnts)
@@ -1008,7 +1008,7 @@ BEGIN
   kunit_test('polar coordinates path planning', t_pol_pnts)
   kunit_done
 
-  --clean up
+  -- clean up
   tstpoly__delete
   tstpln__delete
 

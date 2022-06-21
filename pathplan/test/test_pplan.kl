@@ -85,7 +85,7 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL)
 
     --initialize polygon object
     tstpln__delete
-    tstpoly__delete
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__set_canvas((ZEROPOS(1)))
     tstpoly__append_polygon(polygon)
 
@@ -99,9 +99,10 @@ ROUTINE draw_multi(rast_ang : REAL ; pitch : REAL)
   BEGIN
     tstpln__delete
     tstpoly__delete
-    tstpoly__set_canvas((ZEROPOS(1)))
 
     --create polygon
+    tstpoly__init((ZEROPOS(1)), FALSE)
+
     clear_poly(polygon)
     append_nodes(polygon, 4)
     polygon[1].coords = VEC2D(0,30)   
@@ -183,8 +184,8 @@ ROUTINE t_NN : BOOLEAN
 
     exp[1] = 3;    exp[2] = 4;    exp[3] = 9;    exp[4] = 10;   exp[5] = 11;
     exp[6] = 12;   exp[7] = 6;    exp[8] = 5;    exp[9] = 1;    exp[10] = 2;
-    exp[11] = 13;  exp[12] = 14;  exp[13] = 7;   exp[14] = 8;   exp[15] = 20;
-    exp[16] = 19;  exp[17] = 18;  exp[18] = 17;  exp[19] = 16;  exp[20] = 15;
+    exp[11] = 13;  exp[12] = 14;  exp[13] = 7;   exp[14] = 8;   exp[15] = 16;
+    exp[16] = 15;  exp[17] = 17;  exp[18] = 18;  exp[19] = 20;  exp[20] = 19;
 
     RETURN(kunit_eq_ari(exp, act))
   END t_NN
@@ -317,7 +318,7 @@ ROUTINE t_rast_path : BOOLEAN
       act2[i] =  path_plan[i].v
     ENDFOR
 
-    s_to_iarr('8,7,6,5,4,3,9,10,11,12,13,14,20,19,18,17,16,15,21,22', ',', exp2)
+    s_to_iarr('8,7,6,5,4,3,9,10,11,12,13,14,16,15,17,18,20,19,21,22', ',', exp2)
     
     RETURN(kunit_eq_ari(exp1, act1) AND kunit_eq_ari(exp2, act2) )
 
@@ -361,7 +362,7 @@ ROUTINE t_rast_multi : BOOLEAN
       act1[i] =  path_plan[i].v
     ENDFOR
 
-    s_to_iarr('1,2,7,8,13,14,19,20,25,26,31,32,37,38,43,44,49,50,55,56', ',', exp1)
+    s_to_iarr('1,2,7,8,13,14,19,20,25,26,31,32,37,38,43,44,49,50,3,4', ',', exp1)
 
     --generate path
     rast_ang = 90
@@ -456,7 +457,7 @@ ROUTINE t_hexagon : BOOLEAN
     wall_lines = 0
 
     --draw hexagon
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 0)
     tstpoly__set_params(rast_ang, -1, wall_lines, 0, overlap)
     tstpoly__raster(PTH_LINETO)
@@ -499,7 +500,7 @@ ROUTINE t_temp : BOOLEAN
     rast_ang = 90
     start_corner = 1
 
-    tstpoly__new
+    tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__set_canvas(POS(0,0,0,0,0,rast_ang, (ZEROPOS(1).config_data) ))
     tstpoly__import_shape('FR:\rebel.csv')
     --raster polygon
@@ -553,7 +554,7 @@ BEGIN
   kunit_test('test raster multi polygons', t_rast_multi)
   kunit_test('test raster multi polygon indep', t_rast_mult2)
   kunit_test('test raster hexagon poly', t_hexagon)
-  kunit_test('test raster heagon poly', t_temp)
+  kunit_test('test raster svg poly', t_temp)
   kunit_test('test import raster path', t_import)
 
   kunit_done
