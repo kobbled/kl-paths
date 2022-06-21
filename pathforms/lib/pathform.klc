@@ -53,18 +53,19 @@ pathdraw_friends(PATHDRAW_NAME)
 %define BASE_CLASSNAME class_name
 
 VAR
-  path_val_arr : ARRAY[23] OF STRING[30]
+  path_val_arr : ARRAY[28] OF STRING[30]
   draw_val_arr : ARRAY[9] OF STRING[30]
   work_val_arr : ARRAY[7] OF STRING[30]
 
   station_name : ARRAY[5] OF STRING[20]
   --tree views
-  stationTree, rasterTree, motionTree : BOOLEAN
+  stationTree, toolTree, rasterTree, motionTree : BOOLEAN
   station IN CMOS: INTEGER
   program_type IN CMOS : INTEGER
   shapeType IN CMOS : INTEGER
   filename IN CMOS : STRING[12]
   idod_ IN CMOS : INTEGER
+  default_wpr IN CMOS : BOOLEAN
   -- poses
   origin : XYZWPR
   frm : XYZWPR

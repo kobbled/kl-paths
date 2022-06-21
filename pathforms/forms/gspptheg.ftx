@@ -19,6 +19,9 @@ $-,ppth
   " Coord System: " "-%8n(enum_coord)" &new_line
   " OD/ID:        " "-%8n(enum_idod)" &new_line
   " Tool Pitch:   " "-%6.2f" &new_line
+  "-%t" &bold " Tool Orientation" &standard &new_line
+  " Use Default:  " "-%6B(bool_fkey)" &new_line
+  " WPR:     " "-%6.2f" "-%6.2f" "-%6.2f" &new_line
   "-%t" &bold " Raster Parameters" &standard &new_line
   " Raster Type:          " "-%8n(enum_rast)" &new_line
   " Raster Angle:         " "-%6.2f" &new_line
