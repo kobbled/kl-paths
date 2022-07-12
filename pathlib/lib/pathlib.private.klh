@@ -12,8 +12,6 @@ ROUTINE paths__compute_diagonals(point : t_VEC_PATH ; raster_dir : VECTOR ; poly
                                  data : PATH nodedata = t_VEC_PATH ; query : T_RASTQUERY) FROM paths
 declare_function(prog_name,get_path_vector,prog_name_alias,gtpv)
 ROUTINE paths__get_path_vector(start_idx : INTEGER ; data : PATH nodedata = t_VEC_PATH) : VECTOR FROM paths
-declare_function(prog_name,get_increments,prog_name_alias,ginc)
-ROUTINE paths__get_increments(strt, emd : VECTOR ; spacing : REAL) : INTEGER FROM paths
 declare_function(prog_name,psuedo_center,prog_name_alias,pscn)
 ROUTINE paths__psuedo_center(data : PATH nodedata = t_VEC_PATH; strti : INTEGER ; endi : INTEGER) : VECTOR FROM paths
 declare_function(prog_name,find_min,prog_name_alias,fdmin)

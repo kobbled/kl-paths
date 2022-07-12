@@ -47,13 +47,13 @@ declare_function(prog_name,calc_bounding_box,prog_name_alias,gtbx)
 ROUTINE paths__calc_bounding_box(data : PATH nodedata = t_VEC_PATH) : t_RECT FROM paths
 declare_function(prog_name,map_to_bounding_box,prog_name_alias,mpbb)
 ROUTINE paths__map_to_bounding_box(data : PATH nodedata = t_VEC_PATH; bboxs : PATH nodedata = t_RECT) FROM paths
+declare_function(prog_name,get_increments,prog_name_alias,ginc)
+ROUTINE paths__get_increments(strt, emd : VECTOR ; spacing : REAL) : INTEGER FROM paths
+
 --conversion functions
 declare_function(prog_name,interpolate_vpath,prog_name_alias,inrvp)
 ROUTINE paths__interpolate_vpath(vpath : PATH nodedata = t_VEC_PATH; spacing : REAL; line_type : INTEGER ; &
                                  ref_frame : XYZWPR; out_path : PATH nodedata = t_VEC_PATH) FROM paths
-declare_function(prog_name,interpolate_ppath,prog_name_alias,inrpp)
-ROUTINE paths__interpolate_ppath(vpath : PATH nodedata = t_POS_PATH; spacing : REAL; line_type : INTEGER ; & 
-                                 ref_frame : XYZWPR; out_path : PATH nodedata = t_POS_PATH) FROM paths
 declare_function(prog_name,interpolate_toolpath,prog_name_alias,inrtp)
 ROUTINE paths__interpolate_toolpath(vpath : PATH nodedata = t_TOOLPATH; spacing : REAL; line_type : INTEGER ; &
                                  ref_frame : XYZWPR; out_path : PATH nodedata = t_TOOLPATH) FROM paths
