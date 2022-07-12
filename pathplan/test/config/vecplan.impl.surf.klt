@@ -1,0 +1,111 @@
+--include default interface
+%include pathplan.interface.klt
+
+-- ***********
+-- Define interface header
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define define_pplan_headers(parent) `declare_member(parent,dist_to_weight,parent,d2wt)
+ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE FROM parent
+declare_member(parent,convert2pos,parent,cn2ps)
+ROUTINE convert2pos(p : PATH nodedata = t_VEC_PATH ; i : INTEGER ; ofst_orient : VECTOR; parent_frm : XYZWPR) : XYZWPR FROM parent
+declare_member(parent,path_blending,parent,pthbl)
+ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm : XYZWPR; blendRatio : REAL; outNode : t_TOOLPATH) FROM parent
+declare_member(parent,convertOrientation,parent,cnvor)
+ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius : REAL; system : INTEGER; z_axis : INTEGER; flip : BOOLEAN) FROM parent
+declare_member(parent,linkingTransition,parent,lktrs)
+ROUTINE linkingTransition(p : PATH nodedata = t_TOOLPATH; spacing : REAL) FROM parent
+`
+%mode pop
+
+-- ***********
+-- Define interface
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define define_pplan_members(parent) `declare_member(parent,dist_to_weight,parent,d2wt)
+ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE
+  BEGIN
+    RETURN(TRUNC(dist))
+  END dist_to_weight
+declare_member(parent,convert2pos,parent,cn2ps)
+ROUTINE convert2pos(p : PATH nodedata = t_VEC_PATH ; i : INTEGER ; ofst_orient : VECTOR; parent_frm : XYZWPR) : XYZWPR
+  BEGIN
+
+%ifdef DEBUG_BUILD
+    usrdis__print(INFO, 'P' + i_to_s(pth_idx) + ': ' + '(' + vec_to_s(p[i].v, ',') + ')' + ',' + '(' + vec_to_s(tangent, ',') + ')')
+    pth_idx = pth_idx + 1
+%endif
+
+    -- ( pose__vector_to_pose(frm:v.v, pose__get_orientation(frm), frm.config_data) )
+    RETURN( pose__vector_to_pose(p[i].v, ofst_orient, parent_frm.config_data) )
+  END convert2pos
+declare_member(parent,path_blending,parent,pthbl)
+ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm : XYZWPR; blendRatio : REAL; outNode : t_TOOLPATH)
+  VAR
+    v1, v2 : VECTOR
+    vs, os : VECTOR
+  BEGIN
+    v1 = pose__pose_to_vector(p[i].v)
+    v2 = pose__pose_to_vector(p[i+1].v)
+
+    vs = blendRatio*v2 + (1-blendRatio)*v1
+    os = pose__get_orientation(p[i].v)
+
+    outNode.v = parent_frm:POS(vs.x, vs.y, vs.z, os.x, os.y, os.z, parent_frm.config_data)
+    outNode.tangent = p[i].tangent
+
+  END path_blending
+declare_member(parent,convertOrientation,parent,cnvor)
+ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius : REAL; system : INTEGER; z_axis : INTEGER; flip : BOOLEAN)
+  VAR
+    i : INTEGER
+    surfpos : XYZWPR
+  BEGIN
+    --convert to cartesian
+    SELECT (system) OF
+      CASE(PTH_CYLINDER):
+        FOR i=1 TO PATH_LEN(p) DO
+          --convert surface arc into degrees
+          surfpos = p[i].v
+          surfpos.x = surfpos.x/radius*180/M_PI
+          --convert coordinates
+          p[i].v = pose__cylindrical_to_cartesian(frm, (surfpos), (z_axis))
+
+          p[i].v.w = p[i].v.w + surfpos.w ; p[i].v.p = p[i].v.p + surfpos.p ; p[i].v.r = p[i].v.r + surfpos.r ;
+          --rotation for VERT_AXES
+          IF (z_axis = VERT_AXES) THEN
+            p[i].v.w = p[i].v.w - 90
+          ENDIF
+
+          IF flip THEN
+            p[i].v.w = p[i].v.w + 180 ;
+          ENDIF
+        ENDFOR
+      CASE(PTH_POLAR):
+        FOR i=1 TO PATH_LEN(p) DO
+          --convert surface uv into theta and phi angles
+          surfpos = p[i].v
+          surfpos.x = surfpos.x/radius*180/M_PI
+          surfpos.y = surfpos.y/radius*180/M_PI
+          --convert coordinates
+          p[i].v = pose__polar_to_cartesian(frm, (surfpos), (z_axis))
+
+          p[i].v.w = p[i].v.w + surfpos.w ; p[i].v.p = p[i].v.p + surfpos.p ; p[i].v.r = p[i].v.r + surfpos.r ;
+        ENDFOR
+      CASE(PTH_CARTESAN):
+      ELSE:
+    ENDSELECT
+  END convertOrientation
+declare_member(parent,linkingTransition,parent,lktrs)
+ROUTINE linkingTransition(p : PATH nodedata = t_TOOLPATH; spacing : REAL)
+  BEGIN
+    get_toolpath_interpolate(spacing, PTH_LINETO, TRUE, p)
+  END linkingTransition
+`
+%mode pop
