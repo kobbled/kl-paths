@@ -40,6 +40,8 @@ VAR
 %ifdef DEBUG_BUILD
   seg_start, pth_idx : INTEGER
 %endif
+%define EPSILON 0.01
+%define M_PI 3.1415926535
 
 %include errors.klh
 %include pathlib.klh

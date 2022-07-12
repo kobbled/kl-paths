@@ -56,11 +56,6 @@ define_pplan_headers(PATH_PLAN_NAME)
 ROUTINE next_toolpath
 -- Retrieves the next path in the pathplan
 -- handles the linking path for cylindrical cartesian, and rotary
-%ifdef ROT_GRP
-  VAR
-    endpnts : ARRAY[2] OF t_TOOLPATH
-    status : INTEGER
-%endif
   BEGIN
     SELECT `PATH_PLAN_NAME`__next_toolpath OF
       CASE(PTH_TOOLING):
@@ -69,27 +64,7 @@ ROUTINE next_toolpath
         ENDIF
         registers__set_real(SPEED_REGISTER, tool_speed)
       CASE(PTH_LINKING):
-%ifdef ROT_GRP
-          --If rotary group (ROT_GRP) and line is < 90 deg
-          --only include endpoints in line. If path is 0->360
-          --it will not rotate all the way back around
-          endpnts = `PATH_PLAN_NAME`__get_endpoints
-          IF UNINIT(endpnts[1].v) THEN
-            paths__clear_toolpath(pth)
-          ELSE
-            IF(ABS(endpnts[2].v.x-endpnts[1].v.x) < 270) THEN
-              `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, FALSE, pth)
-            ELSE
-              paths__clear_toolpath(pth)
-              APPEND_NODE(pth,status)
-              pth[PATH_LEN(pth)] = endpnts[1]
-              APPEND_NODE(pth,status)
-              pth[PATH_LEN(pth)] = endpnts[2]
-            ENDIF
-          ENDIF
-%else
-          `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, FALSE, pth)
-%endif
+        `PATH_PLAN_NAME`__linkingTransition(pth, link_step)
         registers__set_real(SPEED_REGISTER, link_speed)
     ENDSELECT
 
@@ -97,13 +72,7 @@ ROUTINE next_toolpath
     paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
     
     --convert to cartesian
-    SELECT (coord_system.system) OF
-      CASE(PTH_CYLINDER):
-        paths__cylindrical_to_cartesian(pth, frm, (coord_system.z_axis))
-      CASE(PTH_POLAR):
-        paths__polar_to_cartesian(pth, frm, (coord_system.z_axis))
-      ELSE:
-    ENDSELECT
+    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (coord_system.system), (coord_system.z_axis), FALSE)
   END next_toolpath
 
 ROUTINE get_toolpath
@@ -124,24 +93,7 @@ ROUTINE get_toolpath
           ENDIF
           registers__set_real(SPEED_REGISTER, tool_speed)
         CASE(PTH_LINKING):
-%ifdef ROT_GRP
-          --If rotary group (ROT_GRP) and line is < 90 deg
-          --only include endpoints in line. If path is 0->360
-          --it will not rotate all the way back around
-          endpnts = `PATH_PLAN_NAME`__get_endpoints
-          IF NOT UNINIT(endpnts[1].v) THEN
-            IF(ABS(endpnts[2].v.x-endpnts[1].v.x) < 270) THEN
-              `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, TRUE, pth)
-            ELSE
-              APPEND_NODE(pth,status)
-              pth[PATH_LEN(pth)] = endpnts[1]
-              APPEND_NODE(pth,status)
-              pth[PATH_LEN(pth)] = endpnts[2]
-            ENDIF
-          ENDIF
-%else
-          `PATH_PLAN_NAME`__get_toolpath_interpolate(link_step, PTH_LINETO, TRUE, pth)
-%endif
+          `PATH_PLAN_NAME`__linkingTransition(pth, link_step)
           registers__set_real(SPEED_REGISTER, link_speed)
       ENDSELECT
     UNTIL( `PATH_PLAN_NAME`__is_path_end )
@@ -150,13 +102,7 @@ ROUTINE get_toolpath
     paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
 
     --convert to cartesian
-    SELECT (coord_system.system) OF
-      CASE(PTH_CYLINDER):
-        paths__cylindrical_to_cartesian(pth, frm, (coord_system.z_axis))
-      CASE(PTH_POLAR):
-        paths__polar_to_cartesian(pth, frm, (coord_system.z_axis))
-      ELSE:
-    ENDSELECT
+    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (coord_system.system), (coord_system.z_axis), FALSE)
   END get_toolpath
 
 ROUTINE get_midpoint
@@ -335,13 +281,8 @@ ROUTINE makeline
       karelError(VAR_UNINIT,'coordinate system must be set in class_name', ER_ABORT)
     ENDIF
 
-    SELECT (coord_system.system) OF
-      CASE(PTH_CYLINDER):
-        paths__cylindrical_to_cartesian(pth, frm, (coord_system.z_axis))
-      CASE(PTH_POLAR):
-        paths__polar_to_cartesian(pth, frm, (coord_system.z_axis))
-      ELSE:
-    ENDSELECT
+    --convert to cartesian
+    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (coord_system.system), (coord_system.z_axis), FALSE)
 
   END makeline
 
@@ -366,13 +307,8 @@ ROUTINE get_line
       karelError(VAR_UNINIT,'coordinate system must be set in class_name', ER_ABORT)
     ENDIF
 
-    SELECT (coord_system.system) OF
-      CASE(PTH_CYLINDER):
-        paths__cylindrical_to_cartesian(pth, frm, (coord_system.z_axis))
-      CASE(PTH_POLAR):
-        paths__polar_to_cartesian(pth, frm, (coord_system.z_axis))
-      ELSE:
-    ENDSELECT
+    --convert to cartesian
+    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (coord_system.system), (coord_system.z_axis), FALSE)
 
   END get_line
 
