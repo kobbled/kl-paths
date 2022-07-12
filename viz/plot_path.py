@@ -6,6 +6,7 @@
 # controller.
 
 #ftplib ref: http://zetcode.com/python/ftp/
+from decimal import ROUND_05UP
 import os
 import sys
 import time
@@ -16,7 +17,6 @@ import re
 from random import randint
 import argparse
 
-
 from robolink import *    # RoboDK API
 from robodk import *      # Robot toolbox
 import numpy as np
@@ -25,6 +25,8 @@ from math import pi
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+
+import collections
 
 #ftp parameters
 ROBOT_IP = '127.0.0.1'
@@ -62,8 +64,8 @@ TOOLPATH_GROUP = '1'
 
 # ** robodk parameters **
 #dummy cell
-REF_FRAME = 'data_frame'
-TOOL_FRAME = 'Tool 1'
+REF_FRAME = 'data_frame_sphere'
+TOOL_FRAME = 'Tool Sphere'
 PART_NAME = 'path'
 PROG_NAME = 'AutoProgram'
 
@@ -83,9 +85,21 @@ folder_files = ''
 
 raster_lines = []
 polygons = []
-path = []
+t_polygon = collections.namedtuple('t_polygon',
+  'coords '
+  'code '
+  'polygon '
+  'tangent'
+)
+
+rpath = []
+t_path = collections.namedtuple('t_path',
+  'pose '
+  'type '
+  'code '
+  'tangent'
+)
 path_plan = []
-tpath_codes = []
 
 #enum toolpath type
 PTH_TOOLING = 100
@@ -101,30 +115,23 @@ def random_color_gen():
   g = randint(0, 255)
   b = randint(0, 255)
   return (r, g, b)
-
-def check_line_type(args):
-  parsefile = folder_files +'/' + SAVE_DIRECTORY + '/' + args.rbt_fl + '.VA'
-
-  t1= rf"\s*Field:\s{LINES_VARNAME}\.NODEDATA\s*ARRAY\[(\d+)\]\sOF\s{LINES_TYPENAME}\s"
-  t2= rf"\s*Field:\s{LINES_VARNAME}\.NODEDATA\s*ARRAY\[(\d+)\]\sOF\s{LINES_TYPENAME2}\s"
-  
-  for line in open(parsefile):
-    if re.search(t1, line):
-      type1 = True
-    if re.search(t2, line):
-      type1 = False
-
-  return(type1)
   
 
-def parseContour(args):
+def parseContour(member_name, args, out_list):
 
   parsefile = folder_files +'/' + SAVE_DIRECTORY + '/' + args.rbt_fl + '.VA'
 
-  pattern_code = rf"Field: {CONTOUR_VARNAME}\.NODEDATA\[(\d+)\]\.{CONTOUR_CODE_SUFFIX} Access: RW: {CONTOUR_CODE_TYPE} =\s*(.*)"
-  pattern_vector = rf"Field: {CONTOUR_VARNAME}\.NODEDATA\[(\d+)\]\.{CONTOUR_VEC_SUFFIX} Access: RW: {CONTOUR_VEC_TYPE} =\s"
+  pattern_code = rf"Field: {member_name}\.NODEDATA\[(\d+)\]\.{CONTOUR_CODE_SUFFIX} Access: RW: {CONTOUR_CODE_TYPE} =\s*(.*)"
+  pattern_vector = rf"Field: {member_name}\.NODEDATA\[(\d+)\]\.{CONTOUR_VEC_SUFFIX} Access: RW: {CONTOUR_VEC_TYPE} =\s"
+  pattern_polygon = rf"Field: {member_name}\.NODEDATA\[(\d+)\]\.POLYGON Access: RW: SHORT =\s*(.*)"
+  pattern_tangent = rf"Field: {member_name}\.NODEDATA\[(\d+)\]\.TANGENT Access: RW: VECTOR =\s"
   patternx = r"X:\s*(-?\d{0,3}\.\d{1,3})"
   patterny = r"Y:\s*(-?\d{0,3}\.\d{1,3})"
+
+  coords = ('', '')
+  code = ''
+  polygon = ''
+  tangent = ('', '')
 
   with open(parsefile,'r') as f:
 
@@ -133,7 +140,10 @@ def parseContour(args):
 
       m2 = re.search(pattern_code, lines[i])
       m1 = re.search(pattern_vector, lines[i])
+      m3 = re.search(pattern_tangent, lines[i])
+      m4 = re.search(pattern_polygon, lines[i])
 
+      nid = None
       if m1:
         # get index
         nid = int(m1.group(1)) - 1
@@ -148,50 +158,16 @@ def parseContour(args):
         if mvec:
           new_y = float(mvec.group(1))
         # append to list
-        if len(polygons) > nid:
-          node = polygons[nid]
-          node[1] = (new_x, new_y)
-          polygons[nid] = node
-        else:
-          polygons.insert(nid, [0,[new_x, new_y]] )
-
-        #add to path
-        path.append([new_x, new_y])
-
+        coords = (new_x, new_y)
+      
       if m2:
         # get index
         nid = int(m2.group(1)) - 1
         code = int(m2.group(2))
-        if len(polygons) > nid:
-          node = polygons[nid]
-          node[0] = code
-          polygons[nid] = node
-        else:
-          polygons.insert(nid, [code,[0, 0]] )
-
-def parseLines(args):
-
-  parsefile = folder_files +'/' + SAVE_DIRECTORY + '/' + args.rbt_fl + '.VA'
-
-  pattern_start = rf"Field: {LINES_VARNAME}\.NODEDATA\[(\d+)\]\.{LINE_START_SUFFIX} Access: RW: {LINE_TYPE} =\s*(.*)"
-  pattern_end = rf"Field: {LINES_VARNAME}\.NODEDATA\[(\d+)\]\.{LINE_END_SUFFIX} Access: RW: {LINE_TYPE} =\s*(.*)"
-  patternx = r"X:\s*(-?\d{0,3}\.\d{1,3})"
-  patterny = r"Y:\s*(-?\d{0,3}\.\d{1,3})"
-
-  with open(parsefile,'r') as f:
-
-    lines = f.readlines()
-    for i in range(len(lines)):
-
-      m1 = re.search(pattern_start, lines[i])
-      m2 = re.search(pattern_end, lines[i])
       
-      if m1 or m2:
+      if m3:
         # get index
-        if m1:
-          nid = int(m1.group(1)) - 1
-        else:
-          nid = int(m2.group(1)) - 1
+        nid = int(m3.group(1)) - 1
         # get x coordinate
         mvec = re.search(patternx, lines[i+1])
         new_x = 0.0
@@ -202,47 +178,79 @@ def parseLines(args):
         new_y = 0.0
         if mvec:
           new_y = float(mvec.group(1))
+        # append to list
+        tangent = (new_x, new_y)
+      
+      if m4:
+        # get index
+        nid = int(m4.group(1)) - 1
+        polygon = int(m4.group(2))
 
-        #add to path
-        path.append([new_x, new_y])
-
-      if m1:
-        if len(raster_lines) > nid:
-          node = raster_lines[nid]
-          node[0] = [new_x, new_y]
-          raster_lines[nid] = node
+      poly = t_polygon(
+          coords = coords,
+          code = code,
+          polygon = polygon,
+          tangent = tangent
+        )
+      if nid is not None:
+        if len(out_list) > nid:
+          out_list[nid] = poly
         else:
-          raster_lines.insert(nid, [[new_x, new_y],[0, 0]] )
+          out_list.insert(nid, poly )
+        
+        nid = None
+
+
+def parsePath(member_name, args, out_list):
+
+  parsefile = folder_files +'/' + SAVE_DIRECTORY + '/' + args.rbt_fl + '.VA'
+
+  pattern_code = rf"Field: {member_name}\.NODEDATA\[(\d+)\]\.{TOOLPATH_CODE} Access: RW: SHORT =\s*(.*)"
+  pattern_vector = rf"Field: {member_name}\.NODEDATA\[(\d+)\]\.{TOOLPATH_SUFFIX} Access: RW: XYZWPR =\s"
+  pattern_type = rf"Field: {member_name}\.NODEDATA\[(\d+)\]\.{TOOLPATH_TYPE} Access: RW: SHORT =\s*(.*)"
+  pattern_tangent = rf"Field: {member_name}\.NODEDATA\[(\d+)\]\.TANGENT Access: RW: VECTOR =\s"
+  
+  patterconfig = r"Group\:\s{TOOLPATH_GROUP}\s*Config\:\s[A-Z]\s[A-Z]\s[A-Z],\s\d,\s\d,\s\d\s*"
+  patternxyz = r"X:\s*(-?\d{0,3}\.\d{1,3})\s*Y:\s*(-?\d{0,3}\.\d{1,3})\s*Z:\s*(-?\d{0,3}\.\d{1,3})"
+  patternwpr = r"W:\s*(-?\d{0,3}\.\d{1,3})\s*P:\s*(-?\d{0,3}\.\d{1,3})\s*R:\s*(-?\d{0,3}\.\d{1,3})"
+  patternx = r"X:\s*(-?\d{0,3}\.\d{1,3})"
+  patterny = r"Y:\s*(-?\d{0,3}\.\d{1,3})"
+  patternz = r"Z:\s*(-?\d{0,3}\.\d{1,3})"
+
+  pose = ''
+  code = ''
+  typ = ''
+  tangent = ('', '')
+
+  with open(parsefile,'r') as f:
+
+    lines = f.readlines()
+    for i in range(len(lines)):
+
+      m2 = re.search(pattern_code, lines[i])
+      m1 = re.search(pattern_vector, lines[i])
+      m3 = re.search(pattern_tangent, lines[i])
+      m4 = re.search(pattern_type, lines[i])
+
+      nid = None
+      if m1:
+        # get index
+        nid = int(m1.group(1)) - 1
+        # get x coordinate
+        mconfig = re.search(patterconfig, lines[i+1])
+        mxyz = re.search(patternxyz, lines[i+2])
+        mwpr = re.search(patternwpr, lines[i+3])
+
+        pose = ([float(mxyz.group(1)), float(mxyz.group(2)), float(mxyz.group(3)), float(mwpr.group(1)), float(mwpr.group(2)), float(mwpr.group(3))] )
       
       if m2:
-        if len(raster_lines) > nid:
-          node = raster_lines[nid]
-          node[1] = [new_x, new_y]
-          raster_lines[nid] = node
-        else:
-          raster_lines.insert(nid, [[0, 0],[new_x, new_y]] )
-
-def parseLines2(args):
-
-  parsefile = folder_files +'/' + SAVE_DIRECTORY + '/' + args.rbt_fl + '.VA'
-
-  pattern_code = rf"Field: {LINES_VARNAME}\.NODEDATA\[(\d+)\]\.{CONTOUR_CODE_SUFFIX} Access: RW: {CONTOUR_CODE_TYPE} =\s*(.*)"
-  pattern_vector = rf"Field: {LINES_VARNAME}\.NODEDATA\[(\d+)\]\.{CONTOUR_VEC_SUFFIX} Access: RW: {CONTOUR_VEC_TYPE} =\s"
-  patternx = r"X:\s*(-?\d{0,3}\.\d{1,3})"
-  patterny = r"Y:\s*(-?\d{0,3}\.\d{1,3})"
-
-  with open(parsefile,'r') as f:
-    
-    j = 0
-    lines = f.readlines()
-    for i in range(len(lines)):
-
-      m1 = re.search(pattern_vector, lines[i])
-
-      if m1:
         # get index
-        if ((j % 2) == 0):
-          nid = int( (int(m1.group(1)) - 1)/2)
+        nid = int(m2.group(1)) - 1
+        code = int(m2.group(2))
+      
+      if m3:
+        # get index
+        nid = int(m3.group(1)) - 1
         # get x coordinate
         mvec = re.search(patternx, lines[i+1])
         new_x = 0.0
@@ -253,21 +261,35 @@ def parseLines2(args):
         new_y = 0.0
         if mvec:
           new_y = float(mvec.group(1))
-        
-        if len(raster_lines) > nid:
-          node = raster_lines[nid]
-          node[1] = [new_x, new_y]
-          raster_lines[nid] = node
-        else:
-          raster_lines.insert(nid, [[new_x, new_y],[0, 0]] )
-        
-        #add to path
-        path.append([new_x, new_y])
-        
-        j = (j + 1) % 2
-        
+        # get z coordinate
+        mvec = re.search(patternz, lines[i+1])
+        new_z = 0.0
+        if mvec:
+          new_z = float(mvec.group(1))
+        # append to list
+        tangent = (new_x, new_y, new_z)
+      
+      if m4:
+        # get index
+        nid = int(m4.group(1)) - 1
+        typ = int(m4.group(2))
 
-def parsePath(args):
+      nPath = t_path(
+          pose = pose,
+          code = code,
+          type = typ,
+          tangent = tangent
+        )
+      if nid is not None:
+        if len(out_list) > nid:
+          out_list[nid] = nPath
+        else:
+          out_list.insert(nid, nPath )
+        
+        nid = None
+
+
+def parsePlan(args):
   parsefile = folder_files +'/' + SAVE_DIRECTORY + '/' + args.rbt_fl + '.VA'
 
   pattern_map = rf"Field: {PATH_MAP}\.NODEDATA\[(\d+)\]\.{PATH_MAP_SUFFIX} Access: RW: {PATH_MAP_TYPE} =\s*(\d+)"
@@ -286,7 +308,7 @@ def parsePath(args):
   
   # get path coordinates
   for i in range(len(path_order)):
-    path_plan.append([path_order[i], path[path_order[i]-1]])
+    path_plan.append([path_order[i], rpath[path_order[i]-1].pose])
   
 def parsePath3D(args):
   parsefile = folder_files +'/' + SAVE_DIRECTORY + '/' + args.rbt_fl + '.VA'
@@ -314,15 +336,22 @@ def parsePath3D(args):
 
 def print_cont(list_obj):
   for i in range(len(list_obj)):
-    print("{}: {:.3f}, {:.3f}".format(list_obj[i][0], list_obj[i][1][0], list_obj[i][1][1]))
+    print("{}: {:.3f}, {:.3f} : {:.3f}, {:.3f}".format(list_obj[i].code, list_obj[i].coords[0], list_obj[i].coords[1], list_obj[i].tangent[0], list_obj[i].tangent[1]))
 
-def print_line(list_obj):
+def print_plan(list_obj):
   for i in range(len(list_obj)):
-    print("{:.3f}, {:.3f} : {:.3f}, {:.3f}".format(list_obj[i][0][0], list_obj[i][0][1], list_obj[i][1][0], list_obj[i][1][1]))
+      print("{}: [{:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(list_obj[i][0], list_obj[i][1][0], list_obj[i][1][1], list_obj[i][1][2], list_obj[i][1][3], list_obj[i][1][4], list_obj[i][1][5]))
 
-def print_vec(list_obj):
+def print_path(list_obj):
   for i in range(len(list_obj)):
-    print("{}: [{:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(i+1,list_obj[i][0],list_obj[i][1],list_obj[i][2],list_obj[i][3],list_obj[i][4],list_obj[i][5]))
+    print("{}: [{:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}] : {:.3f}, {:.3f}, {:.3f}".format(i+1,list_obj[i].pose[0],list_obj[i].pose[1],list_obj[i].pose[2],list_obj[i].pose[3],list_obj[i].pose[4],list_obj[i].pose[5], list_obj[i].tangent[0], list_obj[i].tangent[1], list_obj[i].tangent[2]))
+
+def slice(obj, name):
+  list = []
+  for o in obj:
+    list.append(getattr(o, name))
+  
+  return list
 
 def plot():
   fig, ax = plt.subplots()
@@ -330,7 +359,9 @@ def plot():
   #ploygons
   Path = mpath.Path
   if len(polygons) > 0:
-    codes, verts = zip(*polygons)
+    codes = slice(polygons, 'code')
+    verts = slice(polygons, 'coords')
+    tang = slice(polygons, 'tangent')
     start_idx = 0 ; end_idx = len(polygons)
 
   for i in range(len(polygons)):
@@ -347,26 +378,49 @@ def plot():
       path = mpath.Path(verts[start_idx:end_idx], codes[start_idx:end_idx])
       patch = mpatches.PathPatch(path, facecolor=face_color, edgecolor=edge_color, alpha=0.5)
       ax.add_patch(patch)
-  
-  #path
-  if len(path_plan) > 0:
-    idx, verts = zip(*path_plan)
-    xs, ys = zip(*verts)
-    ax.plot(xs, ys, 'o--', lw=2, color='red', ms=5)
+
+    # add tangent vectors
+    ax.arrow(verts[i][0], verts[i][1], tang[i][0]*5, tang[i][1]*5, head_width=3, head_length=5, fc='r', ec='r')
 
   #lines
-  for line in raster_lines:
-    x, y = zip(*line)
+  if len(raster_lines) > 0:
+    verts = slice(raster_lines, 'coords')
+    codes = slice(raster_lines, 'code')
+    poly = slice(raster_lines, 'polygon')
+    tang = slice(raster_lines, 'tangent')
 
+    r0 = []
+    r1 = []
+
+    for i in range(len(raster_lines)):
+      if codes[i] == mpath.Path.MOVETO:
+        a = list(verts[i])
+        a.extend(list(tang[i]))
+        r0.append(a)
+      if (codes[i] == Path.CLOSEPOLY) or (codes[i] == Path.STOP):
+        a = list(verts[i])
+        a.extend(list(tang[i]))
+        r1.append(a)
+
+    r0 = np.array(r0)
+    r1 = np.array(r1)
+  
+    x = list(zip(r0[:,0], r1[:,0]))
+    y = list(zip(r0[:,1], r1[:,1]))
+
+  for i in range(len(r0)):
     color = random_color_gen()
-    color = list(map(lambda i: i*1.0/255, color))
+    color = list(map(lambda x: x*1.0/255, color))
     #color = 'yellow'
-    draw = plt.Line2D(x, y, color=color)
+    draw = plt.Line2D(x[i], y[i], color=color)
     ax.add_line(draw)
+
+    # add tangent vectors
+    ax.arrow((r0[i][0]+r1[i][0])/2, (r0[i][1]+r1[i][1])/2, r0[i][2]*5, r0[i][3]*5, head_width=3, head_length=5, fc='g', ec='g')
 
   ax.grid()
   ax.axis('equal')
-  plt.draw()
+  plt.show()
 
 def op_code(code):
   if code == mpath.Path.MOVETO:
@@ -376,7 +430,7 @@ def op_code(code):
   
   return(code)
 
-def plot3D(tpath):
+def plot3D():
   RDK = Robolink()
 
   RDK.Render(False)
@@ -399,44 +453,42 @@ def plot3D(tpath):
   prog.setPoseFrame(frame)
   prog.setPoseTool(tool)
 
-  if tpath.size > 0:
+  if len(rpath) > 0:
     #draw lines
     made_object = False
     crve = []
     code = -1
-    for i in range(len(tpath_codes)):
+    for i in range(len(rpath)):
       #reset curve
-      if (tpath_codes[i][1] == PTH_LINKING):
+      if (rpath[i].type == PTH_LINKING):
         crve = []
         code = -1
       
-      if (tpath_codes[i][1] == PTH_TOOLING):
-        if ((tpath_codes[i][0] == mpath.Path.MOVETO) or (tpath_codes[i][0] == mpath.Path.STOP)) and (code == -1):
-          code = tpath_codes[i][0]
+      if (rpath[i].type == PTH_TOOLING):
+        if ((rpath[i].code == mpath.Path.MOVETO) or (rpath[i].code == mpath.Path.STOP)) and (code == -1):
+          code = rpath[i].code
 
-        if (tpath_codes[i][0] == code):
-          crve.append(tpath[i])
-        elif (tpath_codes[i][0] == op_code(code)):
-          crve.append(tpath[i])
+        if (rpath[i].code == code):
+          crve.append(rpath[i].pose)
+        elif (rpath[i].code == op_code(code)):
+          crve.append(rpath[i].pose)
           if made_object:
-            crve = [c.tolist() for c in crve]
             RDK.AddCurve(crve, objct, True)
           else:
-            crve = [c.tolist() for c in crve]
             objct = RDK.AddCurve(crve)
             objct.setParent(frame)
             objct.setName(PART_NAME)
             made_object = True
         else:
-          crve.append(tpath[i])
+          crve.append(rpath[i].pose)
 
 
     #draw points
 
-    for i in range(len(tpath)):
+    for i in range(len(rpath)):
       target = RDK.AddTarget('T%i' % (i), prog)
       target.setAsCartesianTarget()
-      target.setPose(xyzrpw_2_pose(tpath[i]))
+      target.setPose(xyzrpw_2_pose(rpath[i].pose))
       prog.MoveL(target)
     
     prog.ShowTargets(False)
@@ -500,32 +552,32 @@ def main():
   # start an ftp instance
   robot = RobotFTP(args.rbt_fl, ROBOT_IP, ROBOT_PORT, username = USERNAME, password = PASSWORD)
 
-  ltype = check_line_type(args)
-  if ltype:
-    parseLines(args)
-  else:
-    parseLines2(args)
+  # get lines
+  parseContour(LINES_VARNAME, args, raster_lines)
 
   # get contours
-  parseContour(args)
+  parseContour(CONTOUR_VARNAME, args, polygons)
+
+  # get path
+  parsePath(TOOLPATH_VARNAME, args, rpath)
   
-  parsePath(args)
-  tpath = parsePath3D(args)
+  # path plan
+  parsePlan(args)
 
   print('polygons')
   print_cont(polygons)
   print('lines')
-  if ltype:
-    print_line(raster_lines)
-  else:
-    print_cont(raster_lines)
+  print_cont(raster_lines)
   print('path')
-  print_cont(path_plan)
-  plot()
-
+  print_plan(path_plan)
   print('toolpath')
-  print_vec(tpath)
-  plot3D(tpath)
+  print_path(rpath)
+
+  #plot robodk path
+  plot3D()
+
+  #plot drawing
+  plot()
 
   #keep window from closing
   plt.show()
