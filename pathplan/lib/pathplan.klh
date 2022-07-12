@@ -49,7 +49,7 @@ ROUTINE reverse_toolpath(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,get_toolpath,class_name,gettp)
 ROUTINE get_toolpath(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,get_toolpath_interpolate,class_name,gtpi)
-ROUTINE get_toolpath_interpolate(spacing : INTEGER ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = t_TOOLPATH) FROM class_name
+ROUTINE get_toolpath_interpolate(spacing : REAL ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,closest_point,class_name,cpnt)
 ROUTINE closest_point(point : t_VEC_PATH) : INTEGER FROM class_name
 declare_member(class_name,closest_bounding_box,class_name,cbbx)
