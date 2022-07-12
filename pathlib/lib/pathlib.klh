@@ -73,6 +73,6 @@ ROUTINE paths__cylindrical_to_cartesian_mm(p : PATH nodedata = t_TOOLPATH; ref_f
 declare_function(prog_name,polar_to_cartesian,prog_name_alias,pl2cr)
 ROUTINE paths__polar_to_cartesian(p : PATH nodedata = t_TOOLPATH ; ref_frame : XYZWPR; z_axis : INTEGER) FROM paths
 declare_function(prog_name,polar_to_cartesian_mm,prog_name_alias,plmcr)
-ROUTINE paths__polar_to_cartesian_mm(p : PATH nodedata = t_TOOLPATH ; ref_frame : XYZWPR; z_axis : INTEGER) FROM paths
+ROUTINE paths__polar_to_cartesian_mm(p : PATH nodedata = t_TOOLPATH ; ref_frame : XYZWPR; radius : REAL; z_axis : INTEGER) FROM paths
 
 %endif --pathlib_h

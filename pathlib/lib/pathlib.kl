@@ -898,6 +898,9 @@ ROUTINE paths__cylindrical_to_cartesian
   VAR
     i : INTEGER
   BEGIN
+    -- ..note::
+    --      cannot include tangent line orientation as x and y axes need
+    --      to be the same unit of measurment (mm/mm) not (deg/mm)
     FOR i=1 TO PATH_LEN(p) DO
       p[i].v = pose__cylindrical_to_cartesian(ref_frame, (p[i].v), z_axis)
     ENDFOR
@@ -931,8 +934,8 @@ ROUTINE paths__polar_to_cartesian_mm
   BEGIN
     FOR i=1 TO PATH_LEN(p) DO
       pol_pos = p[i].v
-      pol_pos.x = pol_pos.x/pol_pos.z*180/M_PI
-      pol_pos.y = pol_pos.y/pol_pos.z*180/M_PI
+      pol_pos.x = pol_pos.x/radius*180/M_PI
+      pol_pos.y = pol_pos.y/radius*180/M_PI
       p[i].v = pose__polar_to_cartesian(ref_frame, pol_pos, z_axis)
     ENDFOR
   END paths__polar_to_cartesian_mm
