@@ -925,6 +925,193 @@ ROUTINE t_pvert_ID : BOOLEAN
     RETURN(kunit_eq_arp(exp_path, act_path))
   END t_pvert_ID
 
+ROUTINE t_porient_OD : BOOLEAN
+  VAR
+%define PAD_RADIUS 100
+-- pad width 60 deg
+%defeval PAD_WIDTH PAD_RADIUS*60*3.14159/180
+%define PAD_LENGTH 150
+-- pad sep 30 deg
+%defeval PAD_SEPERATION (PAD_RADIUS*30*3.14159/180+PAD_WIDTH)
+%define NO_OF_PADS 1
+%defeval RETRACT_HEIGHT 20
+
+%define RASTER_ANGLE 45
+%define PASS_OVERLAP 10
+%define CONTOUR_LINES 0
+%define TOOLING_STEP 10
+%define LINKING_STEP 15
+    origin : XYZWPR
+    bbox : t_RECT
+    apprch_pnt : t_VEC_PATH
+%define SAMPLE_START 100
+%define SAMPLE_END 120
+    i, j : INTEGER
+    act_path, exp_path : ARRAY[11] OF XYZWPR
+  BEGIN
+    -- ** drawing **
+    --draw pads
+    clear_poly(polygon)
+    tstpoly__init((ZEROPOS(1)), TRUE)
+    tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
+    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0) )
+
+    --get raster lines
+    -- (start_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstpoly__raster(PTH_LINETO)
+    --get lines and contours
+    paths__clear_vecpath(lines)
+    paths__clear_vecpath(contours)
+    tstpoly__lines_to_vec_path(lines)
+    tstpoly__contours_to_vec_path(contours)
+
+    -- ** planning **
+    --generate path
+    tstorn__init(lines, POS(0,0,PAD_RADIUS,0,0,0, (ZEROPOS(1).config_data)))
+    --(poly_depend, strict_dir)
+    tstorn__raster_graph(ONEWAY, TRUE, TRUE)
+    -- (add to kd tree)
+    tstorn__append_path(contours, FALSE)
+     --get start node
+    bbox = tstpoly__get_bounding_box
+    tstorn__MST(tstorn__closest_bounding_box(3))
+    --set point orientation
+    tstorn__set_orientation(DOWN_NORMAL_VERT)
+
+    clear_list(path_plan)
+    tstorn__get_plan(path_plan)
+
+    paths__clear_toolpath(pth)
+    REPEAT
+      SELECT (tstorn__next_toolpath) OF
+        CASE(PTH_TOOLING):
+          tstorn__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+        CASE(PTH_LINKING):
+          tstorn__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+      ENDSELECT
+    UNTIL( tstorn__is_path_end )
+
+    --raise linking path
+    paths__offset_toolpath(pth, POS(0,0,RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
+    --convert coordinate systems
+    origin = POS(100,100,0,0,0,0, pose__set_config(RBT_CONFIG))
+    tstorn__convertOrientation(pth, origin, PAD_RADIUS, PTH_CYLINDER, VERT_AXES, FALSE)
+
+    j = 1
+    i=SAMPLE_START
+    WHILE i <= SAMPLE_END DO
+      act_path[j] = pth[i].v
+      i = i + 2
+      j = j + 1
+    ENDWHILE
+
+    exp_path[1] = POS(6.6, 175.3, 138.7, 90.0, -45.0, -128.9, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(23.2, 192.2, 116.0, 90.0, -45.0, -140.2, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(42.9, 205.6, 93.4, 90.0, -45.0, -151.6, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(64.8, 214.7, 70.7, 90.0, -45.0, -163.0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(88.1, 219.4, 48.0, 90.0, -45.0, -174.3, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(100.0, 200.0, 36.7, 90.0, -45.0, -180.0, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(85.1, 198.9, 51.7, 90.0, -45.0, -171.4, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(70.5, 195.6, 66.6, 90.0, -45.0, -162.9, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(56.6, 190.1, 81.6, 90.0, -45.0, -154.3, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(43.7, 182.6, 96.5, 90.0, -45.0, -145.7, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(32.0, 173.3, 111.5, 90.0, -45.0, -137.1, (ZEROPOS(1).config_data))
+
+    RETURN(kunit_eq_arp(exp_path, act_path))
+  END t_porient_OD
+
+ROUTINE t_delta_ornt : BOOLEAN
+  VAR
+%define PAD_RADIUS 50
+%defeval RETRACT_HEIGHT 20
+
+%define RASTER_ANGLE 45
+%define PASS_OVERLAP 10
+%define CONTOUR_LINES 0
+%define TOOLING_STEP 10
+%define LINKING_STEP 15
+    origin : XYZWPR
+    bbox : t_RECT
+    apprch_pnt : t_VEC_PATH
+%define SAMPLE_START 50
+%define SAMPLE_END 70
+    i, j : INTEGER
+    act_path, exp_path : ARRAY[11] OF XYZWPR
+  BEGIN
+    --user frame
+    origin = POS(0,0,0,0,0,0, (ZEROPOS(1).config_data))
+
+    -- ** drawing **
+    clear_poly(polygon)
+    tstpoly__init((ZEROPOS(1)), TRUE)
+    tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
+    draw_delta(RASTER_ANGLE, PASS_OVERLAP, 1)
+
+    --get lines and contours
+    paths__clear_vecpath(lines)
+    paths__clear_vecpath(contours)
+    tstpoly__lines_to_vec_path(lines)
+    tstpoly__contours_to_vec_path(contours)
+
+    -- ** planning **
+    --generate path
+    tstorn__init(lines, POS(0,0,PAD_RADIUS,0,0,0,(ZEROPOS(1).config_data)))
+    --(poly_depend, strict_dir)
+    tstorn__raster_graph(ONEWAY, FALSE, FALSE)
+    -- (add to kd tree)
+    tstorn__append_path(contours, FALSE)
+     --get start node
+     bbox = tstpoly__get_bounding_box
+    --    -- Contour last
+    apprch_pnt = paths__new_vpath(bbox.verts[1], PTH_STOP, 0, VEC(1,0,0))
+    tstorn__MST(tstorn__closest_point(apprch_pnt))
+      --Contour first
+    -- tstorn__MST(tstorn__closest_bounding_box(1))
+    --set point orientation
+    tstorn__set_orientation(DOWN_NORMAL_VERT)
+
+    clear_list(path_plan)
+    tstorn__get_plan(path_plan)
+
+    paths__clear_toolpath(pth)
+    REPEAT
+      SELECT (tstorn__next_toolpath) OF
+        CASE(PTH_TOOLING):
+          tstorn__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+        CASE(PTH_LINKING):
+          tstorn__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+      ENDSELECT
+    UNTIL( tstorn__is_path_end )
+
+    --raise linking path
+    paths__offset_toolpath(pth, POS(0,0,RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
+    --convert coordinate systems
+    tstorn__convertOrientation(pth, origin, PAD_RADIUS, PTH_CYLINDER, VERT_AXES, TRUE)
+
+    j = 1
+    i=SAMPLE_START
+    WHILE i <= SAMPLE_END DO
+      act_path[j] = pth[i].v
+      i = i + 2
+      j = j + 1
+    ENDWHILE
+
+    exp_path[1] = POS(18.0, 46.6, 64.7, 270.0, -45.0, 158.9, (ZEROPOS(1).config_data))
+    exp_path[2] = POS(-0.0, 50.0, 83.1, 270.0, -45.0, -180.0, (ZEROPOS(1).config_data))
+    exp_path[3] = POS(-12.8, 68.8, 92.4, 270.0, -45.0, -169.4, (ZEROPOS(1).config_data))
+    exp_path[4] = POS(11.3, 48.7, 85.9, 270.0, -45.0, 167.0, (ZEROPOS(1).config_data))
+    exp_path[5] = POS(-5.7, 49.7, 103.0, 270.0, -45.0, -173.5, (ZEROPOS(1).config_data))
+    exp_path[6] = POS(6.0, 69.7, 107.1, 270.0, -45.0, 175.1, (ZEROPOS(1).config_data))
+    exp_path[7] = POS(-2.1, 50.0, 113.6, 270.0, -45.0, -177.5, (ZEROPOS(1).config_data))
+    exp_path[8] = POS(-11.3, 69.1, 96.9, 270.0, -45.0, -170.7, (ZEROPOS(1).config_data))
+    exp_path[9] = POS(-27.3, 64.5, 63.5, 270.0, -45.0, -157.1, (ZEROPOS(1).config_data))
+    exp_path[10] = POS(-41.7, 56.2, 30.2, 270.0, -45.0, -143.4, (ZEROPOS(1).config_data))
+    exp_path[11] = POS(-24.7, 43.5, 24.1, 270.0, -45.0, -150.4, (ZEROPOS(1).config_data))
+
+    RETURN(kunit_eq_arp(exp_path, act_path))
+  END t_delta_ornt
+
 
 -- ****** spherical paths ********
 -- *******************************
@@ -1038,6 +1225,8 @@ BEGIN
   kunit_test('draw delta cylinder z-axis', t_cyld_zaxe)
   kunit_test('pads vertical path OD', t_pvert_OD)
   kunit_test('pads vertical path ID', t_pvert_ID)
+  kunit_test('pads vertical path OD orientation', t_porient_OD)
+  kunit_test('pads vertical path OD orientation', t_delta_ornt)
   -- polar paths
   kunit_test('polar coordinates path planning', t_pol_pnts)
   kunit_done
