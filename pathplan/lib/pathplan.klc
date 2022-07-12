@@ -14,6 +14,7 @@ PROGRAM class_name
 %include systemlib.klt
 %include systemvars.klt
 %include draw.rect.klt
+%include pose.const.klt
 %include pathplan.klt
 %include pathlib.klt
 %include pathplan.deps.klt
@@ -44,7 +45,7 @@ VAR
 %include pathlib.klh
 %from math.klh %import norm, norm2
 %from systemlib.klh %import VEC, VEC2D
-%from pose.klh %import pose_to_vector, vector_to_pose, get_orientation
+%include pose.klh
 
 %ifdef DEBUG_BUILD
 %include strings.klh
@@ -366,7 +367,9 @@ ROUTINE next_path_util
           j = j + 1
         UNTIL( adj_list[j].GRAPH_NODE_NAME = ed )
 
+%ifdef DEBUG_BUILD
         WRITE TPDISPLAY('cost: ', adj_list[j].GRAPH_NODE_NAME, CR)
+%endif
 
         --tooling path
         IF (adj_list[j].GRAPH_EDGE_NAME = PATH_MIN_COST) THEN
@@ -601,6 +604,7 @@ ROUTINE next_toolpath
       tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
       tool_segment[PATH_LEN(tool_segment)].typ = pth_typ
       tool_segment[PATH_LEN(tool_segment)].speed = DEFAULT_SPEED
+      tool_segment[PATH_LEN(tool_segment)].tangent = segment[i].tangent
     ENDFOR
 
     RETURN(pth_typ)
@@ -635,6 +639,7 @@ ROUTINE set_line
       tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment, i, pnt_orient, frm)
       tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
       tool_segment[PATH_LEN(tool_segment)].typ = line_typ
+      tool_segment[PATH_LEN(tool_segment)].tangent = segment[i].tangent
     ENDFOR
     
   END set_line
@@ -667,6 +672,7 @@ ROUTINE get_path_segement
       APPEND_NODE(out_path, status)
       out_path[PATH_LEN(out_path)] = segment[i]
       out_path[PATH_LEN(out_path)].v = frm:segment[i].v
+      out_path[PATH_LEN(out_path)].tangent = frm:segment[i].tangent
     ENDFOR
 
   END get_path_segement
@@ -698,9 +704,11 @@ ROUTINE get_endpoints
       --startpoint
       endpnts[1] = tool_segment[1]
       endpnts[1].v = frm:tool_segment[1].v
+      endpnts[1].tangent = frm:tool_segment[1].tangent
       --endpoint
       endpnts[2] = tool_segment[PATH_LEN(tool_segment)]
       endpnts[2].v = frm:tool_segment[PATH_LEN(tool_segment)].v
+      endpnts[2].tangent = frm:tool_segment[PATH_LEN(tool_segment)].tangent
     ENDIF
 
     RETURN(endpnts)

@@ -18,7 +18,9 @@ PROGRAM paths
 
 %include errors.klt
 %include systemlib.klt
+%include systemvars.klt
 %include draw.rect.klt
+%include pose.const.klt
 %include pathplan.klt
 %include pathlib.klt
 
@@ -366,7 +368,7 @@ ROUTINE paths__new_vpath
   VAR
     vpth : t_VEC_PATH
   BEGIN
-    vpth.v = v ; vpth.code = code ; vpth.polygon = polygon ;
+    vpth.v = v ; vpth.code = code ; vpth.polygon = polygon ; vpth.tangent = tangent ;
     RETURN(vpth)
   END paths__new_vpath
 
@@ -374,7 +376,7 @@ ROUTINE paths__new_ppath
   VAR
     vpth : t_POS_PATH
   BEGIN
-    vpth.v = v ; vpth.code = code ; vpth.polygon = polygon ;
+    vpth.v = v ; vpth.code = code ; vpth.polygon = polygon ; vpth.tangent = tangent ;
     RETURN(vpth)
   END paths__new_ppath
 
@@ -781,6 +783,7 @@ ROUTINE paths__interpolate_vpath
       APPEND_NODE(out_path,status)
       out_path[PATH_LEN(out_path)] = vpath[i]
       out_path[PATH_LEN(out_path)].v = ref_frame:vpath[i].v
+      out_path[PATH_LEN(out_path)].tangent = ref_frame:vpath[i].tangent
 
       IF inc > 0 THEN
         FOR j=1 TO (inc-1) DO
@@ -789,6 +792,7 @@ ROUTINE paths__interpolate_vpath
           out_path[PATH_LEN(out_path)] = vpath[i+1]
           out_path[PATH_LEN(out_path)].code = line_type
           out_path[PATH_LEN(out_path)].v = ref_frame:((j/inc)*vpath[i+1].v + (1-(j/inc))*vpath[i].v)
+          out_path[PATH_LEN(out_path)].tangent = ref_frame:vpath[i].tangent
         ENDFOR
       ENDIF
 
@@ -796,6 +800,7 @@ ROUTINE paths__interpolate_vpath
       APPEND_NODE(out_path,status)
       out_path[PATH_LEN(out_path)] = vpath[i+1]
       out_path[PATH_LEN(out_path)].v = ref_frame:vpath[i+1].v
+      out_path[PATH_LEN(out_path)].tangent = ref_frame:vpath[i].tangent
 
     ENDFOR
   END paths__interpolate_vpath
@@ -853,6 +858,7 @@ ROUTINE paths__interpolate_toolpath
       APPEND_NODE(out_path,status)
       out_path[PATH_LEN(out_path)] = vpath[i]
       out_path[PATH_LEN(out_path)].v = ref_frame:vpath[i].v
+      out_path[PATH_LEN(out_path)].tangent = ref_frame:vpath[i].tangent
 
       IF inc > 0 THEN
         FOR j=1 TO (inc-1) DO
@@ -863,6 +869,7 @@ ROUTINE paths__interpolate_toolpath
           v = (j/inc)*pose__pose_to_vector(vpath[i+1].v) + (1-(j/inc))*pose__pose_to_vector(vpath[i].v)
           o = (j/inc)*pose__get_orientation(vpath[i+1].v) + (1-(j/inc))*pose__get_orientation(vpath[i].v)
           out_path[PATH_LEN(out_path)].v = ref_frame:POS(v.x, v.y, v.z, o.x, o.y, o.z, ref_frame.config_data)
+          out_path[PATH_LEN(out_path)].tangent = ref_frame:vpath[i].tangent
         ENDFOR
       ENDIF
 
@@ -872,6 +879,7 @@ ROUTINE paths__interpolate_toolpath
         APPEND_NODE(out_path,status)
         out_path[PATH_LEN(out_path)] = vpath[i+1]
         out_path[PATH_LEN(out_path)].v = ref_frame:vpath[i+1].v
+        out_path[PATH_LEN(out_path)].tangent = ref_frame:vpath[i].tangent
       ENDIF
 
     ENDFOR

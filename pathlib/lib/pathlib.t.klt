@@ -7,6 +7,7 @@ TYPE
     code : SHORT
     polygon : SHORT
     approach : VECTOR
+    tangent : VECTOR
   ENDSTRUCTURE
 
 %ifdef systemlib_t
@@ -15,6 +16,7 @@ TYPE
     code : SHORT
     polygon : SHORT
     approach : VECTOR
+    tangent : VECTOR
   ENDSTRUCTURE
 %endif
 
@@ -23,6 +25,7 @@ TYPE
     code : SHORT
     polygon : SHORT
     approach : VECTOR
+    tangent : VECTOR
   ENDSTRUCTURE
 
   t_TOOLPATH FROM paths = STRUCTURE
@@ -30,6 +33,7 @@ TYPE
     speed : REAL
     code : SHORT
     typ : SHORT
+    tangent : VECTOR
   ENDSTRUCTURE 
 
   T_PTHQUERY FROM paths = STRUCTURE
