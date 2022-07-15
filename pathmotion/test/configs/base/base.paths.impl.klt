@@ -40,6 +40,10 @@ declare_member(parent,poseMul,parent,psmul)
 ROUTINE poseMul(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,poseInv,parent,psinv)
 ROUTINE poseInv(nde1 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,approachPath,parent,appth)
+ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : INTEGER; origin : XYZWPR; offset : XYZWPR) FROM parent
+declare_member(parent,retractPath,parent,rtpth)
+ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : INTEGER; origin : XYZWPR; offset : XYZWPR) FROM parent
 `
 
 %mode pop
@@ -121,6 +125,137 @@ ROUTINE poseInv(nde1 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE
   BEGIN
     RETURN(INV((nde1)))
   END poseInv
+declare_member(parent,approachPath,parent,appth)
+ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : INTEGER; origin : XYZWPR; offset : XYZWPR)
+  VAR
+%define APPROACH_DEGREE_DIFF 5
+    lpos : XYZWPR
+    spos, spos2 : VECTOR
+    vpos1, vpos2 : VECTOR
+  BEGIN
+    spos = VEC(origin.x,origin.y+offset.y,origin.z-idod*offset.z)
+    spos2 = VEC(origin.x,origin.y,origin.z-idod*offset.z)
+
+%ifdef DEBUG_BUILD
+    WRITE TPDISPLAY('* Approach *', CR)
+    WRITE TPDISPLAY('spos: ', spos::6::2, CR)
+    WRITE TPDISPLAY('spos2: ', spos2::6::2, CR)
+%endif
+
+    --move to offset -> to zero poisition
+    `PATH_OBJECT_NAME`__makeline(spos, spos2, (ZEROPOS(1)), PTH_LINKING, PTH_LINETO, stepSize, 1, VEC(1,0,0))
+    moveLine(speed)
+
+    --origin point
+    vpos1 = INV(origin):spos2
+
+    --get start position of path from drawing
+    lpos = `PATH_OBJECT_NAME`__get_start_node
+    vpos2 = VEC(lpos.x, lpos.y, lpos.z)
+
+    --apply retract offset
+    vpos2.z = vpos2.z-idod*offset.z
+
+%ifdef DEBUG_BUILD
+    WRITE TPDISPLAY('vpos1: ', vpos1::6::2, CR)
+    WRITE TPDISPLAY('vpos2: ', vpos2::6::2, CR)
+%endif
+
+    IF (coordSys=PTH_CYLINDER) THEN
+      --move between origin and start degree
+      IF (ABS(vpos2.x - vpos1.x) > APPROACH_DEGREE_DIFF) THEN
+        -- ..note:: set travel direction in step size
+        `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, 1, VEC(1,0,0))
+        moveArc(speed)
+      ENDIF
+    ENDIF
+
+    IF (coordSys=PTH_CARTESAN) THEN
+      `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, 1, VEC(1,0,0))
+      moveLine(speed)
+    ENDIF
+
+  END approachPath
+declare_member(parent,retractPath,parent,rtpth)
+ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : INTEGER; origin : XYZWPR; offset : XYZWPR)
+  VAR
+%define APPROACH_DEGREE_DIFF 5
+    lpos : XYZWPR
+    lposOffset : REAL
+    vpos1, vpos2, vpos3 : VECTOR
+    spos : VECTOR
+    fpos : VECTOR
+  BEGIN
+
+    lpos = pose__get_lpos(1)
+
+    --if cylindrical. Convert.
+    IF (coordSys=PTH_CYLINDER) THEN
+      lpos = pose__cartesian_to_cylindrical((ZEROPOS(1)), lpos, VERT_AXES)
+      WRITE TPDISPLAY('lpos: ', VEC(lpos.x, lpos.y, lpos.z)::6::2, CR)
+      --change degrees to mm
+      lpos.x = ((360-lpos.x-0)*origin.z*M_PI/180)
+    ENDIF
+
+    -- set default orientation
+    lpos = pose__replace_orient(lpos, paths__set_orientation(coordSys, idod))
+
+    --convert into drawing frame
+    lpos = INV(origin):lpos
+    --lpos.x = -1*idod*lpos.x
+    vpos1 = VEC(lpos.x, lpos.y, lpos.z)
+
+    -- retract point
+    vpos2 = vpos1
+    vpos2.z = vpos1.z-idod*offset.z
+
+%ifdef DEBUG_BUILD
+    WRITE TPDISPLAY('* Retract *', CR)
+    WRITE TPDISPLAY('vpos1: ', vpos1::6::2, CR)
+    WRITE TPDISPLAY('vpos2: ', vpos2::6::2, CR)
+%endif
+
+    --move up from lpos to the retract height
+    `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, 1, VEC(1,0,0))
+    moveLine(speed)
+
+    -- get origin point
+    spos = VEC(0,0,0)
+    -- ..warning:: modifying z manually
+    spos.z = vpos2.z
+
+    --unravel if cylindrical above the retract distance (x,y,z) -> (theta,z,r)
+    -- move back to start point in x
+    IF (coordSys=PTH_CYLINDER) THEN
+      --if same point. add 360 deg to lpos
+      vpos3 = vpos2
+      IF (ABS(spos.x - vpos3.x) < APPROACH_DEGREE_DIFF) THEN
+        vpos3.x = vpos3.x - 360*origin.z*M_PI/180
+      ENDIF
+
+%ifdef DEBUG_BUILD
+      WRITE TPDISPLAY('vpos3: ', vpos3::6::2, CR)
+      WRITE TPDISPLAY('spos: ', spos::6::2, CR)
+%endif
+
+      -- ..note:: set travel direction in step size.
+      `PATH_OBJECT_NAME`__makeline(vpos3, spos, origin, PTH_LINKING, PTH_LINETO, stepSize, -1*idod, VEC(1,0,0))
+      moveArc(speed)
+    ENDIF
+
+    spos = origin:spos
+    fpos = VEC(origin.x,origin.y+offset.y,spos.z)
+
+%ifdef DEBUG_BUILD
+    WRITE TPDISPLAY('spos2: ', spos::6::2, CR)
+    WRITE TPDISPLAY('fpos: ', fpos::6::2, CR)
+%endif
+
+    --move from the origin to the retract distance to the offset
+    `PATH_OBJECT_NAME`__makeline(spos, fpos, (ZEROPOS(1)), PTH_LINKING, PTH_LINETO, stepSize, 1, VEC(1,0,0))
+    moveLine(speed)
+
+  END retractPath
 `
 
 %mode pop

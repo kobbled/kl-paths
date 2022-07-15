@@ -180,6 +180,16 @@ ROUTINE createPath
     `PATH_OBJECT_NAME`__planPath(lines, contours, (rastprm.startCorner), (rastprm.rastType), (rastprm.constrain))
   END createPath
 
+ROUTINE run_approach_path
+  BEGIN
+    approachPath(speed, stepSize, coordSys, idod, origin, offset)
+  END run_approach_path
+
+ROUTINE run_retract_path
+  BEGIN
+    retractPath(speed, stepSize, coordSys, idod, origin, offset)
+  END run_retract_path
+
 ROUTINE aquire_groups
   VAR
     status : INTEGER
@@ -215,6 +225,9 @@ ROUTINE release_groups
 
 ROUTINE move
   BEGIN
+    --approach path
+    approachPath((motnprm.tool_speed), (motnprm.tool_step), (toolprm.coordSys), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS(0,100,(toolprm.retractDist),0,0,0, (ZEROPOS(1).config_data)))
+
     --move though path
     IF (motnprm.use_arc) THEN
 %ifeq GENERATE_FULL_PATH TRUE
@@ -230,17 +243,8 @@ ROUTINE move
 %endif
     ENDIF
 
-%ifndef ROT_GRP
-    --unravel if cylindrical at end of program
-    IF (toolprm.coordSys=PTH_CYLINDER) THEN
-      `PATH_OBJECT_NAME`__get_line(1, TRUE, TRUE, PTH_LINKING, (motnprm.link_step), FALSE)
-      IF (motnprm.use_arc) THEN
-        moveArc((motnprm.link_speed))
-      ELSE
-        moveLine((motnprm.link_speed))
-      ENDIF
-    ENDIF
-%endif
+    --retract path
+    retractPath((motnprm.tool_speed), (motnprm.tool_step), (toolprm.coordSys), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS(0,100,(toolprm.retractDist),0,0,0, (ZEROPOS(1).config_data)))
 
   END move
 
