@@ -266,13 +266,17 @@ ROUTINE makeline
   VAR
     status : INTEGER
   BEGIN
+    --update config_data to default
+    ref_frame = pose__replace_config(ref_frame, (frm.config_data))
+
     paths__clear_toolpath(line_endpnts)
     --add start point
     APPEND_NODE(line_endpnts,status)
-    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(start_point, paths__set_orientation((coord_system.system), idod_), frm.config_data), PTH_MOVETO, line_typ)
+    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(start_point, paths__set_orientation((coord_system.system), idod_), (frm.config_data)), PTH_MOVETO, line_typ, tangent)
     --add end point
     APPEND_NODE(line_endpnts,status)
-    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(end_point, paths__set_orientation((coord_system.system), idod_), frm.config_data), PTH_CLOSE, line_typ)
+    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(end_point, paths__set_orientation((coord_system.system), idod_), (frm.config_data)), PTH_CLOSE, line_typ, tangent)
+    --`PATH_PLAN_NAME`__set_toolpath(line_endpnts)
 
     paths__clear_toolpath(pth)
     `PATH_PLAN_NAME`__interpolate_path(line_endpnts, (spacing), dir, line_code, ref_frame, FALSE, pth)
