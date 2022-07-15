@@ -384,7 +384,7 @@ ROUTINE paths__new_tpath
   VAR
     vpth : t_TOOLPATH
   BEGIN
-    vpth.v = v ; vpth.code = code ; vpth.typ = typ ;
+    vpth.v = v ; vpth.code = code ; vpth.typ = typ ; vpth.tangent = tangent ;
     RETURN(vpth)
   END paths__new_tpath
 

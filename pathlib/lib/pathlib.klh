@@ -24,7 +24,7 @@ ROUTINE paths__new_vpath(v : VECTOR ; code : INTEGER ; polygon : INTEGER ; tange
 declare_function(prog_name,new_ppath,prog_name_alias,nppth)
 ROUTINE paths__new_ppath(v : XYZWPR ; code : INTEGER ; polygon : INTEGER ; tangent : VECTOR) : t_POS_PATH FROM paths
 declare_function(prog_name,new_tpath,prog_name_alias,ntpth)
-ROUTINE paths__new_tpath(v : XYZWPR ; code : INTEGER ; typ : INTEGER) : t_TOOLPATH FROM paths
+ROUTINE paths__new_tpath(v : XYZWPR ; code : INTEGER ; typ : INTEGER; tangent : VECTOR) : t_TOOLPATH FROM paths
 declare_function(prog_name,new_coord_sys,prog_name_alias,ncord)
 ROUTINE paths__new_coord_sys(system : INTEGER ; z_axis : INTEGER) : t_COORD_SYS FROM paths
 declare_function(prog_name,set_orientation,prog_name_alias,storn)
