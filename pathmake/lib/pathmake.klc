@@ -275,7 +275,7 @@ ROUTINE makeline
     line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(end_point, paths__set_orientation((coord_system.system), idod_), frm.config_data), PTH_CLOSE, line_typ)
 
     paths__clear_toolpath(pth)
-    paths__interpolate_toolpath(line_endpnts, (spacing), line_code, POS(0,0,0,0,0,0,frm.config_data), pth)
+    `PATH_PLAN_NAME`__interpolate_path(line_endpnts, (spacing), dir, line_code, ref_frame, FALSE, pth)
 
     IF UNINIT(coord_system.system) THEN
       karelError(VAR_UNINIT,'coordinate system must be set in class_name', ER_ABORT)
