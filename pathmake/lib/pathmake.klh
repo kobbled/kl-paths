@@ -35,6 +35,8 @@ declare_member(class_name,get_path,class_name,gtpth)
 ROUTINE get_path(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,get_plan,class_name,gtpln)
 ROUTINE get_plan(out_path : PATH nodedata = t_INTEGER) FROM class_name
+declare_member(class_name,get_origin,class_name,gtorg)
+ROUTINE get_origin : XYZWPR FROM class_name
 
 declare_member(class_name,next_toolpath,class_name,ntpth)
 ROUTINE next_toolpath(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
@@ -53,6 +55,10 @@ ROUTINE planPath(lines : PATH nodedata = t_VEC_PATH; contours : PATH nodedata = 
                start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN) FROM class_name
 declare_member(class_name,planImportPath,class_name,ldpth)
 ROUTINE planImportPath(filename : STRING; start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN; intrep_tool : BOOLEAN) FROM class_name
+declare_member(class_name,get_start_node,class_name,gtsrn)
+ROUTINE get_start_node : XYZWPR FROM class_name
+declare_member(class_name,get_end_node,class_name,gtedn)
+ROUTINE get_end_node : XYZWPR FROM class_name
 
 declare_member(class_name,makeline,class_name,mkln)
 ROUTINE makeline(start_point, end_point : VECTOR; ref_frame : XYZWPR ; &

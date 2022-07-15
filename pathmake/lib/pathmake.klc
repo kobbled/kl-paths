@@ -203,6 +203,11 @@ ROUTINE get_path
     COPY_PATH(pth, 0, 0, out_path, status)
   END get_path
 
+ROUTINE get_origin
+  BEGIN
+    RETURN(origin_)
+  END get_origin
+
 ROUTINE get_plan
   VAR
     status : INTEGER
@@ -261,6 +266,15 @@ ROUTINE planImportPath
 
   END planImportPath
 
+ROUTINE get_start_node
+  BEGIN
+    RETURN(frm:`PATH_PLAN_NAME`__get_start_node)
+  END get_start_node
+
+ROUTINE get_end_node
+  BEGIN
+    RETURN(frm:`PATH_PLAN_NAME`__get_end_node)
+  END get_end_node
 
 ROUTINE makeline
   VAR
