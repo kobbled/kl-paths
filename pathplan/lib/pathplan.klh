@@ -24,6 +24,8 @@ declare_member(class_name,get_plan,class_name,gpln)
 ROUTINE get_plan(out_path : PATH nodedata = t_INTEGER) FROM class_name
 declare_member(class_name,set_orientation,class_name,sornt)
 ROUTINE set_orientation(v : VECTOR) FROM class_name
+declare_member(class_name,get_orientation,class_name,gornt)
+ROUTINE get_orientation : VECTOR FROM class_name
 declare_member(class_name,reset_path,class_name,rpth)
 ROUTINE reset_path FROM class_name
 declare_member(class_name,next_path,class_name,npth)
@@ -38,6 +40,12 @@ declare_member(class_name,get_neighbors,class_name,gtnh)
 ROUTINE get_neighbors(idx : INTEGER; poly_depend : BOOLEAN) : T_RASTQUERY FROM class_name
 declare_member(class_name,get_endpoints,class_name,gendp)
 ROUTINE get_endpoints : ARRAY OF t_TOOLPATH FROM class_name
+declare_member(class_name,get_start_node,class_name,gstrn)
+ROUTINE get_start_node : XYZWPR FROM class_name
+declare_member(class_name,get_end_node,class_name,gendn)
+ROUTINE get_end_node : XYZWPR FROM class_name
+declare_member(class_name,get_node,class_name,gtnde)
+ROUTINE get_node(i : INTEGER) : XYZWPR FROM class_name
 declare_member(class_name,get_path_interpolate,class_name,gphi)
 ROUTINE get_path_interpolate(spacing : INTEGER ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = t_VEC_PATH) FROM class_name
 declare_member(class_name,next_toolpath,class_name,ntph)
@@ -48,6 +56,8 @@ declare_member(class_name,reverse_toolpath,class_name,revtp)
 ROUTINE reverse_toolpath(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,get_toolpath,class_name,gettp)
 ROUTINE get_toolpath(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
+declare_member(class_name,set_toolpath,class_name,settp)
+ROUTINE set_toolpath(inpth : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,get_toolpath_interpolate,class_name,gtpi)
 ROUTINE get_toolpath_interpolate(spacing : REAL ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,closest_point,class_name,cpnt)

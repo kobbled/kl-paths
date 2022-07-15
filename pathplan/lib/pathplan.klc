@@ -562,6 +562,11 @@ ROUTINE set_orientation
     pnt_orient = v
   END set_orientation
 
+ROUTINE get_orientation
+  BEGIN
+    RETURN(pnt_orient)
+  END get_orientation
+
 ROUTINE get_plan
   VAR
     status : INTEGER
@@ -698,6 +703,13 @@ ROUTINE get_toolpath
     COPY_PATH(tool_segment, 0, 0, out_path, status)
   END get_toolpath
 
+ROUTINE set_toolpath
+  VAR
+    status : INTEGER
+  BEGIN
+    COPY_PATH(inpth, 0, 0, tool_segment, status)
+  END set_toolpath
+
 ROUTINE get_endpoints
   VAR
     endpnts : ARRAY[2] OF t_TOOLPATH
@@ -715,6 +727,21 @@ ROUTINE get_endpoints
 
     RETURN(endpnts)
   END get_endpoints
+
+ROUTINE get_start_node
+  BEGIN
+    RETURN(convert2pos(pth[(plan[1].v)], pnt_orient, frm))
+  END get_start_node
+
+ROUTINE get_end_node
+  BEGIN
+    RETURN(convert2pos(pth[(plan[1].v)], pnt_orient, frm))
+  END get_end_node
+
+ROUTINE get_node
+  BEGIN
+    RETURN(convert2pos(pth[(plan[i].v)], pnt_orient, frm))
+  END get_node
 
 ROUTINE get_path_interpolate
   BEGIN
