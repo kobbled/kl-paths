@@ -543,6 +543,8 @@ def main():
 
   parser.add_argument('rbt_fl', type=str, nargs='?',
         help="Name of karel file")
+  parser.add_argument('-r', '--robodk', action='store_true', dest='use_robodk',
+        help='Plot path in robodk')
 
   args = parser.parse_args()
 
@@ -573,8 +575,9 @@ def main():
   print('toolpath')
   print_path(rpath)
 
-  #plot robodk path
-  plot3D()
+  if args.use_robodk:
+    #plot robodk path
+    plot3D()
 
   #plot drawing
   plot()
