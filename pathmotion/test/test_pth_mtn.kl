@@ -11,6 +11,8 @@ PROGRAM test_pth_mtn
 %include display.c.klt
 %endif
 
+%define M_PI 3.14159
+
 %include systemlib.klt
 %include systemvars.klt
 %include pose.const.klt
@@ -144,7 +146,7 @@ ROUTINE t_hexagon
     overlap = 6
     wall_lines = 1
 
-    tstpoly__init((ZEROPOS(1)), TRUE)
+    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE)
     tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 0)
     --get raster lines
     --     (start_angle, dir, wall_lines, line_width, line_pitch)
@@ -167,11 +169,16 @@ ROUTINE t_hexagon
     tstmtn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    bbox = tstpoly__get_bounding_box
     tstpth__planPath(lines, contours, PLATE_CORNER, ONEWAY, FALSE)
+
+    -- approach path
+    tstmtn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
     
     --move through path
-    tstmtn__movePolyFull(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
+    tstmtn__movePoly(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
+
+    -- retract path
+    tstmtn__run_retract_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
 
     UNLOCK_GROUP(math__bitmask(RBT_GRP),status)
 
@@ -181,12 +188,11 @@ ROUTINE t_hexagon
 
 ROUTINE t_pvert_ID
   VAR
-
 %define PAD_RADIUS 100
-%define PAD_WIDTH 360
-%define PAD_LENGTH 50
-%defeval PAD_SEPERATION 0
-%define PAD_START_DEG 0
+%defeval PAD_WIDTH 360*PAD_RADIUS*M_PI/180
+%define PAD_LENGTH 20
+%defeval PAD_SEPERATION 0*PAD_RADIUS*M_PI/180
+%define PAD_START_DEG 0*PAD_RADIUS*M_PI/180
 %define NO_OF_PADS 1
 %define RETRACT_RADIUS 40
 %defeval RETRACT_HEIGHT (RETRACT_RADIUS-PAD_RADIUS)
@@ -198,8 +204,8 @@ ROUTINE t_pvert_ID
 
 %define TOOLING_SPEED 100
 %define LINKING_SPEED 200
-%define TOOLING_STEP 90
-%define LINKING_STEP 90
+%defeval TOOLING_STEP 90
+%defeval LINKING_STEP 90
     i, status : INTEGER
     origin : XYZWPR
     frm : XYZWPR
@@ -215,7 +221,7 @@ ROUTINE t_pvert_ID
     pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
 
     --draw pads
-    tstpoly__init((ZEROPOS(1)), TRUE)
+    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE)
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
 
     --get raster lines
@@ -242,13 +248,15 @@ ROUTINE t_pvert_ID
     --generate path
     bbox = tstpoly__get_bounding_box
     tstpth__planPath(lines, contours, ID_CORNER, ONEWAY, FALSE)
+
+    -- approach path
+    tstmtn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100,RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
     
     --move through path
     tstmtn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, RETRACT_HEIGHT)
 
-    -- retract
-    tstpth__get_line(1, TRUE, TRUE, PTH_LINKING, LINKING_STEP, FALSE)
-    tstmtn__moveArc(LINKING_SPEED)
+    -- retract path
+    tstmtn__run_retract_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100,RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
 
     UNLOCK_GROUP(math__bitmask(RBT_GRP),status)
 
@@ -259,10 +267,10 @@ ROUTINE t_pvert_ID
 ROUTINE t_pvert_OD
   VAR
 %define PAD_RADIUS 100
-%define PAD_WIDTH 360
-%define PAD_LENGTH 50
-%defeval PAD_SEPERATION 0
-%define PAD_START_DEG 130
+%defeval PAD_WIDTH 360*PAD_RADIUS*M_PI/180
+%define PAD_LENGTH 20
+%defeval PAD_SEPERATION 0*PAD_RADIUS*M_PI/180
+%defeval PAD_START_DEG 130*PAD_RADIUS*M_PI/180
 %define NO_OF_PADS 1
 %define RETRACT_RADIUS 30
 %defeval RETRACT_HEIGHT (RETRACT_RADIUS)
@@ -274,8 +282,8 @@ ROUTINE t_pvert_OD
 
 %define TOOLING_SPEED 100
 %define LINKING_SPEED 200
-%define TOOLING_STEP 20
-%define LINKING_STEP 20
+%define TOOLING_STEP 90
+%define LINKING_STEP 90
     i, status : INTEGER
     origin : XYZWPR
     frm : XYZWPR
@@ -290,7 +298,7 @@ ROUTINE t_pvert_OD
     pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
 
     --draw pads
-    tstpoly__init((ZEROPOS(1)), TRUE)
+    tstpoly__init(POS((0*PAD_RADIUS*M_PI/180),0,PAD_LENGTH,0,180,0,(ZEROPOS(1).config_data)), TRUE)
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
 
     --get raster lines
@@ -315,16 +323,17 @@ ROUTINE t_pvert_OD
     tstmtn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    tstpth__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
+    tstpth__planPath(lines, contours, LEFT_TOP, ONEWAY, FALSE)
     --pause
+
+    -- approach path
+    tstmtn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
 
     --move through path
     tstmtn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
 
-    -- retract
-    tstpth__get_line(1, TRUE, TRUE, PTH_LINKING, LINKING_STEP, FALSE)
-    --pause
-    tstmtn__moveArc(LINKING_SPEED)
+    -- retract path
+    tstmtn__run_retract_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
 
     UNLOCK_GROUP(math__bitmask(RBT_GRP),status)
 
@@ -339,8 +348,10 @@ BEGIN
 %endif
 
   -- t_hexagon
-  t_pvert_ID
+  -- t_pvert_ID
   -- t_pvert_OD
+  t_pvert_pad
+  -- t_pvert_pdid
 
   --clean up
   -- tstpoly__delete
