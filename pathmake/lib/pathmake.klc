@@ -299,7 +299,12 @@ ROUTINE get_line
     IF NOT append THEN
       paths__clear_toolpath(pth)
     ENDIF
-    paths__interpolate_toolpath(line_endpnts, (spacing), PTH_LINETO, origin_, pth)
+
+    `PATH_PLAN_NAME`__get_toolpath_interpolate((spacing), PTH_LINETO, append, pth)
+
+    IF doOffset THEN
+      paths__offset_toolpath(pth, offset, PTH_NULL, line_typ)
+    ENDIF
 
     IF UNINIT(coord_system.system) THEN
       karelError(VAR_UNINIT,'coordinate system must be set in class_name', ER_ABORT)

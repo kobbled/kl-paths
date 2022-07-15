@@ -58,6 +58,7 @@ declare_member(class_name,makeline,class_name,mkln)
 ROUTINE makeline(start_point, end_point : VECTOR; line_typ : INTEGER; line_code : INTEGER; spacing : REAL) FROM class_name
 declare_member(class_name,get_line,class_name,gtln)
 ROUTINE get_line(line_no : INTEGER; revrs_ordr, reverse_line : BOOLEAN; &
-                 line_typ : INTEGER; spacing : REAL; append : BOOLEAN) FROM class_name
+                 line_typ : INTEGER; spacing : REAL; append : BOOLEAN; &
+                 doOffset : BOOLEAN; offset : XYZWPR) FROM class_name
 
 %endif --end header
