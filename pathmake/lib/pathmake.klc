@@ -72,7 +72,7 @@ ROUTINE next_toolpath
     paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
     
     --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (coord_system.system), (coord_system.z_axis), FALSE)
+    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (origin_.z), (coord_system.system), (coord_system.z_axis), FALSE)
   END next_toolpath
 
 ROUTINE get_toolpath
@@ -102,7 +102,7 @@ ROUTINE get_toolpath
     paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
 
     --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (coord_system.system), (coord_system.z_axis), FALSE)
+    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (origin_.z), (coord_system.system), (coord_system.z_axis), FALSE)
   END get_toolpath
 
 ROUTINE get_midpoint
@@ -282,7 +282,7 @@ ROUTINE makeline
     ENDIF
 
     --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (coord_system.system), (coord_system.z_axis), FALSE)
+    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (origin_.z), (coord_system.system), (coord_system.z_axis), FALSE)
 
   END makeline
 
@@ -306,7 +306,7 @@ ROUTINE get_line
     ENDIF
 
     --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (coord_system.system), (coord_system.z_axis), FALSE)
+    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (origin_.z), (coord_system.system), (coord_system.z_axis), FALSE)
 
   END get_line
 
