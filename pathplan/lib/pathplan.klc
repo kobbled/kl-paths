@@ -607,7 +607,7 @@ ROUTINE next_toolpath
 
     FOR i=1 TO PATH_LEN(segment) DO
       APPEND_NODE(tool_segment, status)
-      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment, i, pnt_orient, frm)
+      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient, frm)
       tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
       tool_segment[PATH_LEN(tool_segment)].typ = pth_typ
       tool_segment[PATH_LEN(tool_segment)].speed = DEFAULT_SPEED
@@ -643,7 +643,7 @@ ROUTINE set_line
     --convert to t_TOOLPATH
     FOR i=1 TO PATH_LEN(segment) DO
       APPEND_NODE(tool_segment, status)
-      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment, i, pnt_orient, frm)
+      tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient, frm)
       tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
       tool_segment[PATH_LEN(tool_segment)].typ = line_typ
       tool_segment[PATH_LEN(tool_segment)].tangent = segment[i].tangent

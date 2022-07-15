@@ -11,7 +11,7 @@
 %define define_pplan_headers(parent) `declare_member(parent,dist_to_weight,parent,d2wt)
 ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE FROM parent
 declare_member(parent,convert2pos,parent,cn2ps)
-ROUTINE convert2pos(p : PATH nodedata = t_VEC_PATH ; i : INTEGER ; ofst_orient : VECTOR; parent_frm : XYZWPR) : XYZWPR FROM parent
+ROUTINE convert2pos(n : t_VEC_PATH ; ofst_orient : VECTOR; parent_frm : XYZWPR) : XYZWPR FROM parent
 declare_member(parent,path_blending,parent,pthbl)
 ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm : XYZWPR; blendRatio : REAL; outNode : t_TOOLPATH) FROM parent
 declare_member(parent,convertOrientation,parent,cnvor)
@@ -34,16 +34,16 @@ ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE
     RETURN(TRUNC(dist))
   END dist_to_weight
 declare_member(parent,convert2pos,parent,cn2ps)
-ROUTINE convert2pos(p : PATH nodedata = t_VEC_PATH ; i : INTEGER ; ofst_orient : VECTOR; parent_frm : XYZWPR) : XYZWPR
+ROUTINE convert2pos(n : t_VEC_PATH ; ofst_orient : VECTOR; parent_frm : XYZWPR) : XYZWPR
   BEGIN
 
 %ifdef DEBUG_BUILD
-    usrdis__print(INFO, 'P' + i_to_s(pth_idx) + ': ' + '(' + vec_to_s(p[i].v, ',') + ')' + ',' + '(' + vec_to_s(tangent, ',') + ')')
+    usrdis__print(INFO, 'P' + i_to_s(pth_idx) + ': ' + '(' + vec_to_s(n.v, ',') + ')' + ',' + '(' + vec_to_s(n.tangent, ',') + ')')
     pth_idx = pth_idx + 1
 %endif
 
     -- ( pose__vector_to_pose(frm:v.v, pose__get_orientation(frm), frm.config_data) )
-    RETURN( pose__vector_to_pose(p[i].v, ofst_orient, parent_frm.config_data) )
+    RETURN( pose__vector_to_pose(n.v, ofst_orient, parent_frm.config_data) )
   END convert2pos
 declare_member(parent,path_blending,parent,pthbl)
 ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm : XYZWPR; blendRatio : REAL; outNode : t_TOOLPATH)
