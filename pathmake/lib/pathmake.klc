@@ -60,11 +60,11 @@ ROUTINE next_toolpath
     SELECT `PATH_PLAN_NAME`__next_toolpath OF
       CASE(PTH_TOOLING):
         IF interp_tool THEN
-          `PATH_PLAN_NAME`__get_toolpath_interpolate(tool_step, PTH_LINETO, FALSE, pth)
+          `PATH_PLAN_NAME`__get_toolpath_interpolate((tool_step), PTH_LINETO, FALSE, pth)
         ENDIF
         registers__set_real(SPEED_REGISTER, tool_speed)
       CASE(PTH_LINKING):
-        `PATH_PLAN_NAME`__linkingTransition(pth, link_step)
+        `PATH_PLAN_NAME`__linkingTransition(pth, (link_step))
         registers__set_real(SPEED_REGISTER, link_speed)
     ENDSELECT
 
@@ -89,11 +89,11 @@ ROUTINE get_toolpath
       SELECT (`PATH_PLAN_NAME`__next_toolpath) OF
         CASE(PTH_TOOLING):
           IF interp_tool THEN
-            `PATH_PLAN_NAME`__get_toolpath_interpolate(tool_step, PTH_LINETO, TRUE, pth)
+            `PATH_PLAN_NAME`__get_toolpath_interpolate((tool_step), PTH_LINETO, TRUE, pth)
           ENDIF
           registers__set_real(SPEED_REGISTER, tool_speed)
         CASE(PTH_LINKING):
-          `PATH_PLAN_NAME`__linkingTransition(pth, link_step)
+          `PATH_PLAN_NAME`__linkingTransition(pth, (link_step))
           registers__set_real(SPEED_REGISTER, link_speed)
       ENDSELECT
     UNTIL( `PATH_PLAN_NAME`__is_path_end )
