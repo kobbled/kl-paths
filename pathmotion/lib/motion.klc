@@ -18,8 +18,10 @@ PROGRAM class_name
 
 %include errors.klt
 %include systemlib.klt
+%include systemvars.klt
 %include math.klt
 %include draw.klt
+%include pose.const.klt
 %include pathlib.klt
 %include toolpath.structs.klt
 %include pathplan.klt
@@ -56,12 +58,14 @@ VAR
 --define path object
 path_make_define(PATH_OBJECT_NAME,CONFIG_FILENAME)
 
+%defeval class_name BASE_CLASSNAME
+
+%include motion.klh
+
 --implement robot config interface
 impl_motion_members(MOTION_DATA_FILE)
 
 %defeval class_name BASE_CLASSNAME
-
-%include motion.klh
 
 --public
 ROUTINE new
