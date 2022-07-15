@@ -53,7 +53,7 @@ ROUTINE next_toolpath : INTEGER FROM class_name
 declare_member(class_name,set_line,class_name,stlin)
 ROUTINE set_line(line_no : INTEGER; revrs_ordr : BOOLEAN; line_typ : INTEGER) FROM class_name
 declare_member(class_name,reverse_toolpath,class_name,revtp)
-ROUTINE reverse_toolpath(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
+ROUTINE reverse_toolpath FROM class_name
 declare_member(class_name,get_toolpath,class_name,gettp)
 ROUTINE get_toolpath(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,set_toolpath,class_name,settp)

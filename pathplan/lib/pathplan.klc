@@ -653,9 +653,18 @@ ROUTINE set_line
 
 ROUTINE reverse_toolpath
   VAR
-    status : INTEGER
+    i, status : INTEGER
+    size : INTEGER
   BEGIN
-    COPY_PATH(tool_segment, PATH_LEN(tool_segment), 1, out_path, status)
+    size = PATH_LEN(tool_segment)
+    i = size
+    WHILE i > 1 DO
+      APPEND_NODE(tool_segment, status)
+      tool_segment[size+1] = tool_segment[i]
+      DELETE_NODE(tool_segment, i, status)
+
+      i = i - 1
+    ENDWHILE
   END reverse_toolpath
 
 ROUTINE is_path_end

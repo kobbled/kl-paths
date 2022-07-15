@@ -293,9 +293,7 @@ ROUTINE get_line
     `PATH_PLAN_NAME`__set_line(line_no, revrs_ordr, line_typ)
 
     IF reverse_line THEN
-      `PATH_PLAN_NAME`__reverse_toolpath(line_endpnts)
-    ELSE
-      `PATH_PLAN_NAME`__get_toolpath(line_endpnts)
+      `PATH_PLAN_NAME`__reverse_toolpath
     ENDIF
 
     IF NOT append THEN
