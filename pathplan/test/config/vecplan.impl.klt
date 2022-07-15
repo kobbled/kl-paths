@@ -92,6 +92,12 @@ ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius
           surfpos = p[i].v
           --convert coordinates
           p[i].v = pose__polar_to_cartesian(frm, (surfpos), (z_axis))
+
+          p[i].v.w = p[i].v.w + surfpos.w ; p[i].v.p = p[i].v.p + surfpos.p ; p[i].v.r = p[i].v.r + surfpos.r ;
+
+          IF flip THEN
+            p[i].v.w = p[i].v.w + 180 ;
+          ENDIF
         ENDFOR
       CASE(PTH_CARTESAN):
       ELSE:
