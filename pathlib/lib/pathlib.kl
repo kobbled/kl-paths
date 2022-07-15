@@ -186,10 +186,19 @@ ROUTINE paths__get_path_vector
   END paths__get_path_vector
 
 ROUTINE paths__get_increments
+  VAR
+    inc : INTEGER
   BEGIN
-    --get length of line
-    -- determine increment percentage between 0 - 1
-    RETURN( TRUNC(math__norm(emd - strt)/spacing) )
+    -- get number of spacing increments to fit in line
+    inc = TRUNC(math__norm(emd - strt)/spacing)
+
+    IF (inc <= 1) THEN
+      -- if spacing is larger than line length split line
+      -- in half
+      inc = 2
+    ENDIF
+
+    RETURN(inc)
   END paths__get_increments
 
 ROUTINE paths__psuedo_center
