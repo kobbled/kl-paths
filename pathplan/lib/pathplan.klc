@@ -744,7 +744,7 @@ ROUTINE get_start_node
 
 ROUTINE get_end_node
   BEGIN
-    RETURN(convert2pos(pth[(plan[1].v)], pnt_orient, frm))
+    RETURN(convert2pos(pth[(plan[PATH_LEN(plan)].v)], pnt_orient, frm))
   END get_end_node
 
 ROUTINE get_node
