@@ -61,8 +61,8 @@
 
 --pathplan
 ------------------
-%defeval PATH_PLAN_NAME tstpln
-%define PATHPLAN_CONFIG_FILENAME vecpathplan.klt
+%defeval PATH_PLAN_NAME tsplrt
+%define PATHPLAN_CONFIG_FILENAME rotaryPlan.klt
 
 --pathclass object
 ------------------
