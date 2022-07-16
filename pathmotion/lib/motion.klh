@@ -49,16 +49,16 @@ ROUTINE moveLine(speed : REAL) FROM class_name
 declare_member(class_name,moveArc,class_name,mvac)
 ROUTINE moveArc(speed : REAL) FROM class_name
 declare_member(class_name,movePoly,class_name,mvpy)
-ROUTINE movePoly(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
+ROUTINE movePoly(tool_speed : REAL; tool_step : REAL; link_speed : REAL; link_step : REAL; &
                  retract_hght : REAL) FROM class_name
 declare_member(class_name,movePolyFull,class_name,mvpf)
-ROUTINE movePolyFull(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
+ROUTINE movePolyFull(tool_speed : REAL; tool_step : REAL; link_speed : REAL; link_step : REAL; &
                  retract_hght : REAL) FROM class_name
 declare_member(class_name,movePolyArc,class_name,mvpya)
-ROUTINE movePolyArc(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
+ROUTINE movePolyArc(tool_speed : REAL; tool_step : REAL; link_speed : REAL; link_step : REAL; &
                  retract_hght : REAL) FROM class_name
 declare_member(class_name,movePolyArcFull,class_name,mvpaf)
-ROUTINE movePolyArcFull(tool_speed : REAL; tool_step : INTEGER; link_speed : REAL; link_step : INTEGER; &
+ROUTINE movePolyArcFull(tool_speed : REAL; tool_step : REAL; link_speed : REAL; link_step : REAL; &
                  retract_hght : REAL) FROM class_name
 
 
