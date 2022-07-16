@@ -91,7 +91,7 @@ ROUTINE append_nodes(p : PATH nodedata = t_VERTEX; nodes : INTEGER)
     ENDFOR
   END append_nodes
 
-ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
+ROUTINE draw_delta
   BEGIN
     --create polygon
     clear_poly(polygon)
@@ -104,15 +104,8 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
     polygon[6].coords = VEC2D(20,60)  
     polygon[7].coords = VEC2D(0,120)
     polygon[8].coords = VEC2D(-20,60)
-
-    --initialize polygon object
-    tstpoly__init((ZEROPOS(1)), TRUE)
-    tstpoly__set_canvas((ZEROPOS(1)))
+    
     tstpoly__append_polygon(polygon)
-
-    --raster polygon
-    tstpoly__set_params((rast_ang), 1, wall_lines, 0, pitch)
-    tstpoly__raster(PTH_LINETO)
 
   END draw_delta
 
