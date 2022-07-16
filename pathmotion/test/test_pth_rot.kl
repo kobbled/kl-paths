@@ -17,6 +17,8 @@ PROGRAM test_pth_rot
 %include display.c.klt
 %endif
 
+%define M_PI 3.14159
+
 %include systemlib.klt
 %include systemvars.klt
 %include draw.klt
@@ -90,7 +92,7 @@ ROUTINE append_nodes(p : PATH nodedata = t_VERTEX; nodes : INTEGER)
     ENDFOR
   END append_nodes
 
-ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
+ROUTINE draw_delta
   BEGIN
     --create polygon
     clear_poly(polygon)
@@ -104,14 +106,7 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
     polygon[7].coords = VEC2D(0,120)
     polygon[8].coords = VEC2D(-20,60)
 
-    --initialize polygon object
-    tstpoly__init((ZEROPOS(1)), TRUE)
-    tstpoly__set_canvas((ZEROPOS(1)))
     tstpoly__append_polygon(polygon)
-
-    --raster polygon
-    tstpoly__set_params((rast_ang), 1, wall_lines, 0, pitch)
-    tstpoly__raster(PTH_LINETO)
 
   END draw_delta
 
@@ -129,8 +124,8 @@ ROUTINE t_rot_delta
 
 %define TOOLING_SPEED 20
 %define LINKING_SPEED 50
-%define TOOLING_STEP 5
-%define LINKING_STEP 10
+%define TOOLING_STEP 5*DRAW_RADIUS*M_PI/180
+%define LINKING_STEP 10*DRAW_RADIUS*M_PI/180
     i, status : INTEGER
     origin : XYZWPR
     frm : XYZWPR
@@ -149,19 +144,24 @@ ROUTINE t_rot_delta
     pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
 
     --draw delta
-    tstpoly__init((ZEROPOS(1)), TRUE)
-    draw_delta(RASTER_ANGLE, PASS_OVERLAP, NO_WALLINES)
+    tstpoly__init(POS(0,0,0,0,180,0,(ZEROPOS(1).config_data)), TRUE) -- OD set
+    draw_delta
 
+    --raster polygon
+    tstpoly__set_params(RASTER_ANGLE, 1, NO_WALLINES, 0, PASS_OVERLAP)
+    tstpoly__raster(PTH_LINETO)
+
+    --get bounding box
+    bbox = tstpoly__get_bounding_box
+
+    -- get raster liens and contours
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
-    --get lines from object
-    tstpoly__lines_to_vec_path(lines) ;
-    --get contours
-    tstpoly__contours_to_vec_path(contours) ;
+    tstpoly__lines_to_vec_path(lines) ; tstpoly__contours_to_vec_path(contours) ;
 
     frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
-    tool = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
     origin = POS(0,START_DIST,DRAW_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
+    tool = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
 
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
@@ -171,11 +171,16 @@ ROUTINE t_rot_delta
     tstrmn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    bbox = tstpoly__get_bounding_box
-    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
+    tstrot__planPath(lines, contours, LEFT_TOP, ONEWAY, FALSE)
+
+    -- approach path
+    tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
     
     --move through raster path
     tstrmn__movePoly(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
+    
+    -- retract path
+    tstrmn__run_retract_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,START_DIST+200,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
 
     --move through contour
 
@@ -192,10 +197,10 @@ ROUTINE t_rot_delta
 ROUTINE t_rot_OD
   VAR
 %define PAD_RADIUS 100
-%define PAD_WIDTH 360
-%define PAD_LENGTH 50
-%defeval PAD_SEPERATION 0
-%define PAD_START_DEG 0
+%define PAD_WIDTH 360*PAD_RADIUS*M_PI/180
+%define PAD_LENGTH 20
+%defeval PAD_SEPERATION 0*PAD_RADIUS*M_PI/180
+%define PAD_START_DEG 0*PAD_RADIUS*M_PI/180
 %define PAD_START_DIST 100
 -- set to 90 for vertical, or 135 for bevel
 %define PAD_ANGLE 0
@@ -210,8 +215,8 @@ ROUTINE t_rot_OD
 
 %define TOOLING_SPEED 100
 %define LINKING_SPEED 200
-%define TOOLING_STEP 90
-%define LINKING_STEP 90
+%define TOOLING_STEP 90*PAD_RADIUS*M_PI/180
+%define LINKING_STEP 90*PAD_RADIUS*M_PI/180
     i, status : INTEGER
     origin : XYZWPR
     frm : XYZWPR
@@ -230,7 +235,7 @@ ROUTINE t_rot_OD
     pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
 
     --draw pads
-    tstpoly__init((ZEROPOS(1)), TRUE)
+    tstpoly__init(POS((0*PAD_RADIUS*M_PI/180),0,PAD_LENGTH,0,180,0,(ZEROPOS(1).config_data)), TRUE)
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
 
     --get raster lines
@@ -238,14 +243,17 @@ ROUTINE t_rot_OD
     tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
 
+    --get bounding box
+    bbox = tstpoly__get_bounding_box
+
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
     --get lines from object
     tstpoly__lines_to_vec_path(lines) ;
 
     frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
-    tool = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
     origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,PAD_ANGLE,0,0,pose__set_config(DEFAULT_CONFIG))
+    tool = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
     
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
@@ -255,11 +263,16 @@ ROUTINE t_rot_OD
     tstrmn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    bbox = tstpoly__get_bounding_box
-    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
+    tstrot__planPath(lines, contours, LEFT_TOP, ONEWAY, FALSE)
+
+    -- approach path
+    tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,PAD_START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
     
     --move through path
     tstrmn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
+
+    -- retract path
+    tstrmn__run_retract_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,PAD_START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
 
     -- --get lists
     -- tstrot__get_plan(path_plan)
@@ -274,10 +287,10 @@ ROUTINE t_rot_OD
 ROUTINE t_rot_ID
   VAR
 %define PAD_RADIUS 100
-%define PAD_WIDTH 360
-%define PAD_LENGTH 50
-%defeval PAD_SEPERATION 0
-%define PAD_START_DEG 180
+%define PAD_WIDTH 360*PAD_RADIUS*M_PI/180
+%define PAD_LENGTH 20
+%defeval PAD_SEPERATION 0*PAD_RADIUS*M_PI/180
+%define PAD_START_DEG 180*PAD_RADIUS*M_PI/180
 %define PAD_START_DIST 100
 -- set to -90 for vertical, or -135 for bevel
 %define PAD_ANGLE 0
@@ -292,8 +305,8 @@ ROUTINE t_rot_ID
 
 %define TOOLING_SPEED 100
 %define LINKING_SPEED 200
-%define TOOLING_STEP 20
-%define LINKING_STEP 20
+%define TOOLING_STEP 45*PAD_RADIUS*M_PI/180
+%define LINKING_STEP 45*PAD_RADIUS*M_PI/180
     i, status : INTEGER
     origin : XYZWPR
     frm : XYZWPR
@@ -312,7 +325,7 @@ ROUTINE t_rot_ID
     pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
 
     --draw pads
-    tstpoly__init((ZEROPOS(1)), TRUE)
+    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE)
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
 
     --get raster lines
@@ -320,14 +333,17 @@ ROUTINE t_rot_ID
     tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
 
+    -- get bounding box
+    bbox = tstpoly__get_bounding_box
+
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
     --get lines from object
     tstpoly__lines_to_vec_path(lines) ;
 
     frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
-    tool = POS(0,0,0,TOOL_ORIENT_UP, pose__set_config(DEFAULT_CONFIG))
     origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,PAD_ANGLE,0,0,pose__set_config(DEFAULT_CONFIG))
+    tool = POS(0,0,0,TOOL_ORIENT_UP, pose__set_config(DEFAULT_CONFIG))
     
     --initialize pathclass
     tstrot__init(frm, cds, origin, PAD_IDOD)
@@ -335,12 +351,19 @@ ROUTINE t_rot_ID
     tstrmn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    bbox = tstpoly__get_bounding_box
     tstrot__planPath(lines, contours, ID_CORNER, ONEWAY, FALSE)
     
-    --move through path
+    --set path type
     tstrmn__set_prog_names(MOVE_DRYRUN)
+
+    -- approach path
+    tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100+PAD_START_DIST,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
+    
+    --move through path
     tstrmn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT) )
+
+    -- retract path
+    tstrmn__run_retract_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100+PAD_START_DIST,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
 
     -- --get lists
     -- tstrot__get_plan(path_plan)
@@ -352,6 +375,186 @@ ROUTINE t_rot_ID
     RETURN
   END t_rot_ID
 
+ROUTINE t_rot_pad
+  VAR
+%define PAD_RADIUS 100
+%define PAD_WIDTH 60*PAD_RADIUS*M_PI/180
+%define PAD_LENGTH 20
+%defeval PAD_SEPERATION 90*PAD_RADIUS*M_PI/180
+%define PAD_START_DEG 0*PAD_RADIUS*M_PI/180
+%define PAD_START_DIST 100
+-- set to 90 for vertical, or 135 for bevel
+%define PAD_ANGLE 0
+%define NO_OF_PADS 3
+%define RETRACT_RADIUS 30
+%defeval RETRACT_HEIGHT (RETRACT_RADIUS)
+%define PAD_IDOD 1
+
+%define RASTER_ANGLE 0
+%define PASS_OVERLAP 10
+%define CONTOUR_LINES 0
+
+%define TOOLING_SPEED 100
+%define LINKING_SPEED 200
+%define TOOLING_STEP 90*PAD_RADIUS*M_PI/180
+%define LINKING_STEP 90*PAD_RADIUS*M_PI/180
+    i, status : INTEGER
+    origin : XYZWPR
+    frm : XYZWPR
+    tool : XYZWPR
+    bbox : t_RECT
+    cds : t_COORD_SYS
+  BEGIN
+    --lock group 1
+    LOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
+
+    --set frame
+    pose__set_userframe(USER_FRAME_NO, RBT_GRP)
+    pose__set_userframe(USER_FRAME_NO, ROT_GRP)
+
+    pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
+    pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
+
+    --draw pads
+    tstpoly__init(POS((0*PAD_RADIUS*M_PI/180),0,PAD_LENGTH,0,180,0,(ZEROPOS(1).config_data)), TRUE)
+    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
+
+    --get raster lines
+    -- (start_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstpoly__raster(PTH_LINETO)
+
+    --get bounding box
+    bbox = tstpoly__get_bounding_box
+
+    paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
+    --get lines from object
+    tstpoly__lines_to_vec_path(lines) ;
+
+    frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
+    cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
+    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,PAD_ANGLE,0,0,pose__set_config(DEFAULT_CONFIG))
+    tool = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
+    
+    --initialize pathclass
+      -- coord frm, coordinate system, part origin, idod
+    tstrot__init(frm, cds, origin, PAD_IDOD)
+    --intialize motion friend class
+      --tool offset, interpolate flag, program type
+    tstrmn__init(tool, TRUE, MOVE_DRYRUN)
+
+    --generate path
+    tstrot__planPath(lines, contours, LEFT_TOP, ONEWAY, FALSE)
+
+    -- approach path
+    tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,PAD_START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
+    
+    --move through path
+    tstrmn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT))
+
+    -- retract path
+    tstrmn__run_retract_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,PAD_START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
+
+    -- --get lists
+    -- tstrot__get_plan(path_plan)
+    -- tstrot__get_segment(pth)
+
+    UNLOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
+
+    RETURN
+  END t_rot_pad
+
+ROUTINE t_rot_pid
+  VAR
+%define PAD_RADIUS 100
+%define PAD_WIDTH 60*PAD_RADIUS*M_PI/180
+%define PAD_LENGTH 20
+%defeval PAD_SEPERATION 90*PAD_RADIUS*M_PI/180
+%define PAD_START_DEG 180*PAD_RADIUS*M_PI/180
+%define PAD_START_DIST 100
+-- set to -90 for vertical, or -135 for bevel
+%define PAD_ANGLE 0
+%define NO_OF_PADS 3
+%define RETRACT_RADIUS 30
+%defeval RETRACT_HEIGHT (RETRACT_RADIUS)
+%define PAD_IDOD -1
+
+%define RASTER_ANGLE 0
+%define PASS_OVERLAP 10
+%define CONTOUR_LINES 0
+
+%define TOOLING_SPEED 100
+%define LINKING_SPEED 200
+%define TOOLING_STEP 45*PAD_RADIUS*M_PI/180
+%define LINKING_STEP 45*PAD_RADIUS*M_PI/180
+    i, status : INTEGER
+    origin : XYZWPR
+    frm : XYZWPR
+    tool : XYZWPR
+    bbox : t_RECT
+    cds : t_COORD_SYS
+  BEGIN
+    --lock group 1
+    LOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
+
+    --set frame
+    pose__set_userframe(USER_FRAME_NO, RBT_GRP)
+    pose__set_userframe(USER_FRAME_NO, ROT_GRP)
+
+    pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
+    pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
+
+    --draw pads
+    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE)
+    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
+
+    --get raster lines
+    -- (start_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstpoly__raster(PTH_LINETO)
+
+    -- get bounding box
+    bbox = tstpoly__get_bounding_box
+
+    paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
+    --get lines from object
+    tstpoly__lines_to_vec_path(lines) ;
+
+    frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
+    cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
+    origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,PAD_ANGLE,0,0,pose__set_config(DEFAULT_CONFIG))
+    tool = POS(0,0,0,TOOL_ORIENT_UP, pose__set_config(DEFAULT_CONFIG))
+    
+    --initialize pathclass
+    tstrot__init(frm, cds, origin, PAD_IDOD)
+    --intialize motion friend class
+    tstrmn__init(tool, TRUE, MOVE_DRYRUN)
+
+    --generate path
+    tstrot__planPath(lines, contours, ID_CORNER, ONEWAY, FALSE)
+    
+    --set path type
+    tstrmn__set_prog_names(MOVE_DRYRUN)
+
+    -- approach path
+    tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100+PAD_START_DIST,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
+    
+    --move through path
+    tstrmn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT) )
+
+    -- retract path
+    tstrmn__run_retract_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100+PAD_START_DIST,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
+
+    -- --get lists
+    -- tstrot__get_plan(path_plan)
+    -- tstrot__get_segment(pth)
+
+    UNLOCK_GROUP(math__bitmask(RBT_GRP) OR math__bitmask(ROT_GRP),status)
+
+
+    RETURN
+  END t_rot_pid
+
 BEGIN
 %ifdef DEBUG_BUILD
   --(log_filename, show_date, show_debug, show_info)
@@ -361,7 +564,9 @@ BEGIN
 
   --t_rot_delta
   --t_rot_OD
-  t_rot_ID
+  --t_rot_ID
+  --t_rot_pad
+  t_rot_pid
 
   --clean up
   tstpoly__delete

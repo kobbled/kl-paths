@@ -21,7 +21,6 @@
     "pathmake"
   ],
   "tests" : [
-    "test/test_pth_mtn.kl",
     "test/test_pth_rot.kl"
   ],
   "tests-includes" : [
