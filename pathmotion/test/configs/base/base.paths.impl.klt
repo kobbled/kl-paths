@@ -137,9 +137,12 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
     spos2 = VEC(origin.x,origin.y,origin.z-idod*offset.z)
 
 %ifdef DEBUG_BUILD
-    WRITE TPDISPLAY('* Approach *', CR)
-    WRITE TPDISPLAY('spos: ', spos::6::2, CR)
-    WRITE TPDISPLAY('spos2: ', spos2::6::2, CR)
+    usrdis__print(DEBUG, '* Approach *')
+    usrdis__print(DEBUG, 'spos: ' + vec_to_s(spos, ','))
+    usrdis__print(DEBUG, 'spos2: ' + vec_to_s(spos2, ','))
+    -- WRITE TPDISPLAY('* Approach *', CR)
+    -- WRITE TPDISPLAY('spos: ', spos::6::2, CR)
+    -- WRITE TPDISPLAY('spos2: ', spos2::6::2, CR)
 %endif
 
     --move to offset -> to zero poisition
@@ -157,8 +160,10 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
     vpos2.z = vpos2.z-idod*offset.z
 
 %ifdef DEBUG_BUILD
-    WRITE TPDISPLAY('vpos1: ', vpos1::6::2, CR)
-    WRITE TPDISPLAY('vpos2: ', vpos2::6::2, CR)
+    usrdis__print(DEBUG, 'vpos1: ' + vec_to_s(vpos1, ','))
+    usrdis__print(DEBUG, 'vpos2: ' + vec_to_s(vpos2, ','))
+    -- WRITE TPDISPLAY('vpos1: ', vpos1::6::2, CR)
+    -- WRITE TPDISPLAY('vpos2: ', vpos2::6::2, CR)
 %endif
 
     IF (coordSys=PTH_CYLINDER) THEN
@@ -187,12 +192,20 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
     fpos : VECTOR
   BEGIN
 
+%ifdef DEBUG_BUILD
+    usrdis__print(DEBUG, '* Retract *')
+    -- WRITE TPDISPLAY('* Retract *', CR)
+%endif
+
     lpos = pose__get_lpos(1)
 
     --if cylindrical. Convert.
     IF (coordSys=PTH_CYLINDER) THEN
       lpos = pose__cartesian_to_cylindrical((ZEROPOS(1)), lpos, VERT_AXES)
-      WRITE TPDISPLAY('lpos: ', VEC(lpos.x, lpos.y, lpos.z)::6::2, CR)
+%ifdef DEBUG_BUILD
+      usrdis__print(DEBUG, 'lpos: ' + vec_to_s(VEC(lpos.x, lpos.y, lpos.z), ','))
+      -- WRITE TPDISPLAY('lpos: ', VEC(lpos.x, lpos.y, lpos.z)::6::2, CR)
+%endif
       --change degrees to mm
       lpos.x = ((360-lpos.x-0)*origin.z*M_PI/180)
     ENDIF
@@ -210,9 +223,10 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
     vpos2.z = vpos1.z-idod*offset.z
 
 %ifdef DEBUG_BUILD
-    WRITE TPDISPLAY('* Retract *', CR)
-    WRITE TPDISPLAY('vpos1: ', vpos1::6::2, CR)
-    WRITE TPDISPLAY('vpos2: ', vpos2::6::2, CR)
+    usrdis__print(DEBUG, 'vpos1: ' + vec_to_s(vpos1, ','))
+    usrdis__print(DEBUG, 'vpos2: ' + vec_to_s(vpos1, ','))
+    -- WRITE TPDISPLAY('vpos1: ', vpos1::6::2, CR)
+    -- WRITE TPDISPLAY('vpos2: ', vpos2::6::2, CR)
 %endif
 
     --move up from lpos to the retract height
@@ -234,8 +248,10 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
       ENDIF
 
 %ifdef DEBUG_BUILD
-      WRITE TPDISPLAY('vpos3: ', vpos3::6::2, CR)
-      WRITE TPDISPLAY('spos: ', spos::6::2, CR)
+      usrdis__print(DEBUG, 'vpos3: ' + vec_to_s(vpos3, ','))
+      usrdis__print(DEBUG, 'spos: ' + vec_to_s(spos, ','))
+      -- WRITE TPDISPLAY('vpos3: ', vpos3::6::2, CR)
+      -- WRITE TPDISPLAY('spos: ', spos::6::2, CR)
 %endif
 
       -- ..note:: set travel direction in step size.
@@ -247,8 +263,10 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
     fpos = VEC(origin.x,origin.y+offset.y,spos.z)
 
 %ifdef DEBUG_BUILD
-    WRITE TPDISPLAY('spos2: ', spos::6::2, CR)
-    WRITE TPDISPLAY('fpos: ', fpos::6::2, CR)
+    usrdis__print(DEBUG, 'spos2: ' + vec_to_s(spos, ','))
+    usrdis__print(DEBUG, 'fpos: ' + vec_to_s(fpos, ','))
+    -- WRITE TPDISPLAY('spos2: ', spos::6::2, CR)
+    -- WRITE TPDISPLAY('fpos: ', fpos::6::2, CR)
 %endif
 
     --move from the origin to the retract distance to the offset

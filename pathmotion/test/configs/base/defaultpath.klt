@@ -48,7 +48,7 @@
 --pathplan
 ------------------
 %define PATH_PLAN_NAME tstpln
-%define PATHPLAN_CONFIG_FILENAME stationaryPath.klt
+%define PATHPLAN_CONFIG_FILENAME stationaryPlan.klt
 
 --pathclass object
 ------------------

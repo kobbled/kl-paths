@@ -9,7 +9,7 @@
 %define DEFAULT_SPEED 12
 
 --used in dependencies
-%define PATHPLAN_CONFIG_FILENAME stationaryPath.klt
+%define PATHPLAN_CONFIG_FILENAME stationaryPlan.klt
 
 --kd tree
 ------------------
@@ -25,4 +25,4 @@
 %define MAX_NEIGHBORS 7
 
 --pathplan implementation
-%include stationaryPath.impl.klt
+%include stationaryPlan.impl.klt
