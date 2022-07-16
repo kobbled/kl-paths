@@ -100,4 +100,37 @@ ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius
       ELSE:
     ENDSELECT
   END convertOrientation
+declare_member(parent,linkingTransition,parent,lktrs)
+ROUTINE linkingTransition(p : PATH nodedata = t_TOOLPATH; spacing : REAL; idod : INTEGER)
+  VAR
+%define LINKING_FULL_WRAP 180
+    endpnts : ARRAY[2] OF XYZWPR
+    status : INTEGER
+  BEGIN
+    --If rotary group (ROT_GRP) and line is < 90 deg
+    --only include endpoints in line. If path is 0->360
+    --it will not rotate all the way back around
+    endpnts[1] = tool_segment[1].v
+    endpnts[2] = tool_segment[PATH_LEN(tool_segment)].v
+    IF UNINIT(endpnts[1]) THEN
+      paths__clear_toolpath(p)
+    ELSE
+      --need to evaluate how close the endpoints are in degree to eachother.
+      --if > than epsilon run an arc
+      IF(ABS((endpnts[2].x/frm.z*180/M_PI)-(endpnts[1].x/frm.z*180/M_PI)) < LINKING_FULL_WRAP) THEN
+        get_toolpath_interpolate(spacing, PTH_LINETO, FALSE, p)
+      ELSE
+        --add 360 to endpnt 2 so that it is always rotating forward
+        endpnts[2].x = (endpnts[2].x/frm.z*180/M_PI) - idod*360
+        endpnts[2].x = (endpnts[2].x*frm.z*M_PI/180)
+        --put back into tool segment to interpolate
+        tool_segment[PATH_LEN(tool_segment)].v = endpnts[2]
+
+        reverse_toolpath
+
+        get_toolpath_interpolate(spacing, PTH_LINETO, FALSE, p)
+      ENDIF
+    ENDIF
+  END linkingTransition
+`
 %mode pop
