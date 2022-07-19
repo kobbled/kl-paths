@@ -108,7 +108,7 @@ ROUTINE get_contours
 ROUTINE drawPad
   BEGIN
     --draw pads
-    `DRAW_OBJECT_NAME`__init((ZEROPOS(1)), (rastprm.onBoundary))
+    `DRAW_OBJECT_NAME`__init(origin, (rastprm.onBoundary))
     `DRAW_OBJECT_NAME`__pads(padprm.width, padprm.length, padprm.separation, padprm.no_of_pads, VEC2D(0,0))
 
     --raster shape
@@ -119,7 +119,7 @@ ROUTINE drawPad
 ROUTINE drawHex
   BEGIN
     --draw pads
-    `DRAW_OBJECT_NAME`__init((ZEROPOS(1)), (rastprm.onBoundary))
+    `DRAW_OBJECT_NAME`__init(origin, (rastprm.onBoundary))
     `DRAW_OBJECT_NAME`__hexagon((hexprm.radius), (hexprm.points), VEC2D(0, 0), (polyprm.polyRotation))
 
     --raster shape
@@ -133,10 +133,7 @@ ROUTINE drawCustom
   BEGIN
 
     --draw pads
-    `DRAW_OBJECT_NAME`__init((ZEROPOS(1)), (rastprm.onBoundary))
-    --apply polygon z-rotation to input frame
-    p = poly_frame:POS(0,0,0,0,0,(polyprm.polyRotation),poly_frame.Config_data)
-    `DRAW_OBJECT_NAME`__set_canvas(p)
+    `DRAW_OBJECT_NAME`__init(origin, (rastprm.onBoundary))
     `DRAW_OBJECT_NAME`__import_shape('FR:\' + filename + '.csv')
 
     --raster shape
