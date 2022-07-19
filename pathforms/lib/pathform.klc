@@ -301,11 +301,19 @@ BEGIN
       -- ** draw shape, raster, and pathplan  **
       SELECT shapeType OF
         CASE(SHP_PAD):
-          `PATHDRAW_NAME`__drawPad(padprm, rastprm)
+          --set canvas origin/perspective
+          `PATHDRAW_NAME`__set_origin(toolprm.idod, (cds.system), 0, (polyprm.polyRotation))
+          `PATHDRAW_NAME`__drawPad(padprm, polyprm, rastprm)
+          `PATHDRAW_NAME`__raster(rastprm)
         CASE(SHP_HEX):
+          --set canvas origin/perspective. polyRotation is handled in polygon__hexagon.
+          `PATHDRAW_NAME`__set_origin(toolprm.idod, (cds.system), 0, 0)
           `PATHDRAW_NAME`__drawHex(hexprm, polyprm, rastprm)
+          `PATHDRAW_NAME`__raster(rastprm)
         CASE(SHP_CUST):
-          `PATHDRAW_NAME`__drawCustom(filename, polyprm, rastprm, frm)
+          `PATHDRAW_NAME`__set_origin(toolprm.idod, (cds.system), 0, (polyprm.polyRotation))
+          `PATHDRAW_NAME`__drawCustom(filename, polyprm, rastprm)
+          `PATHDRAW_NAME`__raster(rastprm)
         ELSE:
           WRITE TPDISPLAY(CR, 'Shape type not selected properly')
           display__show
