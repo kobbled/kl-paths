@@ -147,6 +147,10 @@ make_work_indicies('LAM_NAME')
 define_station_names(station_name)
 
 BEGIN
+
+  --uninitialize select button
+  term_char = 0
+
   --path parameters
   frm_pthList
   init_pthList
@@ -187,6 +191,10 @@ BEGIN
     toolprm.idod = 1
   ENDIF
 
+  --run program
+  IF (term_char = ky_f2) THEN
+
+    --start corner
     SELECT (startCorner) OF
       CASE(LEFT_BOTTOM):
         rastprm.startCorner = RIGHT_BOTTOM
