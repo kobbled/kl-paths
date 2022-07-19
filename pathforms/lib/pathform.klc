@@ -194,18 +194,6 @@ BEGIN
   --run program
   IF (term_char = ky_f2) THEN
 
-    --start corner
-    SELECT (startCorner) OF
-      CASE(LEFT_BOTTOM):
-        rastprm.startCorner = RIGHT_BOTTOM
-      CASE(RIGHT_BOTTOM):
-        rastprm.startCorner = LEFT_BOTTOM
-      CASE(LEFT_TOP):
-        rastprm.startCorner = RIGHT_TOP
-      CASE(RIGHT_TOP):
-        rastprm.startCorner = LEFT_TOP
-    ENDSELECT
-
     --get default tool orientation if selected
     IF default_wpr THEN
       IF toolprm.idod = -1 THEN
