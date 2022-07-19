@@ -124,6 +124,27 @@ path_motion_define(STATION4_MOTION,STATION4_CNFG)
     ENDSELECT
 `
 
+--select the proper start corner if ID or OD is
+--selected in previous form
+%define default_start_corner(selected_idod) `
+    SELECT station OF
+      CASE(1):
+        startCorner = `STATION1_PATH`__get_corner(selected_idod)
+%ifdef STATION2_CNFG
+      CASE(2):
+        startCorner = `STATION2_PATH`__get_corner(selected_idod)
+%endif
+%ifdef STATION3_CNFG
+      CASE(3):
+        startCorner = `STATION3_PATH`__get_corner(selected_idod)
+%endif
+%ifdef STATION4_CNFG
+      CASE(4):
+        startCorner = `STATION4_PATH`__get_corner(selected_idod)
+%endif
+      ELSE:
+        ABORT
+    ENDSELECT
 `
 
 --form branch for subform of whichever 'Shape'

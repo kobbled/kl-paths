@@ -194,6 +194,9 @@ forms__show(stat_str, stat_val_arr)
       toolprm.idod = 1
     ENDIF
 
+    --select default for start corner
+    --based on if ID or OD is selected
+    default_start_corner(toolprm.idod)
 
     -- *** SHOW PATH FORM ***
     --load forms

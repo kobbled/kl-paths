@@ -29,6 +29,8 @@ declare_member(class_name,define_origin,class_name,dforg)
 ROUTINE define_origin(polyprm : t_PATH_VARS ; toolprm : t_TOOL_VARS) FROM class_name
 
 --getters
+declare_member(class_name,get_corner,class_name,gtcrn)
+ROUTINE get_corner(idod : INTEGER) : INTEGER FROM class_name
 declare_member(class_name,get_idod,class_name,gtido)
 ROUTINE get_idod : INTEGER FROM class_name
 declare_member(class_name,get_path,class_name,gtpth)
