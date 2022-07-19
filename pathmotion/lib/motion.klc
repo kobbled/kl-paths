@@ -230,17 +230,9 @@ ROUTINE move
 
     --move though path
     IF (motnprm.use_arc) THEN
-%ifeq GENERATE_FULL_PATH TRUE
-      movePolyArcFull((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist) )
-%else
-      movePolyArc((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist) )
-%endif
+      movePolyArc((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist.z) )
     ELSE
-%ifeq GENERATE_FULL_PATH TRUE
-      movePolyFull((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist) )
-%else
-      movePoly((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist) )
-%endif
+      movePoly((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist.z) )
     ENDIF
 
     --retract path
