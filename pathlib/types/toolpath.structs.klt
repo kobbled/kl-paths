@@ -39,8 +39,8 @@ TYPE
   t_MOTION_PRM FROM t_paths = STRUCTURE
     tool_speed : REAL
     link_speed : REAL
-    tool_step : INTEGER
-    link_step : INTEGER
+    tool_step : REAL
+    link_step : REAL
     use_arc   : BOOLEAN
   ENDSTRUCTURE
 
