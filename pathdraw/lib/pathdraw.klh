@@ -20,10 +20,10 @@ ROUTINE get_contours(out_contour : PATH nodedata = t_VEC_PATH) FROM class_name
 declare_member(class_name,raster,class_name,rast)
 ROUTINE raster(rastprm : t_PATH_RAST) FROM class_name
 declare_member(class_name,drawPad,class_name,drpad)
-ROUTINE drawPad(padprm : t_PAD_VARS ; rastprm : t_PATH_RAST) FROM class_name
+ROUTINE drawPad(padprm : t_PAD_VARS ; polyprm : t_PATH_VARS ; rastprm : t_PATH_RAST) FROM class_name
 declare_member(class_name,drawHex,class_name,drhex)
 ROUTINE drawHex(hexprm : t_HEX_VARS ; polyprm : t_PATH_VARS ; rastprm : t_PATH_RAST) FROM class_name
 declare_member(class_name,drawCustom,class_name,drcus)
-ROUTINE drawCustom(filename : STRING ; polyprm : t_PATH_VARS ; rastprm : t_PATH_RAST ; poly_frame : XYZWPR) FROM class_name
+ROUTINE drawCustom(filename : STRING ; polyprm : t_PATH_VARS ; rastprm : t_PATH_RAST) FROM class_name
 
 %endif --end header
