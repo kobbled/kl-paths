@@ -23,6 +23,7 @@ PROGRAM paths
 %include pose.const.klt
 %include pathplan.klt
 %include pathlib.klt
+%include toolpath.structs.klt
 
 %include errors.klh
 %ifdef DEBUG_BUILD
@@ -404,6 +405,22 @@ ROUTINE paths__new_coord_sys
     cs.system = system ; cs.z_axis = z_axis
     RETURN(cs)
   END paths__new_coord_sys
+
+ROUTINE paths__toolvec_to_vec
+  VAR
+    v : VECTOR
+  BEGIN
+    v.x = tv.x ; v.y = tv.y ; v.z = tv.z ;
+    RETURN(v)
+  END paths__toolvec_to_vec
+
+ROUTINE paths__vec_to_toolvec
+  VAR
+    tv : t_TOOL_VEC
+  BEGIN
+    tv.x = v.x ; tv.y = v.y ; tv.z = v.z ;
+    RETURN(tv)
+  END paths__vec_to_toolvec
 
 ROUTINE paths__set_orientation
   VAR
