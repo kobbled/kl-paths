@@ -187,10 +187,6 @@ BEGIN
     toolprm.idod = 1
   ENDIF
 
-  --start corner
-  IF (toolprm.idod = -1) THEN
-    rastprm.startCorner = startCorner
-  ELSE
     SELECT (startCorner) OF
       CASE(LEFT_BOTTOM):
         rastprm.startCorner = RIGHT_BOTTOM
@@ -201,10 +197,16 @@ BEGIN
       CASE(RIGHT_TOP):
         rastprm.startCorner = LEFT_TOP
     ENDSELECT
-  ENDIF
 
-  --run program
-  IF (term_char = ky_f2) THEN
+    --get default tool orientation if selected
+    IF default_wpr THEN
+      IF toolprm.idod = -1 THEN
+        toolprm.orient = paths__vec_to_toolvec(VEC(TOOL_ORIENT_UP))
+      ELSE
+        toolprm.orient = paths__vec_to_toolvec(VEC(TOOL_ORIENT_DOWN))
+      ENDIF
+    ENDIF 
+
     --show next form
     SELECT shapeType OF
       CASE(SHP_PAD):
