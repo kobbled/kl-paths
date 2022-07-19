@@ -13,6 +13,8 @@ declare_member(class_name,delete,class_name,dstr)
 ROUTINE delete FROM class_name
 declare_member(class_name,set_origin,class_name,stor)
 ROUTINE set_origin(idod : INTEGER; coordSys : INTEGER; length : REAL; rotation : REAL) FROM class_name
+declare_member(class_name,get_length,class_name,gtlth)
+ROUTINE get_length : REAL FROM class_name
 declare_member(class_name,get_lines,class_name,gtlns)
 ROUTINE get_lines(out_lines : PATH nodedata = t_VEC_PATH) FROM class_name
 declare_member(class_name,get_contours,class_name,gtctr)

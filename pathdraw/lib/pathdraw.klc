@@ -38,9 +38,11 @@ draw_object_define(DRAW_OBJECT_NAME,CONFIG_FILENAME)
 
 --private
 
+ROUTINE get_bounding_box
   BEGIN
     --get bounding box
     bbox = `DRAW_OBJECT_NAME`__get_bounding_box
+  END get_bounding_box
 
 ROUTINE set_raster_params
   BEGIN
@@ -83,6 +85,17 @@ ROUTINE set_origin
     ENDIF
   END set_origin
 
+ROUTINE get_length
+  BEGIN
+    IF UNINIT(bbox.verts[1]) THEN
+      get_bounding_box
+    ENDIF
+
+    -- get length of bounding box along its longitude
+    RETURN(math__norm(bbox.verts[4]-bbox.verts[1]))
+
+  END get_length
+
 ROUTINE get_lines
   VAR
     status : INTEGER
@@ -119,6 +132,7 @@ ROUTINE drawPad
     --need to do before getting boudning box
     set_raster_params(rastprm)
 
+    get_bounding_box
 
   END drawPad
 
@@ -131,6 +145,7 @@ ROUTINE drawHex
     --need to do before getting boudning box
     set_raster_params(rastprm)
 
+    get_bounding_box
 
   END drawHex
 
@@ -145,6 +160,7 @@ ROUTINE drawCustom
     --need to do before getting boudning box
     set_raster_params(rastprm)
     
+    get_bounding_box
 
   END drawCustom
 
