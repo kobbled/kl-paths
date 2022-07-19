@@ -37,8 +37,8 @@ $-,ppth
   " Retract Vec:  " "-%7.2f" "-%7.2f" "-%7.2f" &new_line
   " Tooling Speed:      " "-%6.2f" &new_line
   " Linking Speed:      " "-%6.2f" &new_line
-  " Tool Step Inc:      " "-%5d" &new_line
-  " Link Step Inc:      " "-%5d" &new_line
+  " Tool Step Inc:      " "-%6.2f" &new_line
+  " Link Step Inc:      " "-%6.2f" &new_line
   " Use Arc Motions:    " "-%6B(bool_fkey)" &new_line
   ^ppth_fkey
 .endform
