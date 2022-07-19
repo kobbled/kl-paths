@@ -17,10 +17,13 @@ PROGRAM class_name
 
 VAR
   bbox : t_RECT
+  origin : XYZWPR
   contours : PATH nodedata = t_VEC_PATH
   lines : PATH nodedata = t_VEC_PATH
 
 %from systemlib.klh %import VEC, VEC2D
+%from errors.klh %import SET_UNINIT_F
+%from math.klh %import norm
 %from pose.klh %import set_config
 %include pathlib.klh
 
@@ -55,7 +58,14 @@ ROUTINE raster
 
 --public
 
+ROUTINE init
+  BEGIN
+    set_origin(idod, coordSys, length, rotation)
+  END init
+
 ROUTINE delete
+  VAR
+    uninitbb : t_RECT
   BEGIN
     --clear wrapper members
     paths__clear_vecpath(contours)
@@ -63,7 +73,22 @@ ROUTINE delete
     
     --clear draw object
     `DRAW_OBJECT_NAME`__delete
+
+    --uninitialize members
+    bbox = uninitbb
+    SET_UNINIT_F('class_name', 'origin')
   END delete
+
+ROUTINE set_origin
+  BEGIN
+    -- for cylindrical systems the drawing will be mirrored
+    -- on the OD. Rotate drawing in order invert the mirroring
+    IF (idod = 1) AND (coordSys = PTH_CYLINDER) THEN
+      origin = POS(0,0,length,0,180,rotation,(ZEROPOS(1).config_data))
+    ELSE
+      origin = POS(0,0,0,0,0,rotation,(ZEROPOS(1).config_data))
+    ENDIF
+  END set_origin
 
 ROUTINE get_lines
   VAR
