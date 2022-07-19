@@ -44,7 +44,7 @@
 %define SCAN_LINE_PROG 'MOV_SCN_ROT'
 
 --planning corner start
-%defeval OD_CORNER RIGHT_BOTTOM
+%defeval OD_CORNER LEFT_TOP
 %defeval ID_CORNER LEFT_BOTTOM
 
 --dynamic userframe variables
@@ -61,8 +61,8 @@
 
 --pathplan
 ------------------
-%defeval PATH_PLAN_NAME tstpln
-%define PATHPLAN_CONFIG_FILENAME vecpathplan.klt
+%defeval PATH_PLAN_NAME tsplrt
+%define PATHPLAN_CONFIG_FILENAME rotaryPlan.klt
 
 --pathclass object
 ------------------
