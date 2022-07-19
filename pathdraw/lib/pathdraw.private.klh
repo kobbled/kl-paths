@@ -3,8 +3,7 @@
 
 --oop
 %include namespace.m
-
-declare_member(class_name,raster,class_name,rast)
-ROUTINE raster(rastprm : t_PATH_RAST) FROM class_name
+declare_member(class_name,set_raster_params,class_name,stpm)
+ROUTINE set_raster_params(rastprm : t_PATH_RAST) FROM class_name
 
 %endif --pathdraw_private_h

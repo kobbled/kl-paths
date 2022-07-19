@@ -17,6 +17,8 @@ declare_member(class_name,get_lines,class_name,gtlns)
 ROUTINE get_lines(out_lines : PATH nodedata = t_VEC_PATH) FROM class_name
 declare_member(class_name,get_contours,class_name,gtctr)
 ROUTINE get_contours(out_contour : PATH nodedata = t_VEC_PATH) FROM class_name
+declare_member(class_name,raster,class_name,rast)
+ROUTINE raster(rastprm : t_PATH_RAST) FROM class_name
 declare_member(class_name,drawPad,class_name,drpad)
 ROUTINE drawPad(padprm : t_PAD_VARS ; rastprm : t_PATH_RAST) FROM class_name
 declare_member(class_name,drawHex,class_name,drhex)
