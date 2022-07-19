@@ -1,14 +1,18 @@
 *     Dictionary Form File : gspcuseg
 *
+
+#include fkeys.fh
+
 .kl pcus
 .form
 $-,pcus
   &home &reverse "Polygon Dimensions" &standard &new_line
   &new_line
-  " Filename:      " "-%12k" &new_line
-  " Height:        " "-%6.2f" &new_line
-  " Start X:       " "-%6.2f" &new_line
-  " Start Y:       " "-%6.2f" &new_line
+  " In Degrees :        " "-%6B(bool_fkey)" &new_line
+  " Filename:           " "-%12k" &new_line
+  " Height:             " "-%6.2f" &new_line
+  " Start X:            " "-%6.2f" &new_line
+  " Start Y:            " "-%6.2f" &new_line
   " Polygon Rotation:   " "-%6.2f" &new_line
   " Polygon Pitch:      " "-%6.2f" &new_line
   ^pcus_fkey
@@ -16,3 +20,5 @@ $-,pcus
 $-,pcus_fkey     *function key labels
     "  EXIT" &new_line
     "  RUN" &new_line
+
+#eval tf_keys

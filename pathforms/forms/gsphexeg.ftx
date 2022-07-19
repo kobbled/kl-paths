@@ -1,12 +1,16 @@
 *     Dictionary Form File : gsphexeg
 *
+
+#include fkeys.fh
+
 .kl phex
 .form
 $-,phex
   &home &reverse "Polygon Dimensions" &standard &new_line
   &new_line
+  " In Degrees :        " "-%6B(bool_fkey)" &new_line
   " Polygon Radius:     " "-%6.2f" &new_line
-  " No. of Pads:        " "-%5d" &new_line
+  " No. of Points:      " "-%5d" &new_line
   " Height:             " "-%6.2f" &new_line
   " Start X:            " "-%6.2f" &new_line
   " Start Y:            " "-%6.2f" &new_line
@@ -17,3 +21,5 @@ $-,phex
 $-,phex_fkey     *function key labels
     "  EXIT" &new_line
     "  RUN" &new_line
+
+#eval tf_keys

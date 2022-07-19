@@ -1,20 +1,25 @@
 *     Dictionary Form File : gsppadeg
 *
+#include fkeys.fh
+
 .kl ppad
 .form
 $-,ppad
   &home &reverse "Pad Dimensions" &standard &new_line
   &new_line
-  " Width (Degrees):       " "-%6.2f" &new_line
-  " Length:                " "-%6.2f" &new_line
-  " Radius:                " "-%6.2f" &new_line
-  " Start Degree:          " "-%6.2f" &new_line
-  " Start Dist:            " "-%6.2f" &new_line
-  " Pad Angle:             " "-%6.2f" &new_line
-  " No. of Pads:           " "-%5d" &new_line
-  " Pad Sep. (Degs):       " "-%6.2f" &new_line
+  " In Degrees :      " "-%6B(bool_fkey)" &new_line
+  " Width :           " "-%6.2f" &new_line
+  " Length:           " "-%6.2f" &new_line
+  " Radius:           " "-%6.2f" &new_line
+  " Start X:          " "-%6.2f" &new_line
+  " Start Y:          " "-%6.2f" &new_line
+  " Pad Angle:        " "-%6.2f" &new_line
+  " No. of Pads:      " "-%5d" &new_line
+  " Pad Sep. :        " "-%6.2f" &new_line
   ^ppad_fkey
 .endform
 $-,ppad_fkey     *function key labels
     "  EXIT" &new_line
     "  RUN" &new_line
+  
+#eval tf_keys

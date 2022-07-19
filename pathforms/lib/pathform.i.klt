@@ -86,15 +86,16 @@ ROUTINE init_pthList
 %define make_pad_indicies(ps) `ROUTINE frm_padList
   BEGIN
     --pad parameters
-    draw_val_arr[1] = '['+ps+']padprm.width'
-    draw_val_arr[2] = '['+ps+']padprm.length'
-    draw_val_arr[3] = '['+ps+']polyprm.height'
-    draw_val_arr[4] = '['+ps+']polyprm.xStart'
-    draw_val_arr[5] = '['+ps+']polyprm.yStart'
-    draw_val_arr[6] = '['+ps+']polyprm.polyAngle'
-    draw_val_arr[7] = '['+ps+']padprm.no_of_pads'
-    draw_val_arr[8] = '['+ps+']padprm.separation'
-    draw_val_arr[9] = ''
+    draw_val_arr[1] = '['+ps+']padprm.inDegrees'
+    draw_val_arr[2] = '['+ps+']padprm.width'
+    draw_val_arr[3] = '['+ps+']padprm.length'
+    draw_val_arr[4] = '['+ps+']polyprm.height'
+    draw_val_arr[5] = '['+ps+']polyprm.xStart'
+    draw_val_arr[6] = '['+ps+']polyprm.yStart'
+    draw_val_arr[7] = '['+ps+']polyprm.polyAngle'
+    draw_val_arr[8] = '['+ps+']padprm.no_of_pads'
+    draw_val_arr[9] = '['+ps+']padprm.separation'
+    draw_val_arr[10] = ''
   END frm_padList
 
 ROUTINE init_padList
@@ -109,15 +110,16 @@ ROUTINE init_padList
 ROUTINE frm_hexList
   BEGIN
     --pad parameters
-    draw_val_arr[1] = '['+ps+']hexprm.radius'
-    draw_val_arr[2] = '['+ps+']hexprm.points'
-    draw_val_arr[3] = '['+ps+']polyprm.height'
-    draw_val_arr[4] = '['+ps+']polyprm.xStart'
-    draw_val_arr[5] = '['+ps+']polyprm.yStart'
-    draw_val_arr[6] = '['+ps+']polyprm.polyRotation'
-    draw_val_arr[7] = '['+ps+']polyprm.polyAngle'
-    draw_val_arr[8] = ''
+    draw_val_arr[1] = '['+ps+']polyprm.inDegrees'
+    draw_val_arr[2] = '['+ps+']hexprm.radius'
+    draw_val_arr[3] = '['+ps+']hexprm.points'
+    draw_val_arr[4] = '['+ps+']polyprm.height'
+    draw_val_arr[5] = '['+ps+']polyprm.xStart'
+    draw_val_arr[6] = '['+ps+']polyprm.yStart'
+    draw_val_arr[7] = '['+ps+']polyprm.polyRotation'
+    draw_val_arr[8] = '['+ps+']polyprm.polyAngle'
     draw_val_arr[9] = ''
+    draw_val_arr[10] = ''
   END frm_hexList
 
 ROUTINE init_hexList
@@ -130,16 +132,47 @@ ROUTINE init_hexList
 ROUTINE frm_cusList
   BEGIN
     --pad parameters
-    draw_val_arr[1] = '['+ps+']filename'
-    draw_val_arr[2] = '['+ps+']polyprm.height'
-    draw_val_arr[3] = '['+ps+']polyprm.xStart'
-    draw_val_arr[4] = '['+ps+']polyprm.yStart'
-    draw_val_arr[5] = '['+ps+']polyprm.polyRotation'
-    draw_val_arr[6] = '['+ps+']polyprm.polyAngle'
-    draw_val_arr[7] = ''
+    draw_val_arr[1] = '['+ps+']polyprm.inDegrees'
+    draw_val_arr[2] = '['+ps+']filename'
+    draw_val_arr[3] = '['+ps+']polyprm.height'
+    draw_val_arr[4] = '['+ps+']polyprm.xStart'
+    draw_val_arr[5] = '['+ps+']polyprm.yStart'
+    draw_val_arr[6] = '['+ps+']polyprm.polyRotation'
+    draw_val_arr[7] = '['+ps+']polyprm.polyAngle'
     draw_val_arr[8] = ''
     draw_val_arr[9] = ''
+    draw_val_arr[10] = ''
   END frm_cusList
+
+ROUTINE cnvrt_to_mm
+  BEGIN
+
+    IF padprm.inDegrees THEN
+      padprm.width = padprm.width*polyprm.height*M_PI/180
+      padprm.separation = padprm.separation*polyprm.height*M_PI/180
+
+      --make true so that start degree is calculated in mm
+      polyprm.inDegrees = TRUE
+
+      --deselect, as the vaues are now saved as mm
+      padprm.inDegrees = FALSE
+    ENDIF
+
+    IF polyprm.inDegrees THEN
+      polyprm.xStart = polyprm.xStart*polyprm.height*M_PI/180
+      
+      --deselect, as the vaues are now saved as mm
+      polyprm.inDegrees = FALSE
+    ENDIF
+
+    IF motnprm.inDegrees THEN
+      motnprm.tool_step = motnprm.tool_step*polyprm.height*M_PI/180
+      motnprm.link_step = motnprm.link_step*polyprm.height*M_PI/180
+
+      --deselect, as the vaues are now saved as mm
+      motnprm.inDegrees = FALSE
+    ENDIF
+  END cnvrt_to_mm
 `
 
 %define make_work_indicies(ps) `ROUTINE frm_wrkList

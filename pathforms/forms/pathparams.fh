@@ -46,9 +46,9 @@ $-,enum_corners
 $-
 "Right Bottom"  *
 $-
-"Left Top"  *
-$-
 "Right Top"  *
+$-
+"Left Top"  *
 $-
 "\a"  * eol
 `
