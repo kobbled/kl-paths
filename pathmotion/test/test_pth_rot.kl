@@ -8,7 +8,7 @@ PROGRAM test_pth_rot
 %define TOOLING_SPEED 50
 %define LINKING_SPEED 100
 
-%defeval OD_CORNER RIGHT_BOTTOM
+%defeval OD_CORNER LEFT_TOP
 %defeval ID_CORNER LEFT_BOTTOM
 
 %ifdef DEBUG_BUILD
@@ -171,7 +171,7 @@ ROUTINE t_rot_delta
     tstrmn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    tstrot__planPath(lines, contours, LEFT_TOP, ONEWAY, FALSE)
+    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
 
     -- approach path
     tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
@@ -235,7 +235,7 @@ ROUTINE t_rot_OD
     pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
 
     --draw pads
-    tstpoly__init(POS((0*PAD_RADIUS*M_PI/180),0,PAD_LENGTH,0,180,0,(ZEROPOS(1).config_data)), TRUE)
+    tstpoly__init(POS(0,0,PAD_LENGTH,0,180,0,(ZEROPOS(1).config_data)), TRUE)
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
 
     --get raster lines
@@ -263,7 +263,7 @@ ROUTINE t_rot_OD
     tstrmn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    tstrot__planPath(lines, contours, LEFT_TOP, ONEWAY, FALSE)
+    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
 
     -- approach path
     tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,PAD_START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
@@ -416,7 +416,7 @@ ROUTINE t_rot_pad
     pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
 
     --draw pads
-    tstpoly__init(POS((0*PAD_RADIUS*M_PI/180),0,PAD_LENGTH,0,180,0,(ZEROPOS(1).config_data)), TRUE)
+    tstpoly__init(POS(0,0,PAD_LENGTH,0,180,0,(ZEROPOS(1).config_data)), TRUE)
     tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
 
     --get raster lines
@@ -444,7 +444,7 @@ ROUTINE t_rot_pad
     tstrmn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    tstrot__planPath(lines, contours, LEFT_TOP, ONEWAY, FALSE)
+    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
 
     -- approach path
     tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,PAD_START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))

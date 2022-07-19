@@ -44,7 +44,7 @@
 %define SCAN_LINE_PROG 'MOV_SCN_ROT'
 
 --planning corner start
-%defeval OD_CORNER RIGHT_BOTTOM
+%defeval OD_CORNER LEFT_TOP
 %defeval ID_CORNER LEFT_BOTTOM
 
 --dynamic userframe variables

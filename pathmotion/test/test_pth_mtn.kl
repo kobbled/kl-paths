@@ -23,7 +23,7 @@ PROGRAM test_pth_mtn
 
 VAR
 --pathplan parameters
-%defeval OD_CORNER RIGHT_BOTTOM
+%defeval OD_CORNER LEFT_TOP
 %defeval ID_CORNER LEFT_BOTTOM
 %defeval PLATE_CORNER RIGHT_BOTTOM
 --robot config parameters
@@ -316,7 +316,7 @@ ROUTINE t_pvert_OD
     tstmtn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    tstpth__planPath(lines, contours, LEFT_TOP, ONEWAY, FALSE)
+    tstpth__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
     --pause
 
     -- approach path
@@ -392,7 +392,7 @@ ROUTINE t_pvert_pad
     tstmtn__init(tool, TRUE, MOVE_DRYRUN)
 
     --generate path
-    tstpth__planPath(lines, contours, LEFT_TOP, ONEWAY, FALSE)
+    tstpth__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
     --pause
 
     -- approach path

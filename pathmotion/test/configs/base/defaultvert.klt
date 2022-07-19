@@ -40,7 +40,7 @@
 %define SCAN_LINE_PROG 'MOV_SCN'
 
 --planning corner start
-%defeval OD_CORNER RIGHT_BOTTOM
+%defeval OD_CORNER LEFT_TOP
 %defeval ID_CORNER LEFT_BOTTOM
 
 --path implementation
@@ -49,7 +49,7 @@
 --pathplan
 ------------------
 %defeval PATH_PLAN_NAME tstpln
-%define PATHPLAN_CONFIG_FILENAME vecpathplan.klt
+%define PATHPLAN_CONFIG_FILENAME stationaryPlan.klt
 
 --pathclass object
 ------------------

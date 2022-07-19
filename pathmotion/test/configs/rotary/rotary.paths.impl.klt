@@ -260,7 +260,9 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
     lpos = `PATH_OBJECT_NAME`__get_end_node
     --get into degress from 0-360
     lpos.x = lpos.x/origin.z*180/M_PI
+%ifdef DEBUG_BUILD
     WRITE TPDISPLAY('deg: ', lpos.x::6::2, CR)
+%endif
     lpos.x = lpos.x*origin.z*M_PI/180
 
     vpos1 = VEC(lpos.x, lpos.y, lpos.z)
