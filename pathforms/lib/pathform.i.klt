@@ -34,12 +34,15 @@
     --motion params
     path_val_arr[23] = '['+ps+']motionTree'
     --
-    path_val_arr[24] = '['+ps+']toolprm.retractDist'
-    path_val_arr[25] = '['+ps+']motnprm.tool_speed'
-    path_val_arr[26] = '['+ps+']motnprm.link_speed'
-    path_val_arr[27] = '['+ps+']motnprm.tool_step'
-    path_val_arr[28] = '['+ps+']motnprm.link_step'
-    path_val_arr[29] = '['+ps+']motnprm.use_arc'
+    path_val_arr[24] = '['+ps+']motnprm.inDegrees'
+    path_val_arr[25] = '['+ps+']toolprm.retractDist.x'
+    path_val_arr[26] = '['+ps+']toolprm.retractDist.y'
+    path_val_arr[27] = '['+ps+']toolprm.retractDist.z'
+    path_val_arr[28] = '['+ps+']motnprm.tool_speed'
+    path_val_arr[29] = '['+ps+']motnprm.link_speed'
+    path_val_arr[30] = '['+ps+']motnprm.tool_step'
+    path_val_arr[31] = '['+ps+']motnprm.link_step'
+    path_val_arr[32] = '['+ps+']motnprm.use_arc'
   END frm_pthList
 
 ROUTINE init_pthList
@@ -55,7 +58,7 @@ ROUTINE init_pthList
     IF UNINIT(toolprm.coordSys) THEN toolprm.coordSys = PTH_CYLINDER; ENDIF
     IF UNINIT(idod_) THEN idod_ = 1; ENDIF
     IF UNINIT(toolprm.pitch) THEN toolprm.pitch = 0; ENDIF
-    IF UNINIT(toolprm.retractDist) THEN toolprm.retractDist = 5; ENDIF
+    IF UNINIT(toolprm.retractDist.z) THEN toolprm.retractDist.x = 0; toolprm.retractDist.y = 100; toolprm.retractDist.z = 30; ENDIF
     --raster params
     IF UNINIT(rasterTree) THEN rasterTree = TRUE ; ENDIF
     IF UNINIT(rastprm.rastType) THEN rastprm.rastType = 1; ENDIF

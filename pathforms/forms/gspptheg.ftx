@@ -21,7 +21,7 @@ $-,ppth
   " Tool Pitch:   " "-%6.2f" &new_line
   "-%t" &bold " Tool Orientation" &standard &new_line
   " Use Default:  " "-%6B(bool_fkey)" &new_line
-  " WPR:     " "-%6.2f" "-%6.2f" "-%6.2f" &new_line
+  " WPR:     " "-%7.2f" "-%7.2f" "-%7.2f" &new_line
   "-%t" &bold " Raster Parameters" &standard &new_line
   " Raster Type:          " "-%8n(enum_rast)" &new_line
   " Constrain to Polygon?:" "-%6B(bool_fkey)" &new_line
@@ -33,7 +33,8 @@ $-,ppth
   " Countour Lines:       " "-%3d" &new_line
   " Start Corner:    " "-%12w(enum_corners)" &new_line
   "-%t" &bold " Motion Parameters" &standard &new_line
-  " Retract Distance:   " "-%6.2f" &new_line
+  " In Degrees :  " "-%6B(bool_fkey)" &new_line
+  " Retract Vec:  " "-%7.2f" "-%7.2f" "-%7.2f" &new_line
   " Tooling Speed:      " "-%6.2f" &new_line
   " Linking Speed:      " "-%6.2f" &new_line
   " Tool Step Inc:      " "-%5d" &new_line
