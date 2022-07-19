@@ -1,0 +1,32 @@
+*     Dictionary Form File : gsstateg
+*
+
+#include fkeys.fh
+#include pathparams.fh
+
+* include template.fh file including the form template information
+#include pathform.template.fh
+
+.kl stat
+.form
+$-,stat
+  &home &reverse "Station" &standard &new_line
+  &new_line
+  "-%t" &bold " Station Parameters" &standard &new_line
+  " Station:      " "-%16v(enum_station)" &new_line
+  " Execution:    " "-%8n(enum_mtn)" &new_line
+  " Shape:        " "-%10w(enum_shapes)" &new_line
+  " Coord System: " "-%8n(enum_coord)" &new_line
+  " OD/ID:        " "-%8n(enum_idod)" &new_line
+  ^stat_fkey
+.endform
+$-,stat_fkey     *function key labels
+    "  EXIT" &new_line
+    "  RUN" &new_line
+
+$-,enum_station
+    "FORM_NAME" &new_line * program name of variable
+    "station_name" &new_line * variable name containing choices
+* pathparams
+#eval define_form_shapes
+#eval define_tool_params

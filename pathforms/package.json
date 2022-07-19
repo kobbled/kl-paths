@@ -6,6 +6,7 @@
   "license" : "MIT",
   "author" : "kobbled",
   "forms" : [
+    "forms/gsstateg.ftx",
     "forms/gspptheg.ftx",
     "forms/gsppadeg.ftx",
     "forms/gsphexeg.ftx",

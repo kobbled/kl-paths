@@ -5,6 +5,8 @@ PROGRAM class_name
 %include klevkeys.kl
 
 --user forms for defining main parameters
+%define stat_file 'gsstateg'
+%define stat_str 'STAT'
 %define path_file 'gspptheg'
 %define path_str 'PPTH'
 
@@ -55,7 +57,8 @@ pathdraw_friends(PATHDRAW_NAME)
 %define BASE_CLASSNAME class_name
 
 VAR
-  path_val_arr : ARRAY[34] OF STRING[30]
+  stat_val_arr : ARRAY[8] OF STRING[30]
+  path_val_arr : ARRAY[28] OF STRING[30]
   draw_val_arr : ARRAY[12] OF STRING[30]
   work_val_arr : ARRAY[8] OF STRING[30]
 
@@ -130,6 +133,7 @@ define_scan_object(SCANNING_OBJECT_NAME,SCANNING_CNFG)
 %defeval class_name BASE_CLASSNAME
 
 -- ** define form arrays
+make_stat_indicies('class_name')
 make_path_indicies('class_name')
 make_pad_indicies('class_name')
 make_work_indicies('LAM_NAME')
@@ -140,6 +144,10 @@ BEGIN
 
   --uninitialize select button
   term_char = 0
+
+  --station parameters
+  frm_statList
+  init_statLst
 
   --path parameters
   frm_pthList
@@ -168,14 +176,12 @@ BEGIN
 %endif
 
 
+-- *** SHOW STATION FORM ***
+--load forms
+b = forms__load(stat_file, stat_str)
 
-  --conversions
-  IF (idod_ = 2) THEN
-    toolprm.idod = -1
-  ENDIF
-  IF (idod_ = 1) THEN
-    toolprm.idod = 1
-  ENDIF
+--show form
+forms__show(stat_str, stat_val_arr)
 
   -- station settings
   IF (term_char = ky_f2) THEN
@@ -302,8 +308,14 @@ BEGIN
         usrdis__delete
 %endif
 
+      ELSE
+        WRITE TPDISPLAY(CR, 'Must hit RUN on form to continue')
+        WRITE TPDISPLAY(CR, 'Shift should not be held down.')
+        display__show
+        ABORT
+      ENDIF
     ELSE
-      WRITE TPDISPLAY(CR, 'Must hit RUN on form to continue')
+      WRITE TPDISPLAY(CR, 'Must hit NEXT on form to continue.')
       WRITE TPDISPLAY(CR, 'Shift should not be held down.')
       display__show
       ABORT

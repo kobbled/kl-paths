@@ -12,15 +12,9 @@
 $-,ppth
   &home &reverse "Raster a Shape" &standard &new_line
   &new_line
-  "-%t" &bold " Station Parameters" &standard &new_line
-  " Station:      " "-%16v(enum_station)" &new_line
-  " Execution:    " "-%8n(enum_mtn)" &new_line
-  " Shape:        " "-%10w(enum_shapes)" &new_line
-  " Coord System: " "-%8n(enum_coord)" &new_line
-  " OD/ID:        " "-%8n(enum_idod)" &new_line
-  " Tool Pitch:   " "-%6.2f" &new_line
   "-%t" &bold " Tool Orientation" &standard &new_line
   " Use Default:  " "-%6B(bool_fkey)" &new_line
+  " Tool Pitch:   " "-%6.2f" &new_line
   " WPR:     " "-%7.2f" "-%7.2f" "-%7.2f" &new_line
   "-%t" &bold " Raster Parameters" &standard &new_line
   " Raster Type:          " "-%8n(enum_rast)" &new_line
