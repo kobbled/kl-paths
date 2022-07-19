@@ -64,20 +64,24 @@ ROUTINE init_pthList
     IF UNINIT(rastprm.rastType) THEN rastprm.rastType = 1; ENDIF
     IF UNINIT(rastprm.constrain) THEN rastprm.constrain = FALSE; ENDIF
     IF UNINIT(rastprm.onBoundary) THEN rastprm.onBoundary = TRUE; ENDIF
-    IF UNINIT(startCorner) THEN startCorner = 1; ENDIF
-    IF UNINIT(rastprm.overlap) THEN rastprm.overlap = 3.5; ENDIF
+    IF UNINIT(startCorner) THEN startCorner = LEFT_TOP; ENDIF
+    IF UNINIT(rastprm.overlap) THEN rastprm.overlap = 10; ENDIF
     IF UNINIT(rastprm.dir) THEN rastprm.dir = 1; ENDIF
     IF UNINIT(rastprm.line_width) THEN rastprm.line_width = 0; ENDIF
     IF UNINIT(rastprm.angle) THEN rastprm.angle = 0; ENDIF
     IF UNINIT(rastprm.contours) THEN rastprm.contours = 0; ENDIF
     --motion params
     IF UNINIT(motionTree) THEN motionTree = TRUE ; ENDIF
-    IF UNINIT(motnprm.tool_speed) THEN motnprm.tool_speed = 12; ENDIF
-    IF UNINIT(motnprm.link_speed) THEN motnprm.link_speed = 40; ENDIF
+    IF UNINIT(motnprm.inDegrees) THEN motnprm.inDegrees = TRUE ; ENDIF
+    IF UNINIT(motnprm.tool_speed) THEN motnprm.tool_speed = 100; ENDIF
+    IF UNINIT(motnprm.link_speed) THEN motnprm.link_speed = 130; ENDIF
     IF UNINIT(motnprm.tool_step) THEN motnprm.tool_step = 45; ENDIF
     IF UNINIT(motnprm.link_step) THEN motnprm.link_step = 45; ENDIF
     IF UNINIT(motnprm.use_arc) THEN motnprm.use_arc = TRUE; ENDIF
 
+    IF UNINIT(polyprm.inDegrees) THEN polyprm.inDegrees = TRUE ; ENDIF
+    IF UNINIT(polyprm.xStart) THEN polyprm.xStart = 0 ; ENDIF
+    IF UNINIT(polyprm.yStart) THEN polyprm.yStart = 0 ; ENDIF
     IF UNINIT(polyprm.polyRotation) THEN polyprm.polyRotation = 0 ; ENDIF
     IF UNINIT(polyprm.polyAngle) THEN polyprm.polyAngle = 0 ; ENDIF
   END init_pthList
@@ -101,10 +105,9 @@ ROUTINE init_pthList
 ROUTINE init_padList
   BEGIN
     --pad params
+    IF UNINIT(padprm.inDegrees) THEN padprm.inDegrees = TRUE ; ENDIF
     IF UNINIT(padprm.no_of_pads) THEN padprm.no_of_pads = 1 ; ENDIF
     IF UNINIT(padprm.separation) THEN padprm.separation = 0 ; ENDIF
-    IF UNINIT(padprm.width) THEN padprm.width = 0 ; ENDIF
-    IF UNINIT(padprm.length) THEN padprm.length = 0 ; ENDIF
   END init_padList
 
 ROUTINE frm_hexList
