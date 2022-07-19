@@ -226,7 +226,7 @@ ROUTINE release_groups
 ROUTINE move
   BEGIN
     --approach path
-    approachPath((motnprm.tool_speed), (motnprm.tool_step), (toolprm.coordSys), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS(0,100,(toolprm.retractDist),0,0,0, (ZEROPOS(1).config_data)))
+    approachPath((motnprm.link_speed), (motnprm.link_step), (toolprm.coordSys), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS((toolprm.retractDist.x),(toolprm.retractDist.y),-1*(toolprm.retractDist.z),0,0,0, (ZEROPOS(1).config_data)))
 
     --move though path
     IF (motnprm.use_arc) THEN
@@ -244,7 +244,7 @@ ROUTINE move
     ENDIF
 
     --retract path
-    retractPath((motnprm.tool_speed), (motnprm.tool_step), (toolprm.coordSys), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS(0,100,(toolprm.retractDist),0,0,0, (ZEROPOS(1).config_data)))
+    retractPath((motnprm.link_speed), (motnprm.link_step), (toolprm.coordSys), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS((toolprm.retractDist.x),(toolprm.retractDist.y),-1*(toolprm.retractDist.z),0,0,0, (ZEROPOS(1).config_data)))
 
   END move
 

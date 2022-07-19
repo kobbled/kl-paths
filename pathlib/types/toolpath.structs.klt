@@ -17,7 +17,7 @@ TYPE
   ENDSTRUCTURE
 
   t_TOOL_VARS FROM t_paths = STRUCTURE
-    retractDist : REAL
+    retractDist : t_TOOL_VEC
     pitch : REAL
     idod : INTEGER
     coordSys : INTEGER
