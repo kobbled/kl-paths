@@ -8,6 +8,7 @@ TYPE
     height : REAL
     polyAngle : REAL
     polyRotation : REAL
+    inDegrees : BOOLEAN
   ENDSTRUCTURE
 
   t_TOOL_VEC FROM t_paths = STRUCTURE
@@ -42,6 +43,7 @@ TYPE
     tool_step : REAL
     link_step : REAL
     use_arc   : BOOLEAN
+    inDegrees : BOOLEAN
   ENDSTRUCTURE
 
   t_PAD_VARS FROM t_paths = STRUCTURE
@@ -49,6 +51,7 @@ TYPE
     length : REAL
     separation : REAL
     no_of_pads : INTEGER
+    inDegrees : BOOLEAN
   ENDSTRUCTURE
 
   t_HEX_VARS FROM t_paths = STRUCTURE
