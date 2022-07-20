@@ -19,10 +19,11 @@ TYPE
 
   t_TOOL_VARS FROM t_paths = STRUCTURE
     retractDist : t_TOOL_VEC
+    orient : t_TOOL_VEC
     pitch : REAL
+    pitchLead : REAL
     idod : INTEGER
     coordSys : INTEGER
-    orient : t_TOOL_VEC
   ENDSTRUCTURE
 
   t_PATH_RAST FROM t_paths = STRUCTURE

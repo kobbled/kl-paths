@@ -30,34 +30,35 @@ ROUTINE init_statLst
     path_val_arr[1] = '['+ps+']toolTree'
     --
     path_val_arr[2] = '['+ps+']default_wpr'
-    path_val_arr[3] = '['+ps+']toolprm.pitch'
-    path_val_arr[4] = '['+ps+']toolprm.orient.x'
-    path_val_arr[5] = '['+ps+']toolprm.orient.y'
-    path_val_arr[6] = '['+ps+']toolprm.orient.z'
+    path_val_arr[3] = '['+ps+']toolprm.orient.x'
+    path_val_arr[4] = '['+ps+']toolprm.orient.y'
+    path_val_arr[5] = '['+ps+']toolprm.orient.z'
+    path_val_arr[6] = '['+ps+']toolprm.pitch'
+    path_val_arr[7] = '['+ps+']toolprm.pitchLead'
     --raster info
-    path_val_arr[7] = '['+ps+']rasterTree'
+    path_val_arr[8] = '['+ps+']rasterTree'
     --
-    path_val_arr[8] = '['+ps+']rastprm.rastType'
-    path_val_arr[9] = '['+ps+']rastprm.constrain'
-    path_val_arr[10] = '['+ps+']rastprm.onBoundary'
-    path_val_arr[11] = '['+ps+']rastprm.angle'
-    path_val_arr[12] = '['+ps+']rastprm.overlap'
-    path_val_arr[13] = '['+ps+']rastprm.dir'
-    path_val_arr[14] = '['+ps+']rastprm.line_width'
-    path_val_arr[15] = '['+ps+']rastprm.contours'
-    path_val_arr[16] = '['+ps+']startCorner'
+    path_val_arr[9] = '['+ps+']rastprm.rastType'
+    path_val_arr[10] = '['+ps+']rastprm.constrain'
+    path_val_arr[11] = '['+ps+']rastprm.onBoundary'
+    path_val_arr[12] = '['+ps+']rastprm.angle'
+    path_val_arr[13] = '['+ps+']rastprm.overlap'
+    path_val_arr[14] = '['+ps+']rastprm.dir'
+    path_val_arr[15] = '['+ps+']rastprm.line_width'
+    path_val_arr[16] = '['+ps+']rastprm.contours'
+    path_val_arr[17] = '['+ps+']startCorner'
     --motion params
-    path_val_arr[17] = '['+ps+']motionTree'
+    path_val_arr[18] = '['+ps+']motionTree'
     --
-    path_val_arr[18] = '['+ps+']motnprm.inDegrees'
-    path_val_arr[19] = '['+ps+']toolprm.retractDist.x'
-    path_val_arr[20] = '['+ps+']toolprm.retractDist.y'
-    path_val_arr[21] = '['+ps+']toolprm.retractDist.z'
-    path_val_arr[22] = '['+ps+']motnprm.tool_speed'
-    path_val_arr[23] = '['+ps+']motnprm.link_speed'
-    path_val_arr[24] = '['+ps+']motnprm.tool_step'
-    path_val_arr[25] = '['+ps+']motnprm.link_step'
-    path_val_arr[26] = '['+ps+']motnprm.use_arc'
+    path_val_arr[19] = '['+ps+']motnprm.inDegrees'
+    path_val_arr[20] = '['+ps+']toolprm.retractDist.x'
+    path_val_arr[21] = '['+ps+']toolprm.retractDist.y'
+    path_val_arr[22] = '['+ps+']toolprm.retractDist.z'
+    path_val_arr[23] = '['+ps+']motnprm.tool_speed'
+    path_val_arr[24] = '['+ps+']motnprm.link_speed'
+    path_val_arr[25] = '['+ps+']motnprm.tool_step'
+    path_val_arr[26] = '['+ps+']motnprm.link_step'
+    path_val_arr[27] = '['+ps+']motnprm.use_arc'
   END frm_pthList
 
 ROUTINE init_pthList
@@ -67,6 +68,7 @@ ROUTINE init_pthList
     IF UNINIT(default_wpr) THEN default_wpr = TRUE ; ENDIF
     IF UNINIT(toolprm.orient.x) THEN toolprm.orient.x = 0 ; toolprm.orient.y = 0 ; toolprm.orient.z = 0 ;  ENDIF
     IF UNINIT(toolprm.pitch) THEN toolprm.pitch = 0; ENDIF
+    IF UNINIT(toolprm.pitchLead) THEN toolprm.pitchLead = 0; ENDIF
     IF UNINIT(toolprm.retractDist.z) THEN toolprm.retractDist.x = 0; toolprm.retractDist.y = 100; toolprm.retractDist.z = 30; ENDIF
     --raster params
     IF UNINIT(rasterTree) THEN rasterTree = TRUE ; ENDIF
