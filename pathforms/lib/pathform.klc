@@ -108,7 +108,9 @@ VAR
 %endif
 
 --initialize form blocks
-%include pathform.blocks.klt
+--..danger:: `pathform.blocks.klt` does not work with %ifdef statements
+--            something to do with whitespace. and unsatified if blocks
+--include pathform.blocks.klt
 --form include routines
 %include pathform.i.klt
 
@@ -121,7 +123,22 @@ path_draw_define(PATHDRAW_NAME,FORM_CONFIG_FILENAME)
 lam_define(LAM_NAME,LAM_CNFG)
 
 --motion object initialize
-declare_stations
+%ifdef STATION1_CNFG
+path_make_define(STATION1_PATH,STATION1_CNFG)
+path_motion_define(STATION1_MOTION,STATION1_CNFG)
+%endif
+%ifdef STATION2_CNFG
+path_make_define(STATION2_PATH,STATION2_CNFG)
+path_motion_define(STATION2_MOTION,STATION2_CNFG)
+%endif
+%ifdef STATION3_CNFG
+path_make_define(STATION3_PATH,STATION3_CNFG)
+path_motion_define(STATION3_MOTION,STATION3_CNFG)
+%endif
+%ifdef STATION4_CNFG
+path_make_define(STATION4_PATH,STATION4_CNFG)
+path_motion_define(STATION4_MOTION,STATION4_CNFG)
+%endif
 ---
 
 %ifeq ENABLE_SCANNING TRUE
@@ -196,7 +213,24 @@ forms__show(stat_str, stat_val_arr)
 
     --select default for start corner
     --based on if ID or OD is selected
-    default_start_corner(toolprm.idod)
+    SELECT station OF
+      CASE(1):
+        startCorner = `STATION1_PATH`__get_corner(toolprm.idod)  
+%ifdef STATION2_CNFG
+      CASE(2):
+        startCorner = `STATION2_PATH`__get_corner(toolprm.idod)  
+%endif
+%ifdef STATION3_CNFG
+      CASE(3):
+        startCorner = `STATION3_PATH`__get_corner(toolprm.idod)  
+%endif
+%ifdef STATION4_CNFG
+      CASE(4):
+        startCorner = `STATION4_PATH`__get_corner(toolprm.idod)  
+%endif
+      ELSE:
+        ABORT
+    ENDSELECT
 
     -- *** SHOW PATH FORM ***
     --load forms
@@ -222,7 +256,23 @@ forms__show(stat_str, stat_val_arr)
 
       -- *** SHOW PAD, HEX, OR CUSTOM FORM ***
       --show next form
-      load_shape_form
+      SELECT shapeType OF
+        CASE(SHP_PAD):
+          frm_padList
+          b = forms__load(pad_file, pad_str)
+          forms__show(pad_str, draw_val_arr)
+        CASE(SHP_HEX):
+          frm_hexList
+          b = forms__load(hex_file, hex_str)
+          forms__show(hex_str, draw_val_arr)
+        CASE(SHP_CUST):
+          frm_cusList
+          b = forms__load(cus_file, cus_str)
+          forms__show(cus_str, draw_val_arr)
+        ELSE:
+          WRITE TPDISPLAY(CR, 'Shape type not selected properly')
+          display__show
+      ENDSELECT
   
       IF (term_char = ky_f2) THEN
 
@@ -275,13 +325,95 @@ forms__show(stat_str, stat_val_arr)
         ENDSELECT
 
         -- ** intialize objects **
-        initialize_stations
+        SELECT station OF
+          CASE(1):
+            --initialize pathclass
+              -- coord frm, coordinate system, part origin, idod
+            `STATION1_PATH`__init(frm, cds, origin, toolprm.idod)
+            --intialize motion friend class
+              --tool offset, interpolate flag, program type
+            `STATION1_MOTION`__init2(toolprm, TRUE, program_type)
+%ifdef STATION2_CNFG
+          CASE(2):
+            `STATION2_PATH`__init(frm, cds, origin, toolprm.idod)
+            `STATION2_MOTION`__init2(toolprm, TRUE, program_type)
+%endif
+%ifdef STATION3_CNFG
+          CASE(3):
+            `STATION3_PATH`__init(frm, cds, origin, toolprm.idod)
+            `STATION3_MOTION`__init2(toolprm, TRUE, program_type)
+%endif
+%ifdef STATION4_CNFG
+          CASE(4):
+            `STATION4_PATH`__init(frm, cds, origin, toolprm.idod)
+            `STATION4_MOTION`__init2(toolprm, TRUE, program_type)
+%endif
+          ELSE:
+            WRITE TPDISPLAY(CR, 'Workstation not selected properly')
+            display__show
+            ABORT
+        ENDSELECT
         
         -- ** draw shape, raster, and pathplan  **
-        draw_shape_form
+        SELECT shapeType OF
+          CASE(SHP_PAD):
+            --set canvas origin/perspective
+            `PATHDRAW_NAME`__set_origin(toolprm.idod, (cds.system), 0, (polyprm.polyRotation))
+            `PATHDRAW_NAME`__drawPad(padprm, polyprm, rastprm)
+            `PATHDRAW_NAME`__raster(rastprm)
+          CASE(SHP_HEX):
+            --set canvas origin/perspective. polyRotation is handled in polygon__hexagon.
+            `PATHDRAW_NAME`__set_origin(toolprm.idod, (cds.system), 0, 0)
+            `PATHDRAW_NAME`__drawHex(hexprm, polyprm, rastprm)
+            `PATHDRAW_NAME`__raster(rastprm)
+          CASE(SHP_CUST):
+            `PATHDRAW_NAME`__set_origin(toolprm.idod, (cds.system), 0, (polyprm.polyRotation))
+            `PATHDRAW_NAME`__drawCustom(filename, polyprm, rastprm)
+            `PATHDRAW_NAME`__raster(rastprm)
+          ELSE:
+            WRITE TPDISPLAY(CR, 'Shape type not selected properly')
+            display__show
+        ENDSELECT
 
         -- ** move through raster **
-        station_move
+        SELECT station OF
+          CASE(1):
+            --pathplan
+            `STATION1_MOTION`__createPath(lines, contours, rastprm)
+            --run path
+            `STATION1_MOTION`__aquire_groups
+            `STATION1_MOTION`__move(toolprm, motnprm)
+            `STATION1_MOTION`__release_groups
+%ifdef STATION2_CNFG
+          CASE(2):
+            --pathplan
+            `STATION2_MOTION`__createPath(lines, contours, rastprm)
+            --run path
+            `STATION2_MOTION`__aquire_groups
+            `STATION2_MOTION`__move(toolprm, motnprm)
+            `STATION2_MOTION`__release_groups
+%endif
+%ifdef STATION3_CNFG
+          CASE(3):
+            --pathplan
+            `STATION3_MOTION`__createPath(lines, contours, rastprm)
+            --run path
+            `STATION3_MOTION`__aquire_groups
+            `STATION3_MOTION`__move(toolprm, motnprm)
+            `STATION3_MOTION`__release_groups
+%endif
+%ifdef STATION4_CNFG
+          CASE(4):
+            --pathplan
+            `STATION4_MOTION`__createPath(lines, contours, rastprm)
+            --run path
+            `STATION4_MOTION`__aquire_groups
+            `STATION4_MOTION`__move(toolprm, motnprm)
+            `STATION4_MOTION`__release_groups
+%endif
+          ELSE:
+            ABORT
+        ENDSELECT
 
         -- ** exist sequence **
         SELECT program_type OF
@@ -304,7 +436,28 @@ forms__show(stat_str, stat_val_arr)
         `PATHDRAW_NAME`__delete
 
         --clean up stations
-        delete_stations
+      SELECT station OF
+        CASE(1):
+          `STATION1_PATH`__delete
+          `STATION1_MOTION`__delete
+%ifdef STATION2_CNFG
+        CASE(2):
+          `STATION2_PATH`__delete
+          `STATION2_MOTION`__delete
+%endif
+%ifdef STATION3_CNFG
+        CASE(3):
+          `STATION3_PATH`__delete
+          `STATION3_MOTION`__delete
+%endif
+%ifdef STATION4_CNFG
+        CASE(4):
+          `STATION4_PATH`__delete
+          `STATION4_MOTION`__delete
+%endif
+        ELSE:
+          ABORT
+      ENDSELECT
 
 %ifdef DEBUG_BUILD
         usrdis__write_pipe
