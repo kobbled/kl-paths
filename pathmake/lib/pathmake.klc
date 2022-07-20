@@ -191,6 +191,15 @@ ROUTINE define_origin
     origin_ = POS((polyprm.xStart), (polyprm.yStart), (polyprm.height), (polyprm.polyAngle*toolprm.idod),0,0, pose__set_config(DEFAULT_CONFIG))
   END define_origin
 
+ROUTINE get_orient
+  BEGIN
+    IF idod = -1 THEN
+      RETURN(VEC(TOOL_ORIENT_UP))
+    ELSE
+      RETURN(VEC(TOOL_ORIENT_DOWN))
+    ENDIF
+  END get_orient
+
 ROUTINE get_corner
   BEGIN
     IF idod = -1 THEN

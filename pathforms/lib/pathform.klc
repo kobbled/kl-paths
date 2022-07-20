@@ -247,11 +247,24 @@ forms__show(stat_str, stat_val_arr)
 
       --get default tool orientation if selected
       IF default_wpr THEN
-        IF toolprm.idod = -1 THEN
-          toolprm.orient = paths__vec_to_toolvec(VEC(TOOL_ORIENT_UP))
-        ELSE
-          toolprm.orient = paths__vec_to_toolvec(VEC(TOOL_ORIENT_DOWN))
-        ENDIF
+        SELECT station OF
+          CASE(1):
+            toolprm.orient = paths__vec_to_toolvec(`STATION1_PATH`__get_orient(toolprm.idod))
+%ifdef STATION2_CNFG
+          CASE(2):
+            toolprm.orient = paths__vec_to_toolvec(`STATION2_PATH`__get_orient(toolprm.idod))
+%endif
+%ifdef STATION3_CNFG
+          CASE(3):
+            toolprm.orient = paths__vec_to_toolvec(`STATION3_PATH`__get_orient(toolprm.idod))
+%endif
+%ifdef STATION4_CNFG
+          CASE(4):
+            toolprm.orient = paths__vec_to_toolvec(`STATION4_PATH`__get_orient(toolprm.idod))
+%endif
+          ELSE:
+            ABORT
+        ENDSELECT
       ENDIF 
 
       -- *** SHOW PAD, HEX, OR CUSTOM FORM ***
