@@ -38,9 +38,9 @@ ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE FROM p
 declare_member(parent,make_tool_offset,parent,mktof)
 ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,make_user_offset,parent,mkuof)
-ROUTINE make_user_offset : MOTION_DATA_TYPE
+ROUTINE make_user_offset : MOTION_DATA_TYPE FROM parent
 declare_member(parent,define_tool_offset,parent,dftof)
-ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) FROM class_name
+ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) FROM parent
 declare_member(parent,set_lpos,parent,stlps)
 ROUTINE set_lpos : MOTION_DATA_TYPE FROM parent
 declare_member(parent,tpath2pos,parent,tppse)
