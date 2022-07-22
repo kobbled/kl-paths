@@ -178,9 +178,16 @@ declare_member(parent,poseMul,parent,psmul)
 ROUTINE poseMul(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE
   VAR
     p : MOTION_DATA_TYPE
+    jpos1, jpos2 : JOINTPOS
   BEGIN
     p.pose = nde1.pose:nde2.pose
-    p.rot = nde1.rot
+
+    -- MUST dereference from GROUP first! 
+    jpos1 = (nde1.rot)
+    jpos2 = (nde2.rot)
+    
+    p.rot = pose__add_jpos(jpos1, jpos2)
+
     RETURN(p)
   END poseMul
   
