@@ -240,6 +240,31 @@ ROUTINE move
 
   END move
 
+ROUTINE movePos
+  VAR
+    nde : MOTION_DATA_TYPE
+    tpos : t_TOOLPATH
+  BEGIN
+    --set tool orientation
+    set_posereg(tool_offset, TOOL_OFFSET_REG)
+
+    --set code and type for tp
+    registers__set_int(CODE_REGISTER, PTH_MOVETO)
+    registers__set_int(TYPE_REGISTER, line_typ)
+    registers__set_int(TERM_REGISTER, TERM_FINE)
+
+    --set pose
+    tpos = paths__new_tpath(pos, PTH_MOVETO, line_typ, tangent)
+    nde = tpath2pos(tpos)
+    --multiply in user offset
+    nde = poseMul(nde, frame_offset)
+    --set posreg for TP program
+    set_posereg(nde, POSE_REG)
+    --move to pose
+    CALL_PROG(motion_prog[1], 0)
+
+  END movePos
+
 ROUTINE moveLine
   VAR
     i : INTEGER
