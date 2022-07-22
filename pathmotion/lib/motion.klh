@@ -22,9 +22,7 @@ ROUTINE set_interpolation(interp_ : BOOLEAN) FROM class_name
 declare_member(class_name,set_tool_offset,class_name,sttof)
 ROUTINE set_tool_offset(toolOffst : XYZWPR) FROM class_name
 declare_member(class_name,add_tool_offset,class_name,adtof)
-ROUTINE add_tool_offset(add_offset : XYZWPR) FROM class_name
-declare_member(class_name,define_tool_offset,class_name,dftof)
-ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) FROM class_name
+ROUTINE add_tool_offset(toolOffst : XYZWPR) FROM class_name
 declare_member(class_name,set_program_type,class_name,stpgr)
 ROUTINE set_program_type(typ : INTEGER) FROM class_name
 declare_member(class_name,set_prog_names,class_name,stprg)

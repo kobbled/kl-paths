@@ -42,6 +42,7 @@ pathmake_friends(PATH_OBJECT_NAME)
 
 VAR
   tool_offset : MOTION_DATA_TYPE
+  frame_offset : MOTION_DATA_TYPE
   --index 1 is for linear motion. index 2 is for circular motion.
   motion_prog : ARRAY[2] OF STRING[12]
   --used for setting the motion programs in 'set_prog_names'
@@ -72,6 +73,7 @@ impl_motion_members(MOTION_DATA_FILE)
 ROUTINE new
   BEGIN
     tool_offset = DEFAULT_POSE
+    frame_offset = DEFAULT_POSE
     interpolate = TRUE
     program_type = 1
     set_prog_names(program_type)
@@ -80,6 +82,7 @@ ROUTINE new
 ROUTINE init
   BEGIN
     tool_offset = make_tool_offset(toolOffst)
+    frame_offset = make_user_offset
     interpolate = interp_
     program_type = prog_typ
     set_prog_names(program_type)
@@ -101,6 +104,7 @@ ROUTINE delete
 
     --unitialize offset pose
     tool_offset = DEFAULT_POSE
+    frame_offset = DEFAULT_POSE
     --unitialize boolean
     SET_UNINIT_B('class_name', 'interpolate')
     --uninit motion programs
@@ -125,20 +129,9 @@ ROUTINE add_tool_offset
   VAR
     nde : MOTION_DATA_TYPE
   BEGIN
-    nde = make_tool_offset(add_offset)
+    nde = make_tool_offset(toolOffst)
     tool_offset = poseMul(tool_offset, nde)
   END add_tool_offset
-
-ROUTINE define_tool_offset
-  VAR
-    toolOffst : XYZWPR
-  BEGIN
-    --set tool
-    toolOffst = POS(0, 0, 0,(toolprm.orient.x + toolprm.pitch), toolprm.orient.y, toolprm.orient.z, pose__set_config(DEFAULT_CONFIG))
-    --convert cartesian to robot
-    tool_offset = make_tool_offset(toolOffst)
-
-  END define_tool_offset
 
 ROUTINE set_program_type
   BEGIN
@@ -271,6 +264,9 @@ ROUTINE moveLine
 
       --set pose
       nde = tpath2pos(pth[i])
+      --multiply in user offset
+      nde = poseMul(nde, frame_offset)
+      --set posreg for TP program
       set_posereg(nde, POSE_REG)
       --move to pose
       CALL_PROG(motion_prog[1], 0)
@@ -301,7 +297,11 @@ ROUTINE moveArc
       registers__set_int(TERM_REGISTER, TERM_FINE)
         --set pose
       nde = tpath2pos(pth[1])
+      --multiply tool offset
       nde = poseMul(nde, nde_tool)
+      --multiply in user offset
+      nde = poseMul(nde, frame_offset)
+      --set posreg for TP program
       set_posereg(nde, ARC_REG1)
         --move to pose
       CALL_PROG(motion_prog[2], 0)
@@ -326,18 +326,31 @@ ROUTINE moveArc
       --linear move
         set_posereg(tool_offset, TOOL_OFFSET_REG)
         nde = tpath2pos(pth[i])
+        --multiply in user offset
+        nde = poseMul(nde, frame_offset)
+        --set posreg for TP program
         set_posereg(nde, POSE_REG)
       --move to pose
         CALL_PROG(motion_prog[1], 0)
       ELSE
       --circular move
+
         --set midpoint
         nde = tpath2pos(pth[i])
+        --multiply tool offset
         nde = poseMul(nde, nde_tool)
+        --multiply in user offset
+        nde = poseMul(nde, frame_offset)
+        --set posreg for TP program
         set_posereg(nde, ARC_REG1)
+
         --set endpoint
         nde = tpath2pos(pth[i+1])
+        --multiply tool offset
         nde = poseMul(nde, nde_tool)
+        --multiply in user offset
+        nde = poseMul(nde, frame_offset)
+        --set posreg for TP program
         set_posereg(nde, ARC_REG2)
 
         CALL_PROG(motion_prog[2], 0)
@@ -374,6 +387,9 @@ ROUTINE movePoly
 
         --set pose
         nde = tpath2pos(pth[i])
+        --multiply in user offset
+        nde = poseMul(nde, frame_offset)
+        --set posreg for TP program
         set_posereg(nde, POSE_REG)
         --move to pose
         CALL_PROG(motion_prog[1], 0)
@@ -381,39 +397,6 @@ ROUTINE movePoly
     UNTIL(`PATH_OBJECT_NAME`__is_path_end)
 
   END movePoly
-
-ROUTINE movePolyFull
-  VAR
-    i : INTEGER
-    nde : MOTION_DATA_TYPE
-  BEGIN
-    --set tool orientation
-    set_posereg(tool_offset, TOOL_OFFSET_REG)
-
-    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght, interpolate)
-
-    IF (motion_prog[1] = '') THEN
-      karelError(VAR_UNINIT,'linear motion program in class_name needs to be set', ER_ABORT)
-    ENDIF
-
-    FOR i=1 TO PATH_LEN(pth) DO
-      --set code and type for tp
-      registers__set_int(CODE_REGISTER, (pth[i].code))
-      registers__set_int(TYPE_REGISTER, (pth[i].typ))
-      --set termination for tp
-      SELECT pth[i].code OF
-        CASE(PTH_MOVETO,PTH_CLOSE): registers__set_int(TERM_REGISTER, TERM_FINE) ;
-        ELSE: registers__set_int(TERM_REGISTER, TERM_CONT) ;
-      ENDSELECT
-
-      --set pose
-      nde = tpath2pos(pth[i])
-      set_posereg(nde, POSE_REG)
-      --move to pose
-      CALL_PROG(motion_prog[1], 0)
-    ENDFOR
-
-  END movePolyFull
 
 ROUTINE movePolyArc
   VAR
@@ -441,7 +424,11 @@ ROUTINE movePolyArc
         registers__set_int(TERM_REGISTER, TERM_FINE)
           --set pose
         nde = tpath2pos(pth[1])
+        --multiply tool offset
         nde = poseMul(nde, nde_tool)
+        --multiply in user offset
+        nde = poseMul(nde, frame_offset)
+        --set posreg for TP program
         set_posereg(nde, ARC_REG1)
           --move to pose
         CALL_PROG(motion_prog[2], 0)
@@ -461,6 +448,9 @@ ROUTINE movePolyArc
           registers__set_int(TERM_REGISTER, TERM_FINE)
 
           nde = tpath2pos(pth[i])
+          --multiply in user offset
+          nde = poseMul(nde, frame_offset)
+          --set posreg for TP program
           set_posereg(nde, POSE_REG)
           --move to pose
           CALL_PROG(motion_prog[1], 0)
@@ -478,11 +468,20 @@ ROUTINE movePolyArc
 
           --set midpoint
           nde = tpath2pos(pth[i])
+          --multiply in tool offset
           nde = poseMul(nde, nde_tool)
+          --multiply in user offset
+          nde = poseMul(nde, frame_offset)
+          --set posreg for TP program
           set_posereg(nde, ARC_REG1)
+
           --set endpoint
           nde = tpath2pos(pth[i+1])
+          --multiply in tool offset
           nde = poseMul(nde, nde_tool)
+          --multiply in user offset
+          nde = poseMul(nde, frame_offset)
+          --set posreg for TP program
           set_posereg(nde, ARC_REG2)
 
           CALL_PROG(motion_prog[2], 0)
@@ -494,6 +493,44 @@ ROUTINE movePolyArc
     UNTIL(`PATH_OBJECT_NAME`__is_path_end)
 
   END movePolyArc
+
+-- ..danger:: ISSUE WITH MOVEFULL PATH FUNCTIONS. DO NOT USE BELOW!!! 
+
+ROUTINE movePolyFull
+  VAR
+    i : INTEGER
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    --set tool orientation
+    set_posereg(tool_offset, TOOL_OFFSET_REG)
+
+    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght, interpolate)
+
+    IF (motion_prog[1] = '') THEN
+      karelError(VAR_UNINIT,'linear motion program in class_name needs to be set', ER_ABORT)
+    ENDIF
+
+    FOR i=1 TO PATH_LEN(pth) DO
+      --set code and type for tp
+      registers__set_int(CODE_REGISTER, (pth[i].code))
+      registers__set_int(TYPE_REGISTER, (pth[i].typ))
+      --set termination for tp
+      SELECT pth[i].code OF
+        CASE(PTH_MOVETO,PTH_CLOSE): registers__set_int(TERM_REGISTER, TERM_FINE) ;
+        ELSE: registers__set_int(TERM_REGISTER, TERM_CONT) ;
+      ENDSELECT
+
+      --set pose
+      nde = tpath2pos(pth[i])
+      --multiply in user offset
+      nde = poseMul(nde, frame_offset)
+      --set posreg for TP program
+      set_posereg(nde, POSE_REG)
+      --move to pose
+      CALL_PROG(motion_prog[1], 0)
+    ENDFOR
+
+  END movePolyFull
 
 ROUTINE movePolyArcFull
   VAR
@@ -527,7 +564,11 @@ ROUTINE movePolyArcFull
         registers__set_int(TERM_REGISTER, TERM_FINE)
           --set pose
         nde = tpath2pos(pth[i])
+        --multiply in tool offset
         nde = poseMul(nde, nde_tool)
+        --multiply in user offset
+        nde = poseMul(nde, frame_offset)
+        --set posreg for TP program
         set_posereg(nde, ARC_REG1)
           --move to pose
         CALL_PROG(motion_prog[2], 0)
@@ -544,6 +585,9 @@ ROUTINE movePolyArcFull
 
         --set pose
         nde = tpath2pos(pth[i])
+        --multiply in user offset
+        nde = poseMul(nde, frame_offset)
+        --set posreg for TP program
         set_posereg(nde, POSE_REG)
         --move to pose
         CALL_PROG(motion_prog[1], 0)
@@ -557,12 +601,21 @@ ROUTINE movePolyArcFull
 
         --set midpoint
         nde = tpath2pos(pth[i])
+        --multiply in tool offset
         nde = poseMul(nde, nde_tool)
+        --multiply in user offset
+        nde = poseMul(nde, frame_offset)
+        --set posreg for TP program
         set_posereg(nde, ARC_REG1)
+
         --set endpoint
         nde = tpath2pos(pth[i+1])
+        --set posreg for TP program
         nde = poseMul(nde, nde_tool)
+        --multiply in user offset
+        nde = poseMul(nde, frame_offset)
         set_posereg(nde, ARC_REG2)
+
         --move to pose
         CALL_PROG(motion_prog[2], 0)
         
@@ -578,9 +631,16 @@ ROUTINE movePolyArcFull
         --set midpoint
         nde = tpath2pos(pth[i])
         nde = poseMul(nde, nde_tool)
+        --multiply in user offset
+        nde = poseMul(nde, frame_offset)
+        --set posreg for TP program
         set_posereg(nde, ARC_REG1)
+
         --set endpoint
         nde = tpath2pos(pth[i+1])
+        --multiply in user offset
+        nde = poseMul(nde, frame_offset)
+        --set posreg for TP program
         set_posereg(nde, ARC_REG2)
         --move to pose
         CALL_PROG(motion_prog[2], 0)

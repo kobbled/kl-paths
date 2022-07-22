@@ -24,7 +24,7 @@
 -- initialization  
 -- ***********
 
-%defeval DEFAULT_POSE new_pose(0,0,0,0,0,0,0, DEFAULT_CONFIG)
+%defeval DEFAULT_POSE new_pose(0,0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
 
 -- ***********
 -- Define interface header
@@ -34,9 +34,13 @@
 %mode string QQQ "`" "`" "\\"
 
 %define impl_motion_head(parent) `declare_member(parent,new_pose,parent,npose)
-ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : STRING) : MOTION_DATA_TYPE FROM parent
+ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,make_tool_offset,parent,mktof)
 ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,make_user_offset,parent,mkuof)
+ROUTINE make_user_offset : MOTION_DATA_TYPE
+declare_member(parent,define_tool_offset,parent,dftof)
+ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) FROM class_name
 declare_member(parent,set_lpos,parent,stlps)
 ROUTINE set_lpos : MOTION_DATA_TYPE FROM parent
 declare_member(parent,tpath2pos,parent,tppse)
@@ -67,11 +71,11 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
 %mode string QQQ "`" "`" "\\"
 
 %define impl_motion_members(parent) `declare_member(parent,new_pose,parent,npose)
-ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : STRING) : MOTION_DATA_TYPE
+ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE
   VAR
     nde : MOTION_DATA_TYPE
   BEGIN
-    nde.pose = POS(x,y,z,w,p,r, pose__set_config(cnfg)) 
+    nde.pose = POS(x,y,z,w,p,r, cnfg) 
     nde.rot = pose__zero_jointpos
     nde.rot = pose__set_jointpos_axis((nde.rot), ROTARY_JNT, j1)
 
@@ -80,20 +84,24 @@ ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : STRING) : MOTION_DATA_TYPE
 
 declare_member(parent,make_tool_offset,parent,mktof)
 ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE
-  VAR
-    i   : INTEGER
-    nde : MOTION_DATA_TYPE
-    arr : ARRAY[ROT_AXES] OF REAL
   BEGIN
-    nde.pose = ofst
-    --initalize rotary
-    FOR i=1 TO ARRAY_LEN(arr) DO
-      arr[i] = 0
-    ENDFOR
-    nde.rot = pose__set_jointpos(arr)
-
-    RETURN( nde )
+    RETURN(new_pose(ofst.x,ofst.y,ofst.z,ofst.w,ofst.p,ofst.r, 0, ofst.config_data))
   END make_tool_offset
+
+declare_member(parent,make_user_offset,parent,mkuof)
+ROUTINE make_user_offset : MOTION_DATA_TYPE
+  BEGIN
+    RETURN(new_pose(0,0,0,0,0,0, 0, pose__set_config(DEFAULT_CONFIG)))
+  END make_user_offset
+
+declare_member(parent,define_tool_offset,parent,dftof)
+ROUTINE define_tool_offset(toolprm : t_TOOL_VARS)
+  BEGIN
+    --set tool offset
+    tool_offset = new_pose(0,0,0,(toolprm.orient.x + toolprm.pitch), toolprm.orient.y, toolprm.orient.z, 0, pose__set_config(DEFAULT_CONFIG))
+    frame_offset = new_pose(0,0,0,0,0,0, 0, pose__set_config(DEFAULT_CONFIG))
+
+  END define_tool_offset
 
 declare_member(parent,set_lpos,parent,stlps)
 ROUTINE set_lpos : MOTION_DATA_TYPE
