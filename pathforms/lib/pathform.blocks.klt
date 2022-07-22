@@ -31,16 +31,16 @@ path_motion_define(STATION4_MOTION,STATION4_CNFG)
         `STATION1_PATH`__init(frm, cds, origin, toolprm.idod)
         --intialize motion friend class
           --tool offset, interpolate flag, program type
-        `STATION1_MOTION`__init2(toolprm, TRUE, program_type)
+        `STATION1_MOTION`__init2(toolprm, TRUE, program_type, rastprm)
       CASE(2):
         `STATION2_PATH`__init(frm, cds, origin, toolprm.idod)
-        `STATION2_MOTION`__init2(toolprm, TRUE, program_type)
+        `STATION2_MOTION`__init2(toolprm, TRUE, program_type, rastprm)
       CASE(3):
         `STATION3_PATH`__init(frm, cds, origin, toolprm.idod)
-        `STATION3_MOTION`__init2(toolprm, TRUE, program_type)
+        `STATION3_MOTION`__init2(toolprm, TRUE, program_type, rastprm)
       CASE(4):
         `STATION4_PATH`__init(frm, cds, origin, toolprm.idod)
-        `STATION4_MOTION`__init2(toolprm, TRUE, program_type)
+        `STATION4_MOTION`__init2(toolprm, TRUE, program_type, rastprm)
       ELSE:
         WRITE TPDISPLAY(CR, 'Workstation not selected properly')
         display__show

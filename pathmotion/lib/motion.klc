@@ -47,6 +47,7 @@ VAR
   --used for setting the motion programs in 'set_prog_names'
   program_type : INTEGER
   interpolate : BOOLEAN
+  rast : t_PATH_RAST
 
 %from systemlib.klh %import VEC, VEC2D
 %include errors.klh
@@ -91,6 +92,8 @@ ROUTINE init2
     interpolate = interp_
     program_type = prog_typ
     set_prog_names(program_type)
+    
+    rast = rastprm
   END init2
 
 ROUTINE delete
@@ -174,6 +177,10 @@ ROUTINE set_prog_names
     
   END set_prog_names
 
+ROUTINE set_rast_param
+  BEGIN
+    rast = rastprm
+  END set_rast_param
 
 ROUTINE createPath
   BEGIN

@@ -13,7 +13,7 @@ ROUTINE new FROM class_name
 declare_member(class_name,init,class_name,init)
 ROUTINE init(toolOffst : XYZWPR; interp_ : BOOLEAN; prog_typ : INTEGER) FROM class_name
 declare_member(class_name,init2,class_name,init2)
-ROUTINE init2(toolprm : t_TOOL_VARS; interp_ : BOOLEAN; prog_typ : INTEGER) FROM class_name
+ROUTINE init2(toolprm : t_TOOL_VARS; interp_ : BOOLEAN; prog_typ : INTEGER; rastprm : t_PATH_RAST) FROM class_name
 declare_member(class_name,delete,class_name,dstr)
 ROUTINE delete FROM class_name
 --setters
@@ -29,6 +29,8 @@ declare_member(class_name,set_program_type,class_name,stpgr)
 ROUTINE set_program_type(typ : INTEGER) FROM class_name
 declare_member(class_name,set_prog_names,class_name,stprg)
 ROUTINE set_prog_names(prog_typ : INTEGER) FROM class_name
+declare_member(class_name,set_rast_param,class_name,strsp)
+ROUTINE set_rast_param(rastprm : t_PATH_RAST) FROM class_name
 --set groups
 declare_member(class_name,aquire_groups,class_name,aqgrp)
 ROUTINE aquire_groups FROM class_name
