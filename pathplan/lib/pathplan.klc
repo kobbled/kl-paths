@@ -608,7 +608,12 @@ ROUTINE next_toolpath
     FOR i=1 TO PATH_LEN(segment) DO
       APPEND_NODE(tool_segment, status)
       tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient, frm)
+      --switch code on first and last node to be PTH_MOVETO, and PTH_CLOSE respectively
+      --as path might be in the opposite direction PTH_CLOSE->PTH_MOVETO
       tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
+      IF i=1 THEN tool_segment[PATH_LEN(tool_segment)].code = PTH_MOVETO ; ENDIF
+      IF i=PATH_LEN(segment) THEN tool_segment[PATH_LEN(tool_segment)].code = PTH_CLOSE ; ENDIF
+      -- tool or linking path
       tool_segment[PATH_LEN(tool_segment)].typ = pth_typ
       --..note:: set to default during initialization. Use speed map or blending techniques
       --         to set speed per node along path.
