@@ -394,7 +394,10 @@ ROUTINE paths__new_tpath
   VAR
     vpth : t_TOOLPATH
   BEGIN
-    vpth.v = v ; vpth.code = code ; vpth.typ = typ ; vpth.tangent = tangent ;
+    IF speed <= 0 THEN
+      karelError(VAL_OUT_OF_RNG,'Speed in new_tpath had to be a positive non zero value.', ER_ABORT)
+    ENDIF
+    vpth.v = v ; vpth.code = code ; vpth.typ = typ ; vpth.speed = speed ; vpth.tangent = tangent ;
     RETURN(vpth)
   END paths__new_tpath
 
@@ -421,6 +424,15 @@ ROUTINE paths__vec_to_toolvec
     tv.x = v.x ; tv.y = v.y ; tv.z = v.z ;
     RETURN(tv)
   END paths__vec_to_toolvec
+
+ROUTINE paths__set_speed
+  VAR
+    i : INTEGER
+  BEGIN
+    FOR i=1 TO PATH_LEN(ndes) DO
+      ndes[i].speed = speed
+    ENDFOR
+  END paths__set_speed
 
 ROUTINE paths__set_orientation
   VAR
