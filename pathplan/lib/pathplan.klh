@@ -58,6 +58,12 @@ declare_member(class_name,get_toolpath,class_name,gettp)
 ROUTINE get_toolpath(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,set_toolpath,class_name,settp)
 ROUTINE set_toolpath(inpth : PATH nodedata = t_TOOLPATH) FROM class_name
+--speed profile setting functions
+declare_member(class_name,set_segment_speed,class_name,stspd)
+ROUTINE set_segment_speed(speed : REAL) FROM class_name
+declare_member(class_name,set_segment_speed_bounds,class_name,stspb)
+ROUTINE set_segment_speed_bounds(start_speed : REAL ; end_speed : REAL) FROM class_name
+--
 declare_member(class_name,get_toolpath_interpolate,class_name,gtpi)
 ROUTINE get_toolpath_interpolate(spacing : REAL ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,interpolate_path,class_name,intpp)

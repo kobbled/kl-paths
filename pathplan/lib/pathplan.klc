@@ -610,6 +610,8 @@ ROUTINE next_toolpath
       tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient, frm)
       tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
       tool_segment[PATH_LEN(tool_segment)].typ = pth_typ
+      --..note:: set to default during initialization. Use speed map or blending techniques
+      --         to set speed per node along path.
       tool_segment[PATH_LEN(tool_segment)].speed = DEFAULT_SPEED
       tool_segment[PATH_LEN(tool_segment)].tangent = segment[i].tangent
     ENDFOR
@@ -646,6 +648,9 @@ ROUTINE set_line
       tool_segment[PATH_LEN(tool_segment)].v = convert2pos(segment[i], pnt_orient, frm)
       tool_segment[PATH_LEN(tool_segment)].code = segment[i].code
       tool_segment[PATH_LEN(tool_segment)].typ = line_typ
+      --..note:: set to default during initialization. Use speed map or blending techniques
+      --         to set speed per node along path.
+      tool_segment[PATH_LEN(tool_segment)].speed = DEFAULT_SPEED
       tool_segment[PATH_LEN(tool_segment)].tangent = segment[i].tangent
     ENDFOR
     
@@ -718,6 +723,30 @@ ROUTINE set_toolpath
   BEGIN
     COPY_PATH(inpth, 0, 0, tool_segment, status)
   END set_toolpath
+
+ROUTINE set_segment_speed
+  VAR
+    i : INTEGER
+  BEGIN
+    FOR i=1 TO (PATH_LEN(tool_segment)) DO
+      tool_segment[i].speed = speed
+    ENDFOR
+  END set_segment_speed
+
+ROUTINE set_segment_speed_bounds
+  VAR
+    i : INTEGER
+  BEGIN
+    --set bounds
+    tool_segment[1].speed = start_speed
+    tool_segment[PATH_LEN(tool_segment)].speed = end_speed
+
+    IF (PATH_LEN(tool_segment) > 2) THEN
+      FOR i=2 TO (PATH_LEN(tool_segment) - 1) DO
+        speed_blending(start_speed, end_speed, (i-1)/(PATH_LEN(tool_segment)-1), tool_segment[i])
+      ENDFOR
+    ENDIF
+  END set_segment_speed_bounds
 
 ROUTINE get_endpoints
   VAR
