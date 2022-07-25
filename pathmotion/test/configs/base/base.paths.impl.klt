@@ -165,8 +165,8 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
 %endif
 
     --move to offset -> to zero poisition
-    `PATH_OBJECT_NAME`__makeline(spos, spos2, (ZEROPOS(1)), PTH_LINKING, PTH_LINETO, stepSize, 1, VEC(1,0,0))
-    moveLine(speed)
+    `PATH_OBJECT_NAME`__makeline(spos, spos2, (ZEROPOS(1)), PTH_LINKING, PTH_LINETO, stepSize, speed, 1, VEC(1,0,0))
+    moveLine
 
     --origin point
     vpos1 = INV(origin):spos2
@@ -189,14 +189,14 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
       --move between origin and start degree
       IF (ABS(vpos2.x - vpos1.x) > APPROACH_DEGREE_DIFF) THEN
         -- ..note:: set travel direction in step size
-        `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, 1, VEC(1,0,0))
-        moveArc(speed)
+        `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, speed, 1, VEC(1,0,0))
+        moveArc
       ENDIF
     ENDIF
 
     IF (coordSys=PTH_CARTESAN) THEN
-      `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, 1, VEC(1,0,0))
-      moveLine(speed)
+      `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, speed, 1, VEC(1,0,0))
+      moveLine
     ENDIF
 
   END approachPath
@@ -249,8 +249,8 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
 %endif
 
     --move up from lpos to the retract height
-    `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, 1, VEC(1,0,0))
-    moveLine(speed)
+    `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, speed, 1, VEC(1,0,0))
+    moveLine
 
     -- get origin point
     spos = VEC(0,0,0)
@@ -274,8 +274,8 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
 %endif
 
       -- ..note:: set travel direction in step size.
-      `PATH_OBJECT_NAME`__makeline(vpos3, spos, origin, PTH_LINKING, PTH_LINETO, stepSize, -1*idod, VEC(1,0,0))
-      moveArc(speed)
+      `PATH_OBJECT_NAME`__makeline(vpos3, spos, origin, PTH_LINKING, PTH_LINETO, stepSize, speed, -1*idod, VEC(1,0,0))
+      moveArc
     ENDIF
 
     spos = origin:spos
@@ -289,8 +289,8 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
 %endif
 
     --move from the origin to the retract distance to the offset
-    `PATH_OBJECT_NAME`__makeline(spos, fpos, (ZEROPOS(1)), PTH_LINKING, PTH_LINETO, stepSize, 1, VEC(1,0,0))
-    moveLine(speed)
+    `PATH_OBJECT_NAME`__makeline(spos, fpos, (ZEROPOS(1)), PTH_LINKING, PTH_LINETO, stepSize, speed, 1, VEC(1,0,0))
+    moveLine
 
   END retractPath
 `

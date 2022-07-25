@@ -304,10 +304,10 @@ ROUTINE makeline
     paths__clear_toolpath(line_endpnts)
     --add start point
     APPEND_NODE(line_endpnts,status)
-    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(start_point, paths__set_orientation((coord_system.system), idod_), (frm.config_data)), PTH_MOVETO, line_typ, tangent)
+    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(start_point, paths__set_orientation((coord_system.system), idod_), (frm.config_data)), PTH_MOVETO, line_typ, speed, tangent)
     --add end point
     APPEND_NODE(line_endpnts,status)
-    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(end_point, paths__set_orientation((coord_system.system), idod_), (frm.config_data)), PTH_CLOSE, line_typ, tangent)
+    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(end_point, paths__set_orientation((coord_system.system), idod_), (frm.config_data)), PTH_CLOSE, line_typ, speed, tangent)
     --`PATH_PLAN_NAME`__set_toolpath(line_endpnts)
 
     paths__clear_toolpath(pth)

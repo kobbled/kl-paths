@@ -66,7 +66,8 @@ ROUTINE get_end_node : XYZWPR FROM class_name
 
 declare_member(class_name,makeline,class_name,mkln)
 ROUTINE makeline(start_point, end_point : VECTOR; ref_frame : XYZWPR ; &
-                 line_typ : INTEGER; line_code : INTEGER; spacing : REAL; dir : INTEGER; tangent : VECTOR) FROM class_name
+                 line_typ : INTEGER; line_code : INTEGER; spacing : REAL; & 
+                 speed : REAL; dir : INTEGER; tangent : VECTOR) FROM class_name
 declare_member(class_name,get_line,class_name,gtln)
 ROUTINE get_line(line_no : INTEGER; revrs_ordr, reverse_line : BOOLEAN; &
                  line_typ : INTEGER; spacing : REAL; append : BOOLEAN; &

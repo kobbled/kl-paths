@@ -254,7 +254,12 @@ ROUTINE movePos
     registers__set_int(TERM_REGISTER, TERM_FINE)
 
     --set pose
-    tpos = paths__new_tpath(pos, PTH_MOVETO, line_typ, tangent)
+    tpos = paths__new_tpath(pos, PTH_MOVETO, line_typ, speed, tangent)
+    
+    --set speed
+    tpos.speed = speed
+    registers__set_real(SPEED_REGISTER, speed)
+
     nde = tpath2pos(tpos)
     --multiply in user offset
     nde = poseMul(nde, frame_offset)
