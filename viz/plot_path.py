@@ -34,6 +34,10 @@ ROBOT_PORT = 80
 USERNAME = ""
 PASSWORD = ""
 
+#If needing to visualize only a pathplanning
+#module
+ONPATHPLAN = True
+
 SAVE_DIRECTORY = 'plots'
 
 CONTOUR_VARNAME = 'CONTOURS'
@@ -288,8 +292,19 @@ def parsePath(member_name, args, out_list):
         
         nid = None
 
+def line2toolpath(in_list, out_list):
+  for i in range(len(in_list)):
 
-def parsePlan(args):
+    nPath = t_path(
+            pose = in_list[i].coords,
+            code = in_list[i].code,
+            type = 1,
+            tangent = in_list[i].tangent
+          )
+    
+    out_list.append(nPath)
+
+def parsePlan(args, lst):
   parsefile = folder_files +'/' + SAVE_DIRECTORY + '/' + args.rbt_fl + '.VA'
 
   pattern_map = rf"Field: {PATH_MAP}\.NODEDATA\[(\d+)\]\.{PATH_MAP_SUFFIX} Access: RW: {PATH_MAP_TYPE} =\s*(\d+)"
@@ -308,7 +323,7 @@ def parsePlan(args):
   
   # get path coordinates
   for i in range(len(path_order)):
-    path_plan.append([path_order[i], rpath[path_order[i]-1].pose])
+    path_plan.append([path_order[i], lst[path_order[i]-1].pose])
   
 def parsePath3D(args):
   parsefile = folder_files +'/' + SAVE_DIRECTORY + '/' + args.rbt_fl + '.VA'
@@ -340,7 +355,10 @@ def print_cont(list_obj):
 
 def print_plan(list_obj):
   for i in range(len(list_obj)):
-      print("{}: [{:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(list_obj[i][0], list_obj[i][1][0], list_obj[i][1][1], list_obj[i][1][2], list_obj[i][1][3], list_obj[i][1][4], list_obj[i][1][5]))
+      if len(list_obj[i][1]) > 3:
+        print("{}: [{:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(list_obj[i][0], list_obj[i][1][0], list_obj[i][1][1], list_obj[i][1][2], list_obj[i][1][3], list_obj[i][1][4], list_obj[i][1][5]))
+      else:
+        print("{}: [{:.1f}, {:.1f}]".format(list_obj[i][0], list_obj[i][1][0], list_obj[i][1][1]))
 
 def print_path(list_obj):
   for i in range(len(list_obj)):
@@ -382,6 +400,12 @@ def plot():
     # add tangent vectors
     ax.arrow(verts[i][0], verts[i][1], tang[i][0]*5, tang[i][1]*5, head_width=3, head_length=5, fc='r', ec='r')
 
+  #path
+  if len(path_plan) > 0:
+    idx, verts = zip(*path_plan)
+    xs, ys = zip(*verts)
+    ax.plot(xs, ys, 'o--', lw=2, color='red', ms=5)
+  
   #lines
   if len(raster_lines) > 0:
     verts = slice(raster_lines, 'coords')
@@ -561,10 +585,14 @@ def main():
   parseContour(CONTOUR_VARNAME, args, polygons)
 
   # get path
-  parsePath(TOOLPATH_VARNAME, args, rpath)
+  if ONPATHPLAN:
+    # for pathplan test
+    line2toolpath(raster_lines, rpath)
+  else:
+    parsePath(TOOLPATH_VARNAME, args, rpath)
   
   # path plan
-  parsePlan(args)
+  parsePlan(args, rpath)
 
   print('polygons')
   print_cont(polygons)
@@ -572,8 +600,10 @@ def main():
   print_cont(raster_lines)
   print('path')
   print_plan(path_plan)
-  print('toolpath')
-  print_path(rpath)
+
+  if (not ONPATHPLAN):
+    print('toolpath')
+    print_path(rpath)
 
   if args.use_robodk:
     #plot robodk path
