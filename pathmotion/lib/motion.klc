@@ -286,6 +286,10 @@ ROUTINE moveLine
       --set code and type for tp
       registers__set_int(CODE_REGISTER, (pth[i].code))
       registers__set_int(TYPE_REGISTER, (pth[i].typ))
+
+      --set speed
+      registers__set_real(SPEED_REGISTER, (pth[i].speed))
+
       --set termination for tp
       SELECT (pth[i].code) OF
         CASE(PTH_MOVETO,PTH_CLOSE): registers__set_int(TERM_REGISTER, TERM_FINE) ;
@@ -322,9 +326,13 @@ ROUTINE moveArc
       --set code and type for tp
     IF PATH_LEN(pth) > 0 THEN
     --circular move
-      registers__set_int(CODE_REGISTER, PTH_MOVETO)
+      registers__set_int(CODE_REGISTER, (pth[1].code))
       registers__set_int(TYPE_REGISTER, (pth[1].typ))
       registers__set_int(TERM_REGISTER, TERM_FINE)
+
+      --set speed
+      registers__set_real(SPEED_REGISTER, (pth[1].speed))
+
         --set pose
       nde = tpath2pos(pth[1])
       --multiply tool offset
@@ -342,14 +350,13 @@ ROUTINE moveArc
     i = 2
     WHILE i < PATH_LEN(pth) DO
       --set code and type for tp
-      SELECT pth[i+1].code OF
-        CASE(PTH_MOVETO,PTH_CLOSE):
-          registers__set_int(CODE_REGISTER, PTH_CLOSE)
-        ELSE:
-          registers__set_int(CODE_REGISTER, (pth[i+1].code))
-      ENDSELECT
+        -- needed to properly select FINE or CONT motion statement
+      registers__set_int(CODE_REGISTER, (pth[i+1].code))
       registers__set_int(TYPE_REGISTER, (pth[i+1].typ))
       registers__set_int(TERM_REGISTER, TERM_CONT) ;
+
+      --set speed
+      registers__set_real(SPEED_REGISTER, (pth[i+1].speed))
 
       --Do not use cicular_move if less than 3 points
       IF PATH_LEN(pth) < 3 THEN
@@ -409,11 +416,13 @@ ROUTINE movePoly
         --set code and type for tp
         registers__set_int(CODE_REGISTER, (pth[i].code))
         registers__set_int(TYPE_REGISTER, (pth[i].typ))
-        --set termination for tp
+        --set termination type along path
         SELECT pth[i].code OF
           CASE(PTH_MOVETO,PTH_CLOSE): registers__set_int(TERM_REGISTER, TERM_FINE) ;
           ELSE: registers__set_int(TERM_REGISTER, TERM_CONT) ;
         ENDSELECT
+        --set speed
+        registers__set_real(SPEED_REGISTER, pth[i].speed)
 
         --set pose
         nde = tpath2pos(pth[i])
@@ -445,13 +454,17 @@ ROUTINE movePolyArc
     REPEAT
       `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght, interpolate)
 
+      --** start point of the circle **
       --linear move to start of path
         --set code and type for tp
       IF PATH_LEN(pth) > 0 THEN
       --circular move
-        registers__set_int(CODE_REGISTER, PTH_MOVETO)
+        registers__set_int(CODE_REGISTER, (pth[1].code))
         registers__set_int(TYPE_REGISTER, (pth[1].typ))
         registers__set_int(TERM_REGISTER, TERM_FINE)
+          --set speed
+        registers__set_real(SPEED_REGISTER, pth[1].speed)
+
           --set pose
         nde = tpath2pos(pth[1])
         --multiply tool offset
@@ -464,18 +477,24 @@ ROUTINE movePolyArc
         CALL_PROG(motion_prog[2], 0)
       ENDIF
 
-      --for circular motion need to define the next two points for motion
-      --LS program should handle PTH_CLOSE case
-      i = 2
+      --** midpoints and finish point of the circle **
+      i = 2  --start after first point
       WHILE i < PATH_LEN(pth) DO
         --Do not use cicular_move if less than 3 points
         IF PATH_LEN(pth) < 3 THEN
-        --linear move
+          --linear move
           set_posereg(tool_offset, TOOL_OFFSET_REG)
 
-          registers__set_int(CODE_REGISTER, PTH_CLOSE)
+          --set registers
+          registers__set_int(CODE_REGISTER, (pth[i].code))
           registers__set_int(TYPE_REGISTER, (pth[i].typ))
-          registers__set_int(TERM_REGISTER, TERM_FINE)
+          --set termination type along path
+          SELECT pth[i].code OF
+            CASE(PTH_MOVETO,PTH_CLOSE): registers__set_int(TERM_REGISTER, TERM_FINE) ;
+            ELSE: registers__set_int(TERM_REGISTER, TERM_CONT) ;
+          ENDSELECT
+            --set speed
+          registers__set_real(SPEED_REGISTER, pth[i].speed)
 
           nde = tpath2pos(pth[i])
           --multiply in user offset
@@ -485,16 +504,15 @@ ROUTINE movePolyArc
           --move to pose
           CALL_PROG(motion_prog[1], 0)
         ELSE
-        --circular move
+          --circular move
           --set code and type for tp
-          SELECT pth[i+1].code OF
-            CASE(PTH_MOVETO,PTH_CLOSE):
-              registers__set_int(CODE_REGISTER, PTH_CLOSE)
-            ELSE:
-              registers__set_int(CODE_REGISTER, (pth[i+1].code))
-          ENDSELECT
+            -- needed to properly select FINE or CONT motion statement
+          registers__set_int(CODE_REGISTER, (pth[i+1].code))
           registers__set_int(TYPE_REGISTER, (pth[i+1].typ))
+          --set termination type along path
           registers__set_int(TERM_REGISTER, TERM_CONT)
+            --set speed
+          registers__set_real(SPEED_REGISTER, pth[i+1].speed)
 
           --set midpoint
           nde = tpath2pos(pth[i])
