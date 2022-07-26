@@ -173,7 +173,7 @@ ROUTINE t_NN : BOOLEAN
     tstpln__init(lines, POS(0,0,0,0,0,rast_ang, (ZEROPOS(1).config_data)))
     tstpln__NN_graph
      --get start node
-    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0, VEC(1,0,0))
     start_nde = tstpln__closest_point(apprch_pnt)
     tstpln__MST(start_nde)
     tstpln__get_plan(path_plan)
@@ -291,7 +291,7 @@ ROUTINE t_rast_path : BOOLEAN
     tstpln__raster_graph(ONEWAY, FALSE, FALSE)
      --get start node
     start_corner = 1
-    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0, VEC(1,0,0))
     start_nde = tstpln__closest_point(apprch_pnt)
     tstpln__MST(start_nde)
     tstpln__get_plan(path_plan)
@@ -309,7 +309,7 @@ ROUTINE t_rast_path : BOOLEAN
     tstpln__raster_graph(ZIGZAG, FALSE, FALSE)
     --get start node
     start_corner = 2
-    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0, VEC(1,0,0))
     start_nde = tstpln__closest_point(apprch_pnt)
     tstpln__MST(start_nde)
     tstpln__get_plan(path_plan)
@@ -353,7 +353,7 @@ ROUTINE t_rast_multi : BOOLEAN
     tstpln__raster_graph(ONEWAY, TRUE, TRUE)
 
      --get start node
-    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0, VEC(1,0,0))
     start_nde = tstpln__closest_point(apprch_pnt)
     tstpln__MST(start_nde)
     tstpln__get_plan(path_plan)
@@ -381,7 +381,7 @@ ROUTINE t_rast_multi : BOOLEAN
     tstpln__raster_graph(ONEWAY, TRUE, TRUE)
 
      --get start node
-    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0, VEC(1,0,0))
     start_nde = tstpln__closest_point(apprch_pnt)
     tstpln__MST(start_nde)
     tstpln__get_plan(path_plan)
@@ -423,7 +423,7 @@ ROUTINE t_rast_mult2 : BOOLEAN
     tstpln__raster_graph(ONEWAY, FALSE, FALSE)
 
      --get start node
-    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0)
+    apprch_pnt = paths__new_vpath(bbox.verts[start_corner], PTH_STOP, 0, VEC(1,0,0))
     start_nde = tstpln__closest_point(apprch_pnt)
     tstpln__MST(start_nde)
     tstpln__get_plan(path_plan)
