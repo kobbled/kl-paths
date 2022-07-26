@@ -59,13 +59,21 @@ ROUTINE next_toolpath
   BEGIN
     SELECT `PATH_PLAN_NAME`__next_toolpath OF
       CASE(PTH_TOOLING):
+        --set speed
+        `PATH_PLAN_NAME`__set_segment_speed(tool_speed)
+
+        --get toolpath from pathplan
         IF interp_tool THEN
           `PATH_PLAN_NAME`__get_toolpath_interpolate((tool_step), PTH_LINETO, FALSE, pth)
+        ELSE
+          `PATH_PLAN_NAME`__get_toolpath(pth)
         ENDIF
-        registers__set_real(SPEED_REGISTER, tool_speed)
       CASE(PTH_LINKING):
+        --set speed
+        `PATH_PLAN_NAME`__set_segment_speed(link_speed)
+
+        --get toolpath from linkingTransition user defined member
         `PATH_PLAN_NAME`__linkingTransition(pth, (link_step), idod_)
-        registers__set_real(SPEED_REGISTER, link_speed)
     ENDSELECT
 
     --raise if linking
@@ -88,13 +96,21 @@ ROUTINE get_toolpath
     REPEAT
       SELECT (`PATH_PLAN_NAME`__next_toolpath) OF
         CASE(PTH_TOOLING):
+          --set speed
+          `PATH_PLAN_NAME`__set_segment_speed(tool_speed)
+
+          --get toolpath from pathplan
           IF interp_tool THEN
             `PATH_PLAN_NAME`__get_toolpath_interpolate((tool_step), PTH_LINETO, TRUE, pth)
+          ELSE
+            `PATH_PLAN_NAME`__get_toolpath(pth)
           ENDIF
-          registers__set_real(SPEED_REGISTER, tool_speed)
         CASE(PTH_LINKING):
+          --set speed
+          `PATH_PLAN_NAME`__set_segment_speed(link_speed)
+
+          --get toolpath from linkingTransition user defined member
           `PATH_PLAN_NAME`__linkingTransition(pth, (link_step), idod_)
-          registers__set_real(SPEED_REGISTER, link_speed)
       ENDSELECT
     UNTIL( `PATH_PLAN_NAME`__is_path_end )
 
