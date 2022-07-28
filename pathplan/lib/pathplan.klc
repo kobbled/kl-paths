@@ -47,6 +47,7 @@ VAR
 %include pathlib.klh
 %from math.klh %import norm, norm2
 %from systemlib.klh %import VEC, VEC2D
+%from draw.klh %import calc_tangent
 %include pose.klh
 
 %ifdef DEBUG_BUILD
@@ -452,12 +453,11 @@ ROUTINE importPath
   VAR
     i : INTEGER
     b : BOOLEAN
-    unint_r : ARRAY[5] OF REAL
     r : ARRAY[5] OF REAL
     prev_line, line_cnt : INTEGER
     status : INTEGER
   BEGIN
-    csvpth__constructor(filename, ',', '')
+    csvpth__new(filename, ',', '')
     csvpth__open
     --read header
     --(x,y,z,depth)
@@ -468,7 +468,8 @@ ROUTINE importPath
 
     prev_line = 0
     REPEAT
-      b = csvpth__read_rarr(r, unint_r)
+      csvpth__readline
+      csvpth__read_rarr(1, 0, r)
       IF b THEN
         APPEND_NODE(pth, status)
         pth[PATH_LEN(pth)].v = VEC(r[1], r[2], r[3])
@@ -481,6 +482,8 @@ ROUTINE importPath
         line_cnt = TRUNC(r[5])
         IF line_cnt <> prev_line THEN
           pth[PATH_LEN(pth)].code = PTH_MOVETO
+
+          --update previous node as the end of a line
           IF PATH_LEN(pth) > 1 THEN
             pth[PATH_LEN(pth)-1].code = PTH_CLOSE
           ENDIF
@@ -494,6 +497,9 @@ ROUTINE importPath
 
     --close path
     pth[PATH_LEN(pth)].code = PTH_CLOSE
+
+    --create tangents
+    draw__calc_tangent(pth)
 
     csvpth__close
     csvpth__clear
