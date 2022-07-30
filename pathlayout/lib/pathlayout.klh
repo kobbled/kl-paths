@@ -1,0 +1,29 @@
+--header
+%include header_guard.m
+--oop
+%include namespace.m
+
+--start header file
+header_if -- ifndef class
+header_def -- define class
+
+declare_member(class_name,new,class_name,new)
+ROUTINE new(filename : STRING) FROM class_name
+declare_member(class_name,delete,class_name,del)
+ROUTINE delete FROM class_name
+
+declare_member(class_name,openfile,class_name,open)
+ROUTINE openfile FROM class_name
+declare_member(class_name,closefile,class_name,close)
+ROUTINE closefile FROM class_name
+
+declare_member(class_name,bufferLength,class_name,bufln)
+ROUTINE bufferLength : INTEGER FROM class_name
+declare_member(class_name,loadBuffer,class_name,ldbuf)
+ROUTINE loadBuffer : BOOLEAN FROM class_name
+
+--user defined headers
+declare_member(class_name,countInstances,class_name,cins)
+ROUTINE countInstances(out_pth : PATH nodedata = t_INTEGER) FROM class_name
+
+%endif --end header

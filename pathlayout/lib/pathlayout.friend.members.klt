@@ -1,0 +1,8 @@
+%include define_type.m
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define pathlayout_friends(object_name) `VAR
+  --data attribute from pipe
+  data FROM object_name : t_DATA_TYPE`
+%mode pop

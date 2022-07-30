@@ -1,0 +1,7 @@
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+--csv dependency
+%define csv_make_define(object_name) `%class object_name('csvclass.klc','csvclass.klh')`
+
+%mode pop

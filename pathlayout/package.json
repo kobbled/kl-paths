@@ -6,11 +6,14 @@
   "license" : "MIT",
   "author" : "kobbled",
   "includes" : [
-    "lib"
+    "lib",
   ],
   "depends" : [
     "ktransw-macros",
     "errors",
-    "systemlib"
+    "systemlib",
+    "csv",
+    "pathlib"
+  ],
   ]
 }
