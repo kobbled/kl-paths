@@ -9,6 +9,8 @@
     "lib",
     "lib/interfaces"
   ],
+  "tests-includes" :[
+    "test/configs"
   ],
   "depends" : [
     "ktransw-macros",
@@ -17,5 +19,7 @@
     "csv",
     "pathlib"
   ],
+  "tests-depends" :  [
+    "display"
   ]
 }
