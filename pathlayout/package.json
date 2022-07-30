@@ -9,6 +9,10 @@
     "lib",
     "lib/interfaces"
   ],
+  "tests" : [
+    "test/test_layout.kl",
+    "test/data/test3599.csv"
+  ],
   "tests-includes" :[
     "test/configs"
   ],
