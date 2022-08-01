@@ -11,7 +11,6 @@ PROGRAM class_name
 
 %include pathlayout.t.klt
 %include pathlayout.deps.klt
-%include pathlayout.friend.members.klt
 
 %define BASE_CLASSNAME class_name
 
@@ -27,7 +26,8 @@ VAR
   buffernum : INTEGER -- keep track of how many buffer cycles have been completed
 
 -- reference to 'data' attribute in CSV_OBJECT_NAME
-pathlayout_friends(CSV_OBJECT_NAME)
+%include csvclass.friends.klt
+csvclass_friends(CSV_OBJECT_NAME)
 
 %ifdef LAYOUT_FILE_TYPE CSV_TYPE
 --define csv object
@@ -53,6 +53,11 @@ csv_make_define(CSV_OBJECT_NAME)
 %error 'file type not yet implemented for pathlayout.'
 %endif
 
+-- user macro
+impl_attrs
+
+--public
+
 ROUTINE clear_buffer
   VAR
     i : INTEGER
@@ -64,11 +69,6 @@ ROUTINE clear_buffer
       i = i - 1
 	  ENDWHILE
   END clear_buffer
-
--- user macro
-impl_attrs
-
---public
 
 ROUTINE new
   BEGIN
