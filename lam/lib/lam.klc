@@ -15,6 +15,25 @@ VAR
 %from registers.klh %import set_real, set_int
 %include lam.klh
 
+--private
+  -- user macro
+define_powder_names
+
+  -- user macro
+define_depth_maps
+
+--public
+
+ROUTINE new
+  BEGIN
+    powderNames
+    initDepthMap
+  END new
+
+ROUTINE delete
+  BEGIN
+  END delete
+
 ROUTINE getSpeedFromDepth
   VAR
     speed : REAL
@@ -31,6 +50,19 @@ ROUTINE getSpeedFromDepth
 
     RETURN(speed)
   END getSpeedFromDepth
+
+ROUTINE set_laser_power
+  BEGIN
+    lsrprm.power = power
+  END set_laser_power
+
+ROUTINE set_powder_params
+  BEGIN
+    powprm.hopper = hopper ; powprm.powder = powder ; 
+    powprm.rpm = rpm ; powprm.lpm = lpm ; powprm.flow_rate = flow_rate ;
+    powprm.height = height ;
+  END set_powder_params
+
 ROUTINE set_registers
   BEGIN
     --laser params
