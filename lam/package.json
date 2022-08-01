@@ -20,5 +20,8 @@
   "depends" : [
     "ktransw-macros",
     "registers"
+  ],
+  "tests-depends" :  [
+    "display"
   ]
 }

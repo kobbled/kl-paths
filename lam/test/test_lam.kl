@@ -1,8 +1,33 @@
 PROGRAM test_lam
 %NOLOCKGROUP
 
+%include lam.klt
+
+%include default_lam.klt
+
+%include lam.friends.klt
+lam_friends(tstlam)
+
+%include display.klh
+
 --lam object
-%class tstlam('lam.klc','lam.klh','default_lam_param.klt')
+%class tstlam('lam.klc','lam.klh','default_lam.klt')
 
 BEGIN
+  --clear display
+  display__clear
+  --show display
+  display__show
+
+  tstlam__new
+
+  set_laser_power(3000)
+  set_powder_params(2, POWDER_INCONEL, 2.6, 4, 0.95, 1.27)
+
+  set_registers
+
+  WRITE TPDISPLAY('depth: 0.60; speed: ', getSpeedFromDepth((powprm.powder), 0.60)::5::2, CR)
+  WRITE TPDISPLAY('depth: 1; speed: ', getSpeedFromDepth((powprm.powder), 1)::5::2, CR)
+  WRITE TPDISPLAY('depth: 1.4; speed: ', getSpeedFromDepth((powprm.powder), 1.4)::5::2, CR)
+
 END test_lam
