@@ -16,4 +16,9 @@ TYPE
     height : REAL
   ENDSTRUCTURE
 
+  t_DEPTHREGR FROM lam = STRUCTURE
+    slope : REAL
+    intercept : REAL
+  ENDSTRUCTURE
+
 %endif --lam_types_t

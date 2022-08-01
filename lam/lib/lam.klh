@@ -7,6 +7,10 @@
 header_if -- ifndef class
 header_def -- define class
 
+--getters
+declare_member(class_name,getSpeedFromDepth,class_name,gsfd)
+ROUTINE getSpeedFromDepth(powder : INTEGER; depth : REAL) : REAL FROM class_name
+
 --clear functions
 declare_member(class_name,set_registers,class_name,streg)
 ROUTINE set_registers FROM class_name

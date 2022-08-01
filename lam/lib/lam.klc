@@ -10,10 +10,27 @@ VAR
   lsrprm IN CMOS : t_LASER
   powprm IN CMOS : t_POWDER
   powder_names : ARRAY[NUMBER_OF_POWDERS] OF STRING[20]
+  depth_maps   : ARRAY[NUMBER_OF_POWDERS] OF t_DEPTHREGR
 
 %from registers.klh %import set_real, set_int
 %include lam.klh
 
+ROUTINE getSpeedFromDepth
+  VAR
+    speed : REAL
+  BEGIN
+    speed = depth_maps[powder].slope*depth + depth_maps[powder].intercept
+
+    --clip speed on testing bounds
+    IF speed > SPEED_LIMIT_HIGH THEN
+      speed = SPEED_LIMIT_HIGH
+    ELSE IF speed < SPEED_LIMIT_LOW THEN
+      speed = SPEED_LIMIT_LOW
+    ENDIF 
+    ENDIF
+
+    RETURN(speed)
+  END getSpeedFromDepth
 ROUTINE set_registers
   BEGIN
     --laser params
