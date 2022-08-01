@@ -9,6 +9,7 @@ TYPE
 
   t_POWDER FROM lam = STRUCTURE
     hopper : INTEGER
+    powder : INTEGER
     rpm : REAL
     lpm : REAL
     flow_rate : REAL

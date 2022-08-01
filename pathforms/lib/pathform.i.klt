@@ -194,17 +194,19 @@ ROUTINE cnvrt_to_mm
     --pad parameters
     work_val_arr[1] = '['+ps+']lsrprm.power'
     work_val_arr[2] = '['+ps+']powprm.hopper'
-    work_val_arr[3] = '['+ps+']powprm.rpm'
-    work_val_arr[4] = '['+ps+']powprm.lpm'
-    work_val_arr[5] = '['+ps+']powprm.flow_rate'
-    work_val_arr[6] = '['+ps+']powprm.height'
-    work_val_arr[7] = ''
+    work_val_arr[3] = '['+ps+']powprm.powder'
+    work_val_arr[4] = '['+ps+']powprm.rpm'
+    work_val_arr[5] = '['+ps+']powprm.lpm'
+    work_val_arr[6] = '['+ps+']powprm.flow_rate'
+    work_val_arr[7] = '['+ps+']powprm.height'
+    work_val_arr[8] = ''
   END frm_wrkList
 
 ROUTINE init_wrkList
   BEGIN
     --pad params
     IF UNINIT(lsrprm.power) THEN lsrprm.power = 3000 ; ENDIF
+    IF UNINIT(powprm.powder) THEN powprm.powder = 1 ; ENDIF
     IF UNINIT(powprm.hopper) THEN powprm.hopper = 1 ; ENDIF
   END init_wrkList
 `

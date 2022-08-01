@@ -9,6 +9,7 @@ PROGRAM class_name
 VAR
   lsrprm IN CMOS : t_LASER
   powprm IN CMOS : t_POWDER
+  powder_names : ARRAY[NUMBER_OF_POWDERS] OF STRING[20]
 
 %from registers.klh %import set_real, set_int
 %include lam.klh
