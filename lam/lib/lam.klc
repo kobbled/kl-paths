@@ -18,13 +18,24 @@ ROUTINE set_registers
   BEGIN
     --laser params
     registers__set_int(LASER_POWER_REG, (lsrprm.power))
-    --powder params
+    --powder params: 1 - Hopper 1, 2 - Hopper 2, 3 - Hopper 1/2 blend
     registers__set_int(POWDER_HOPPER_REG, (powprm.hopper))
 
-    registers__set_real(POWDER1_SPEED_REG, (powprm.rpm))
-    registers__set_real(POWDER1_GASF_REG, (powprm.lpm))
-    registers__set_real(POWDER1_FLOW_RATE_REG, (powprm.flow_rate))
-    registers__set_real(POWDER1_THICKNESS_REG, (powprm.height))
+    IF powprm.hopper = 1 THEN
+      --hopper 1 parameters
+      registers__set_real(POWDER1_SPEED_REG,     (powprm.rpm))
+      registers__set_real(POWDER1_GASF_REG,      (powprm.lpm))
+      registers__set_real(POWDER1_FLOW_RATE_REG, (powprm.flow_rate))
+      registers__set_real(POWDER1_THICKNESS_REG, (powprm.height))
+    ELSE IF powprm.hopper = 2 THEN
+      --hopper 2 parameters
+      registers__set_real(POWDER2_SPEED_REG,     (powprm.rpm))
+      registers__set_real(POWDER2_GASF_REG,      (powprm.lpm))
+      registers__set_real(POWDER2_FLOW_RATE_REG, (powprm.flow_rate))
+      registers__set_real(POWDER2_THICKNESS_REG, (powprm.height))
+    ENDIF
+    ENDIF
+
   END set_registers
 
 ROUTINE start
