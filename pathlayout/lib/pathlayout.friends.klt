@@ -1,0 +1,8 @@
+%include define_type.m
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define pathlayout_friends(object_name,user_type) `VAR
+  --
+  buffer FROM object_name : PATH nodedata = user_type`
+%mode pop
