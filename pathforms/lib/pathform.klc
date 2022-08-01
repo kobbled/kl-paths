@@ -83,12 +83,14 @@ VAR
   motnprm IN CMOS  : t_MOTION_PRM
   padprm  IN CMOS  : t_PAD_VARS
   hexprm IN CMOS   : t_HEX_VARS
-  --work parameters
-  lsrprm FROM LAM_NAME : t_LASER
-  powprm FROM LAM_NAME : t_POWDER
 
   b : BOOLEAN
   term_char FROM forms : INTEGER
+
+-- include reference to lam object "buffer".
+--  store form inputs for LAM here
+%include lam.friends.klt
+lam_friends(LAM_NAME)
 
 --helper functions
 %from display.klh %import clear, show

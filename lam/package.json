@@ -5,6 +5,9 @@
   "version" : "0.0.1",
   "license" : "MIT",
   "author" : "kobbled",
+  "forms" : [
+    "forms/gsworkeg.ftx"
+  ],
   "includes" : [
     "lib"
   ],

@@ -1,0 +1,11 @@
+%include define_type.m
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+%define lam_friends(object_name) `VAR
+  --work parameters
+  lsrprm FROM object_name : t_LASER
+  powprm FROM object_name : t_POWDER
+  powder_names FROM object_name : ARRAY[NUMBER_OF_POWDERS] OF STRING[20]
+`
+%mode pop

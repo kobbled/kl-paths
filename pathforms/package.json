@@ -10,8 +10,7 @@
     "forms/gspptheg.ftx",
     "forms/gsppadeg.ftx",
     "forms/gsphexeg.ftx",
-    "forms/gspcuseg.ftx",
-    "forms/gsworkeg.ftx"
+    "forms/gspcuseg.ftx"
   ],
   "tp" : [
     "tp/frm_pad_del.ls"

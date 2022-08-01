@@ -4,5 +4,6 @@
 * ..warning:: NEED TO SET AS THE SAME NAME AS THE OBJECT CREATED
 *             TO RUN THE FORM
 #define FORM_NAME frmpad
+#define LAM_NAME tstlam
 
 #endif * pathformtemplate_h
