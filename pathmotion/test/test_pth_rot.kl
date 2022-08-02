@@ -165,7 +165,7 @@ ROUTINE t_rot_delta
 
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
-    tstrot__init(frm, cds, origin, PAD_IDOD)
+    tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type
     tstrmn__init(tool, TRUE, MOVE_DRYRUN)
@@ -257,7 +257,7 @@ ROUTINE t_rot_OD
     
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
-    tstrot__init(frm, cds, origin, PAD_IDOD)
+    tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type
     tstrmn__init(tool, TRUE, MOVE_DRYRUN)
@@ -346,7 +346,7 @@ ROUTINE t_rot_ID
     tool = POS(0,0,0,TOOL_ORIENT_UP, pose__set_config(DEFAULT_CONFIG))
     
     --initialize pathclass
-    tstrot__init(frm, cds, origin, PAD_IDOD)
+    tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
     tstrmn__init(tool, TRUE, MOVE_DRYRUN)
 
@@ -438,7 +438,7 @@ ROUTINE t_rot_pad
     
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
-    tstrot__init(frm, cds, origin, PAD_IDOD)
+    tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type
     tstrmn__init(tool, TRUE, MOVE_DRYRUN)
@@ -526,7 +526,7 @@ ROUTINE t_rot_pid
     tool = POS(0,0,0,TOOL_ORIENT_UP, pose__set_config(DEFAULT_CONFIG))
     
     --initialize pathclass
-    tstrot__init(frm, cds, origin, PAD_IDOD)
+    tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
     tstrmn__init(tool, TRUE, MOVE_DRYRUN)
 

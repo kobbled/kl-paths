@@ -28,10 +28,7 @@ PROGRAM class_name
 %define BASE_CLASSNAME class_name
 
 VAR
-  frm : XYZWPR
-  idod_ : INTEGER
-  coord_system : t_COORD_SYS
-  origin_ : XYZWPR
+  this : t_PATH_PARAM
   line_endpnts : PATH nodedata = t_TOOLPATH
   pth : PATH nodedata = t_TOOLPATH
 
@@ -57,30 +54,33 @@ ROUTINE next_toolpath
 -- Retrieves the next path in the pathplan
 -- handles the linking path for cylindrical cartesian, and rotary
   BEGIN
-    SELECT `PATH_PLAN_NAME`__next_toolpath OF
-      CASE(PTH_TOOLING):
-        --set speed
-        `PATH_PLAN_NAME`__set_segment_speed(tool_speed)
+    IF this.usePathPlan THEN
+      SELECT `PATH_PLAN_NAME`__next_toolpath OF
+        CASE(PTH_TOOLING):
+          --set speed
+          `PATH_PLAN_NAME`__set_segment_speed(tool_speed)
 
-        --get toolpath from pathplan
-        IF interp_tool THEN
-          `PATH_PLAN_NAME`__get_toolpath_interpolate((tool_step), PTH_LINETO, FALSE, pth)
-        ELSE
-          `PATH_PLAN_NAME`__get_toolpath(pth)
-        ENDIF
-      CASE(PTH_LINKING):
-        --set speed
-        `PATH_PLAN_NAME`__set_segment_speed(link_speed)
+          --get toolpath from pathplan
+          IF interp_tool THEN
+            `PATH_PLAN_NAME`__get_toolpath_interpolate((tool_step), PTH_LINETO, FALSE, pth)
+          ELSE
+            `PATH_PLAN_NAME`__get_toolpath(pth)
+          ENDIF
+        CASE(PTH_LINKING):
+          --set speed
+          `PATH_PLAN_NAME`__set_segment_speed(link_speed)
 
-        --get toolpath from linkingTransition user defined member
-        `PATH_PLAN_NAME`__linkingTransition(pth, (link_step), idod_)
-    ENDSELECT
+          --get toolpath from linkingTransition user defined member
+          `PATH_PLAN_NAME`__linkingTransition(pth, (link_step), this.idod)
+      ENDSELECT
+    ELSE
+    ENDIF
 
     --raise if linking
     paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
     
     --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (origin_.z), (coord_system.system), (coord_system.z_axis), FALSE)
+    `PATH_PLAN_NAME`__convertOrientation(pth, this.frm, (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
   END next_toolpath
 
 ROUTINE get_toolpath
@@ -93,32 +93,34 @@ ROUTINE get_toolpath
 %endif
   BEGIN
     paths__clear_toolpath(pth)
-    REPEAT
-      SELECT (`PATH_PLAN_NAME`__next_toolpath) OF
-        CASE(PTH_TOOLING):
-          --set speed
-          `PATH_PLAN_NAME`__set_segment_speed(tool_speed)
+    IF this.usePathPlan THEN
+      REPEAT
+        SELECT (`PATH_PLAN_NAME`__next_toolpath) OF
+          CASE(PTH_TOOLING):
+            --set speed
+            `PATH_PLAN_NAME`__set_segment_speed(tool_speed)
 
-          --get toolpath from pathplan
-          IF interp_tool THEN
-            `PATH_PLAN_NAME`__get_toolpath_interpolate((tool_step), PTH_LINETO, TRUE, pth)
-          ELSE
-            `PATH_PLAN_NAME`__get_toolpath(pth)
-          ENDIF
-        CASE(PTH_LINKING):
-          --set speed
-          `PATH_PLAN_NAME`__set_segment_speed(link_speed)
+            --get toolpath from pathplan
+            IF interp_tool THEN
+              `PATH_PLAN_NAME`__get_toolpath_interpolate((tool_step), PTH_LINETO, TRUE, pth)
+            ELSE
+              `PATH_PLAN_NAME`__get_toolpath(pth)
+            ENDIF
+          CASE(PTH_LINKING):
+            --set speed
+            `PATH_PLAN_NAME`__set_segment_speed(link_speed)
 
-          --get toolpath from linkingTransition user defined member
-          `PATH_PLAN_NAME`__linkingTransition(pth, (link_step), idod_)
-      ENDSELECT
-    UNTIL( `PATH_PLAN_NAME`__is_path_end )
+            --get toolpath from linkingTransition user defined member
+            `PATH_PLAN_NAME`__linkingTransition(pth, (link_step), this.idod)
+        ENDSELECT
+      UNTIL( `PATH_PLAN_NAME`__is_path_end )
+    ENDIF
 
     --raise linking path
     paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
 
     --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (origin_.z), (coord_system.system), (coord_system.z_axis), FALSE)
+    `PATH_PLAN_NAME`__convertOrientation(pth, this.frm, (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
   END get_toolpath
 
 ROUTINE get_midpoint
@@ -143,10 +145,14 @@ ROUTINE new
     paths__clear_toolpath(line_endpnts)
     paths__clear_toolpath(pth)
 
-    frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
-    origin_ = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
+    this.frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
+    this.origin = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
 
     set_coordinate_system(PTH_CARTESAN, 3)
+    set_idod(1)
+
+    this.usePathPlan = TRUE
+
   END new
 
 ROUTINE init
@@ -154,10 +160,12 @@ ROUTINE init
     paths__clear_toolpath(line_endpnts)
     paths__clear_toolpath(pth)
 
-    frm = coord_frm
-    origin_ = origin
+    this.frm = coord_frm
+    this.origin = origin
 
-    coord_system = coord_sys
+    this.coord_system = coord_sys
+
+    this.usePathPlan = doPathPlan
 
     --registers preset in template
     set_idod(idod)
@@ -170,12 +178,14 @@ ROUTINE delete
     paths__clear_toolpath(line_endpnts)
     paths__clear_toolpath(pth)
 
-    coord_system = unit_sys
-    idod_ = 0
+    this.coord_system = unit_sys
+    this.idod = 0
 
-    origin_ = (ZEROPOS(1))
+    this.origin = (ZEROPOS(1))
 
-    frm = (ZEROPOS(1))
+    this.frm = (ZEROPOS(1))
+
+    this.usePathPlan = FALSE
 
     --free path plan
     `PATH_PLAN_NAME`__delete
@@ -183,28 +193,28 @@ ROUTINE delete
 
 ROUTINE set_idod
   BEGIN
-    idod_ = i
+    this.idod = i
   END set_idod
 
 ROUTINE set_coordinate_system
   BEGIN
-    coord_system.system = system
-    coord_system.z_axis = z_axis
+    this.coord_system.system = system
+    this.coord_system.z_axis = z_axis
   END set_coordinate_system
 
 ROUTINE set_coord_frame
   BEGIN
-    frm = POS(x,y,z,w,p,r, pose__set_config(DEFAULT_CONFIG))
+    this.frm = POS(x,y,z,w,p,r, pose__set_config(DEFAULT_CONFIG))
   END set_coord_frame
 
 ROUTINE set_origin
   BEGIN
-    origin_ = POS(x,y,z,w,p,r, pose__set_config(DEFAULT_CONFIG))
+    this.origin = POS(x,y,z,w,p,r, pose__set_config(DEFAULT_CONFIG))
   END set_origin
 
 ROUTINE define_origin
   BEGIN
-    origin_ = POS((polyprm.xStart), (polyprm.yStart), (polyprm.height), (polyprm.polyAngle*toolprm.idod),0,0, pose__set_config(DEFAULT_CONFIG))
+    this.origin = POS((polyprm.xStart), (polyprm.yStart), (polyprm.height), (polyprm.polyAngle*toolprm.idod),0,0, pose__set_config(DEFAULT_CONFIG))
   END define_origin
 
 ROUTINE get_orient
@@ -227,7 +237,7 @@ ROUTINE get_corner
 
 ROUTINE get_idod
   BEGIN
-    RETURN(idod_)
+    RETURN(this.idod)
   END get_idod
 
 ROUTINE get_path
@@ -239,7 +249,7 @@ ROUTINE get_path
 
 ROUTINE get_origin
   BEGIN
-    RETURN(origin_)
+    RETURN(this.origin)
   END get_origin
 
 ROUTINE get_plan
@@ -258,56 +268,59 @@ ROUTINE planPath
   VAR
     orient : VECTOR
   BEGIN
-    `PATH_PLAN_NAME`__init(lines, origin_)
-    IF raster_type = NEARESTNEIGHBOR THEN
-      `PATH_PLAN_NAME`__NN_graph
-    ELSE
-      --(poly_depend, strict_dir)
-      `PATH_PLAN_NAME`__raster_graph(raster_type, poly_depend, TRUE)
+    IF this.usePathPlan THEN
+      `PATH_PLAN_NAME`__init(lines, this.origin)
+      IF raster_type = NEARESTNEIGHBOR THEN
+        `PATH_PLAN_NAME`__NN_graph
+      ELSE
+        --(poly_depend, strict_dir)
+        `PATH_PLAN_NAME`__raster_graph(raster_type, poly_depend, TRUE)
+      ENDIF
+
+      IF PATH_LEN(contours) > 0 THEN
+        --append contours after to not include in rastering process
+        -- (add to kd tree) = FALSE
+        `PATH_PLAN_NAME`__append_path(contours, FALSE)
+      ENDIF
+
+      `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
+
+      --set point orientation
+      orient = paths__set_orientation((this.coord_system.system), this.idod)
+      orient = orient - VEC(this.origin.w, this.origin.p, this.origin.r)
+      `PATH_PLAN_NAME`__set_orientation( orient )
     ENDIF
-
-    IF PATH_LEN(contours) > 0 THEN
-      --append contours after to not include in rastering process
-      -- (add to kd tree) = FALSE
-      `PATH_PLAN_NAME`__append_path(contours, FALSE)
-    ENDIF
-
-    `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
-
-    --set point orientation
-    orient = paths__set_orientation((coord_system.system), idod_)
-    orient = orient - VEC(origin_.w, origin_.p, origin_.r)
-    `PATH_PLAN_NAME`__set_orientation( orient )
 
   END planPath
 
 ROUTINE planImportPath
   BEGIN
-    `PATH_PLAN_NAME`__new(origin_)
-    `PATH_PLAN_NAME`__importPath(filename)
+    IF this.usePathPlan THEN
+      `PATH_PLAN_NAME`__new(this.origin)
+      `PATH_PLAN_NAME`__importPath(filename)
 
-    IF raster_type = NEARESTNEIGHBOR THEN
-      `PATH_PLAN_NAME`__NN_graph
-    ELSE
-      --(poly_depend, strict_dir)
-      `PATH_PLAN_NAME`__raster_graph(raster_type, poly_depend, TRUE)
+      IF raster_type = NEARESTNEIGHBOR THEN
+        `PATH_PLAN_NAME`__NN_graph
+      ELSE
+        --(poly_depend, strict_dir)
+        `PATH_PLAN_NAME`__raster_graph(raster_type, poly_depend, TRUE)
+      ENDIF
+
+      `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
+
+      --set point orientation
+      `PATH_PLAN_NAME`__set_orientation( paths__set_orientation((this.coord_system.system), this.idod) )
     ENDIF
-
-    `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
-
-    --set point orientation
-    `PATH_PLAN_NAME`__set_orientation( paths__set_orientation((coord_system.system), idod_) )
-
   END planImportPath
 
 ROUTINE get_start_node
   BEGIN
-    RETURN(frm:`PATH_PLAN_NAME`__get_start_node)
+    RETURN(this.frm:`PATH_PLAN_NAME`__get_start_node)
   END get_start_node
 
 ROUTINE get_end_node
   BEGIN
-    RETURN(frm:`PATH_PLAN_NAME`__get_end_node)
+    RETURN(this.frm:`PATH_PLAN_NAME`__get_end_node)
   END get_end_node
 
 ROUTINE makeline
@@ -315,26 +328,26 @@ ROUTINE makeline
     status : INTEGER
   BEGIN
     --update config_data to default
-    ref_frame = pose__replace_config(ref_frame, (frm.config_data))
+    ref_frame = pose__replace_config(ref_frame, (this.frm.config_data))
 
     paths__clear_toolpath(line_endpnts)
     --add start point
     APPEND_NODE(line_endpnts,status)
-    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(start_point, paths__set_orientation((coord_system.system), idod_), (frm.config_data)), PTH_MOVETO, line_typ, speed, tangent)
+    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(start_point, paths__set_orientation((this.coord_system.system), this.idod), (this.frm.config_data)), PTH_MOVETO, line_typ, speed, tangent)
     --add end point
     APPEND_NODE(line_endpnts,status)
-    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(end_point, paths__set_orientation((coord_system.system), idod_), (frm.config_data)), PTH_CLOSE, line_typ, speed, tangent)
+    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(end_point, paths__set_orientation((this.coord_system.system), this.idod), (this.frm.config_data)), PTH_CLOSE, line_typ, speed, tangent)
     --`PATH_PLAN_NAME`__set_toolpath(line_endpnts)
 
     paths__clear_toolpath(pth)
     `PATH_PLAN_NAME`__interpolate_path(line_endpnts, (spacing), dir, line_code, ref_frame, FALSE, pth)
 
-    IF UNINIT(coord_system.system) THEN
+    IF UNINIT(this.coord_system.system) THEN
       karelError(VAR_UNINIT,'coordinate system must be set in class_name', ER_ABORT)
     ENDIF
 
     --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (origin_.z), (coord_system.system), (coord_system.z_axis), FALSE)
+    `PATH_PLAN_NAME`__convertOrientation(pth, this.frm, (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
 
   END makeline
 
@@ -358,12 +371,12 @@ ROUTINE get_line
       paths__offset_toolpath(pth, offset, PTH_NULL, line_typ)
     ENDIF
 
-    IF UNINIT(coord_system.system) THEN
+    IF UNINIT(this.coord_system.system) THEN
       karelError(VAR_UNINIT,'coordinate system must be set in class_name', ER_ABORT)
     ENDIF
 
     --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, frm, (origin_.z), (coord_system.system), (coord_system.z_axis), FALSE)
+    `PATH_PLAN_NAME`__convertOrientation(pth, this.frm, (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
 
   END get_line
 

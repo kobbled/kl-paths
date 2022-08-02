@@ -156,7 +156,7 @@ ROUTINE t_hexagon
 
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
-    tstpth__init(frm, cds, origin, PAD_IDOD)
+    tstpth__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type
     tstmtn__init(tool, TRUE, MOVE_DRYRUN)
@@ -233,7 +233,7 @@ ROUTINE t_pvert_ID
 
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
-    tstpth__init(frm, cds, origin, PAD_IDOD)
+    tstpth__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type
     tstmtn__init(tool, TRUE, MOVE_DRYRUN)
@@ -310,7 +310,7 @@ ROUTINE t_pvert_OD
 
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
-    tstpth__init(frm, cds, origin, PAD_IDOD)
+    tstpth__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type
     tstmtn__init(tool, TRUE, MOVE_DRYRUN)
@@ -386,7 +386,7 @@ ROUTINE t_pvert_pad
 
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
-    tstpth__init(frm, cds, origin, PAD_IDOD)
+    tstpth__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type
     tstmtn__init(tool, TRUE, MOVE_DRYRUN)
@@ -462,7 +462,7 @@ ROUTINE t_pvert_pdid
 
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
-    tstpth__init(frm, cds, origin, PAD_IDOD)
+    tstpth__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type
     tstmtn__init(tool, TRUE, MOVE_DRYRUN)
