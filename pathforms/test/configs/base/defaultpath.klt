@@ -40,7 +40,8 @@
 %define SCAN_LINE_PROG 'MOV_SCN'
 
 --planning corner start
-%defeval PLATE_CORNER RIGHT_BOTTOM
+%defeval OD_CORNER RIGHT_BOTTOM
+%defeval ID_CORNER 0
 
 --path implementation
 %include base.paths.impl.klt
