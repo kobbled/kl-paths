@@ -523,23 +523,25 @@ ROUTINE t_temp : BOOLEAN
     RETURN(TRUE)
   END t_temp
 
-ROUTINE t_import : BOOLEAN
-%define CSV_PATH_NAME 'FR:slice0032.csv'
-  BEGIN
-    tstpln__new(POS(0,0,0,0,0,0, (ZEROPOS(1).config_data)))
-    tstpln__importPath(CSV_PATH_NAME)
-    tstpln__raster_graph(ONEWAY, FALSE, TRUE)
+-- **fix**
+-- ..warning:: This function needs to be updated to new csv/layout
+--             and pathplan->importPath syntax
+--
+-- ROUTINE t_import : BOOLEAN
+-- %define CSV_PATH_NAME 'FR:slice0032.csv'
+--   BEGIN
+--     tstpln__raster_graph(ONEWAY, FALSE, TRUE)
 
-    --get start node
-    tstpln__MST(tstpln__closest_bounding_box(1))
+--     --get start node
+--     tstpln__MST(tstpln__closest_bounding_box(1))
 
-    paths__clear_vecpath(lines)
-    tstpln__get_path(lines)
-    tstpln__get_plan(path_plan)
+--     paths__clear_vecpath(lines)
+--     tstpln__get_path(lines)
+--     tstpln__get_plan(path_plan)
 
 
-    RETURN(TRUE)
-  END t_import
+--     RETURN(TRUE)
+--   END t_import
 
 BEGIN
 
@@ -555,7 +557,7 @@ BEGIN
   kunit_test('test raster multi polygon indep', t_rast_mult2)
   kunit_test('test raster hexagon poly', t_hexagon)
   kunit_test('test raster svg poly', t_temp)
-  kunit_test('test import raster path', t_import)
+  -- need to fix before use :: kunit_test('test import raster path', t_import)
 
   kunit_done
 

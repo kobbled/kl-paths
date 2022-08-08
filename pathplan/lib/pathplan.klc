@@ -453,57 +453,18 @@ ROUTINE delete
 ROUTINE importPath
   VAR
     i : INTEGER
-    b : BOOLEAN
-    r : ARRAY[5] OF REAL
-    prev_line, line_cnt : INTEGER
     status : INTEGER
   BEGIN
-    csvpth__new(filename, ',', '')
-    csvpth__open
-    --read header
-    --(x,y,z,depth)
-    csvpth__read_header
-
     clear_path(segment)
     clear_path(pth)
 
-    prev_line = 0
-    REPEAT
-      csvpth__readline
-      csvpth__read_rarr(1, 0, r)
-      IF b THEN
-        APPEND_NODE(pth, status)
-        pth[PATH_LEN(pth)].v = VEC(r[1], r[2], r[3])
-        pth[PATH_LEN(pth)].polygon = 1
-
-        -- --store depth info
-        -- APPEND_NODE(depths, status)
-        -- depths[PATH_LEN(depths)].v = r[4]
-
-        line_cnt = TRUNC(r[5])
-        IF line_cnt <> prev_line THEN
-          pth[PATH_LEN(pth)].code = PTH_MOVETO
-
-          --update previous node as the end of a line
-          IF PATH_LEN(pth) > 1 THEN
-            pth[PATH_LEN(pth)-1].code = PTH_CLOSE
-          ENDIF
-        ELSE
-          pth[PATH_LEN(pth)].code = PTH_LINETO
-        ENDIF
-
-        prev_line = line_cnt
-      ENDIF
-    UNTIL(NOT b)
-
-    --close path
-    pth[PATH_LEN(pth)].code = PTH_CLOSE
+    FOR i=1 TO PATH_LEN(p) DO
+      APPEND_NODE(pth, status)
+      pth[i] = p[i]
+    ENDFOR
 
     --create tangents
     draw__calc_tangent(pth)
-
-    csvpth__close
-    csvpth__clear
 
     --build kd tree, and start visited
     -- and tracked lists

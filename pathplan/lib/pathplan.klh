@@ -15,7 +15,7 @@ ROUTINE init(p : PATH nodedata = t_VEC_PATH ; coord_frame : XYZWPR) FROM class_n
 declare_member(class_name,delete,class_name,dstr)
 ROUTINE delete FROM class_name
 declare_member(class_name,importPath,class_name,impp)
-ROUTINE importPath(filename : STRING) FROM class_name
+ROUTINE importPath(p : PATH nodedata = t_VEC_PATH) FROM class_name
 declare_member(class_name,append_path,class_name,apph)
 ROUTINE append_path(p : PATH nodedata = t_VEC_PATH; add_to_kd : BOOLEAN) FROM class_name
 declare_member(class_name,append_path_arr,class_name,appa)
