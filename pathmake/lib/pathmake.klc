@@ -29,6 +29,7 @@ PROGRAM class_name
 
 VAR
   this : t_PATH_PARAM
+  pth_end : BOOLEAN
   line_endpnts : PATH nodedata = t_TOOLPATH
   pth : PATH nodedata = t_TOOLPATH
 
@@ -113,7 +114,9 @@ ROUTINE get_toolpath
             --get toolpath from linkingTransition user defined member
             `PATH_PLAN_NAME`__linkingTransition(pth, (link_step), this.idod)
         ENDSELECT
-      UNTIL( `PATH_PLAN_NAME`__is_path_end )
+      UNTIL( is_path_end )
+    ELSE
+      karelError(UNSUPPORTED_ITEM,'Must currently use Path Planning for "get_toolpath" member.', ER_ABORT)
     ENDIF
 
     --raise linking path
@@ -153,6 +156,8 @@ ROUTINE new
 
     this.usePathPlan = TRUE
 
+    pth_end = FALSE
+
   END new
 
 ROUTINE init
@@ -169,6 +174,7 @@ ROUTINE init
 
     --registers preset in template
     set_idod(idod)
+    pth_end = FALSE
   END init
 
 ROUTINE init2
@@ -178,6 +184,7 @@ ROUTINE init2
 
     this = make_prm
 
+    pth_end = FALSE
   END init2
 
 ROUTINE delete
@@ -190,6 +197,7 @@ ROUTINE delete
 
     this = unit_param
 
+    pth_end = FALSE
 
     --free path plan
     `PATH_PLAN_NAME`__delete
@@ -215,6 +223,16 @@ ROUTINE set_origin
   BEGIN
     this.origin = POS(x,y,z,w,p,r, pose__set_config(DEFAULT_CONFIG))
   END set_origin
+
+ROUTINE set_path_end
+  BEGIN
+    pth_end = b
+  END set_path_end
+
+ROUTINE set_usepathplan
+  BEGIN
+    this.usePathPlan = b
+  END set_usepathplan
 
 ROUTINE define_origin
   BEGIN
@@ -265,7 +283,29 @@ ROUTINE get_plan
 
 ROUTINE is_path_end
   BEGIN
-    RETURN(`PATH_PLAN_NAME`__is_path_end)
+    --use `pth_end` for external flagging for end of path
+    --if using path paln check module if at end
+    --of buffer
+    IF this.usePathPlan THEN
+      pth_end = `PATH_PLAN_NAME`__is_path_end
+      RETURN((pth_end))
+    ENDIF
+
+    --external flag to set, for ending path
+    IF pth_end = TRUE THEN
+      RETURN(TRUE)
+    ELSE
+      RETURN(FALSE)
+    ENDIF
+
+    --if no path, assume it is at end of buffer
+    IF PATH_LEN(pth) = 0 THEN
+      pth_end = TRUE
+      RETURN(TRUE)
+    ENDIF
+
+    RETURN(FALSE)
+
   END is_path_end
 
 ROUTINE planPath

@@ -27,6 +27,10 @@ declare_member(class_name,set_coord_frame,class_name,stcdf)
 ROUTINE set_coord_frame(x,y,z,w,p,r : REAL) FROM class_name
 declare_member(class_name,set_origin,class_name,storg)
 ROUTINE set_origin(x,y,z,w,p,r : REAL) FROM class_name
+declare_member(class_name,set_path_end,class_name,stpef)
+ROUTINE set_path_end(b : BOOLEAN) FROM class_name
+declare_member(class_name,set_usepathplan,class_name,stupp)
+ROUTINE set_usepathplan(b : BOOLEAN) FROM class_name
 declare_member(class_name,define_origin,class_name,dforg)
 ROUTINE define_origin(polyprm : t_PATH_VARS ; toolprm : t_TOOL_VARS) FROM class_name
 
