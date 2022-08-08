@@ -13,7 +13,7 @@ PROGRAM test_pth_mtn
 
 %define M_PI 3.14159
 
-%include systemlib.klt
+%include systemlib.types.klt
 %include systemvars.klt
 %include pose.const.klt
 %include draw.klt

@@ -17,7 +17,7 @@ PROGRAM paths
 %define M_PI 3.1415926535
 
 %include errors.klt
-%include systemlib.klt
+%include systemlib.types.klt
 %include systemvars.klt
 %include draw.rect.klt
 %include pose.const.klt

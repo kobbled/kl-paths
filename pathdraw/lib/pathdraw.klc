@@ -5,7 +5,7 @@ PROGRAM class_name
 
 %include namespace.m
 
-%include systemlib.klt
+%include systemlib.types.klt
 %include systemvars.klt
 %include pose.const.klt
 %include draw.klt

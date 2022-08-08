@@ -28,7 +28,7 @@ PROGRAM class_name
 %include ppad.kl
 
 %include errors.klt
-%include systemlib.klt
+%include systemlib.types.klt
 %include pose.const.klt
 %include pathplan.klt
 %include pathlib.klt

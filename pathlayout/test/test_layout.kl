@@ -1,7 +1,10 @@
 PROGRAM test_layout
 %NOLOCKGROUP
 
-%include systemlib.klt
+%include systemlib.types.klt
+%include systemlib.datatypes.klt
+%include pathlib.klt
+%include pose.const.klt
 
 CONST
   FILE_NAME = 'FR:test3599.csv'

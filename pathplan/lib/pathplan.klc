@@ -11,7 +11,8 @@ PROGRAM class_name
 %endif
 
 %include errors.klt
-%include systemlib.klt
+%include systemlib.types.klt
+%include systemlib.datatypes.klt
 %include systemvars.klt
 %include draw.rect.klt
 %include pose.const.klt

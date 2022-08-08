@@ -11,7 +11,7 @@ PROGRAM test_pplan
 %include display.c.klt
 %endif
 
-%include systemlib.klt
+%include systemlib.types.klt
 %include systemvars.klt
 %include pathlib.klt
 %include pathplan.klt
