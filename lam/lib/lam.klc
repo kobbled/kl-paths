@@ -38,6 +38,11 @@ ROUTINE getSpeedFromDepth
   VAR
     speed : REAL
   BEGIN
+    IF powder = 0 THEN
+      -- use internally set powder
+      powder = powprm.powder
+    ENDIF
+
     speed = depth_maps[powder].slope*depth + depth_maps[powder].intercept
 
     --clip speed on testing bounds
