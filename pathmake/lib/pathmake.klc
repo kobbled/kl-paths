@@ -74,14 +74,20 @@ ROUTINE next_toolpath
           --get toolpath from linkingTransition user defined member
           `PATH_PLAN_NAME`__linkingTransition(pth, (link_step), this.idod)
       ENDSELECT
-    ELSE
     ENDIF
 
-    --raise if linking
-    paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
-    
-    --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, this.frm, (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
+    IF PATH_LEN(pth) > 0 THEN
+      --raise if linking
+      -- ..note:: passes are fed in line by line, so we can assume `pth`
+      --          all has the same path code
+      IF (pth[1].code = PTH_LINKING) THEN
+        paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
+      ENDIF
+
+      --convert to cartesian
+      -- ..note:: this function will not do anything if the coord system is cartesian
+      `PATH_PLAN_NAME`__convertOrientation(pth, this.frm, (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
+    ENDIF
   END next_toolpath
 
 ROUTINE get_toolpath
