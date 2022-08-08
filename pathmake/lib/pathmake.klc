@@ -171,21 +171,25 @@ ROUTINE init
     set_idod(idod)
   END init
 
-ROUTINE delete
-  VAR
-    unit_sys : t_COORD_SYS
+ROUTINE init2
   BEGIN
     paths__clear_toolpath(line_endpnts)
     paths__clear_toolpath(pth)
 
-    this.coord_system = unit_sys
-    this.idod = 0
+    this = make_prm
 
-    this.origin = (ZEROPOS(1))
+  END init2
 
-    this.frm = (ZEROPOS(1))
+ROUTINE delete
+  VAR
+    unit_sys : t_COORD_SYS
+    unit_param : t_PATH_PARAM
+  BEGIN
+    paths__clear_toolpath(line_endpnts)
+    paths__clear_toolpath(pth)
 
-    this.usePathPlan = FALSE
+    this = unit_param
+
 
     --free path plan
     `PATH_PLAN_NAME`__delete
