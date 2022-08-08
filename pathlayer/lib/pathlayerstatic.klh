@@ -1,0 +1,28 @@
+--header
+%include header_guard.m
+--oop
+%include namespace.m
+
+--start header file
+header_if -- ifndef class
+header_def -- define class
+
+declare_member(class_name,new,class_name,new)
+ROUTINE new(layer_prm : t_PATH_LAYER ; make_prm : t_PATH_PARAM) FROM class_name
+declare_member(class_name,delete,class_name,del)
+ROUTINE delete FROM class_name
+
+--layout members
+declare_member(class_name,import_layout,class_name,imptl)
+ROUTINE import_layout(filename : STRING; system : INTEGER ; z_axis : INTEGER) FROM class_name
+declare_member(class_name,open_layout,class_name,oplay)
+ROUTINE open_layout FROM class_name
+declare_member(class_name,close_layout,class_name,cllay)
+ROUTINE close_layout FROM class_name
+declare_member(class_name,next_layer,class_name,nxtly)
+ROUTINE next_layer : BOOLEAN FROM class_name
+declare_member(class_name,next_pass,class_name,nxtps)
+ROUTINE next_pass : BOOLEAN FROM class_name
+
+
+%endif --end header

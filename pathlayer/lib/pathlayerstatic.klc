@@ -1,0 +1,231 @@
+PROGRAM class_name
+%NOBUSYLAMP
+%COMMENT = 'pthlayerstat'
+%NOLOCKGROUP
+
+%include namespace.m
+
+%define BASE_CLASSNAME class_name
+
+%include systemlib.types.klt
+%include systemlib.datatypes.klt
+%include pathlib.klt
+
+--define layout struct
+layout_type
+
+--
+VAR
+  this   : t_LAYER
+  params : t_PATH_PARAM
+  passes : PATH nodedata = t_INTEGER
+  layers : INTEGER
+
+-- include reference to pathmake "pth".
+%include pathmake.friend.members.klt
+pathmake_friends(PATH_OBJECT_NAME)
+
+-- include reference to pathlayout "buffer".
+%include pathlayout.friend.members.klt
+pathlayout_friends(LAYOUT_OBJECT_NAME)
+
+%include errors.klh
+%from pathlib.klh %import clear_toolpath
+
+
+--define layout object
+define_pathlayout(LAYOUT_OBJECT_NAME,LAYOUT_CONFIG_FILENAME)
+
+--define path object
+path_make_define(PATH_OBJECT_NAME,PATH_CONFIG_FILENAME)
+
+--lam object
+lam_define(LAM_NAME,LAM_CNFG)
+
+%defeval class_name BASE_CLASSNAME
+
+%include pathlayer.klh
+
+--private
+
+ROUTINE clear_passes
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    i = PATH_LEN(passes)
+    WHILE PATH_LEN(passes) > 0 DO
+		  DELETE_NODE(passes,i,status)
+      i = i - 1
+	  ENDWHILE
+  END clear_passes
+
+ROUTINE move_to_start_pass
+  VAR
+    i : INTEGER
+    passes : INTEGER
+  BEGIN
+    -- get the start pass index
+    IF (this.start_pass > 0) THEN
+      passes = 0
+
+      FOR i=1 TO PATH_LEN(buffer) DO
+        IF (buffer[i].code = PTH_CLOSE) THEN
+          passes = passes + 1
+        ENDIF
+
+        IF (passes = this.start_pass) THEN
+          this.last_idx = i
+          RETURN
+        ENDIF
+      ENDFOR
+
+      karelError(PATH_INDEX_OUT_OF_RANGE,'Path is out of range of the layer buffer.', ER_ABORT)
+
+    ENDIF
+  END move_to_start_pass
+
+  -- user macro
+impl_buffer_conversion
+
+--public
+ROUTINE new
+  BEGIN
+    --initialize lam
+    `LAM_NAME`__new
+
+    --set params
+    params = make_prm
+    --initialize pathmake
+    `PATH_OBJECT_NAME`__init2(params)
+
+    clear_passes
+    layers = 0
+    this = layer_prm
+  END new
+
+ROUTINE delete
+  VAR
+    uninit_lay : t_PATH_LAYER
+    uninit_prm : t_PATH_PARAM
+  BEGIN
+    --layout delete
+    `LAYOUT_OBJECT_NAME`__delete
+
+    --pathmake delete
+    `PATH_OBJECT_NAME`__delete
+
+    clear_passes
+
+    this = uninit_lay
+    params = uninit_prm
+  END delete
+
+-- From layout
+
+ROUTINE import_layout
+  BEGIN
+    `LAYOUT_OBJECT_NAME`__new(filename, system, z_axis)
+    --calculate passes per layer
+    `LAYOUT_OBJECT_NAME`__openfile
+    `LAYOUT_OBJECT_NAME`__countInstances(passes)
+    layers = PATH_LEN(passes)
+    `LAYOUT_OBJECT_NAME`__closefile
+  END import_layout
+
+ROUTINE open_layout
+  VAR
+    eof : BOOLEAN
+  BEGIN
+    `LAYOUT_OBJECT_NAME`__openfile
+
+    IF (this.start_layer > 0) THEN
+      --queue up for starting layer
+      eof = FALSE
+      FOR i=1 TO this.start_layer DO
+        IF (NOT eof) THEN
+          eof = `LAYOUT_OBJECT_NAME`__loadBuffer
+        ENDIF
+      ENDFOR
+    ENDIF
+  END open_layout
+
+ROUTINE close_layout
+  BEGIN
+    `LAYOUT_OBJECT_NAME`__closefile
+  END close_layout
+
+ROUTINE next_layer
+  --returns true if at the end of the file
+  VAR
+    eof : BOOLEAN
+  BEGIN
+    -- load next layer into `buffer` attribute
+    eof = `LAYOUT_OBJECT_NAME`__loadBuffer
+
+    --get current layer
+    IF (NOT eof) THEN
+      this.curr_layer = buffer[1].layer
+
+      --reset passes
+      this.curr_pass = this.start_pass
+      this.last_idx = 0
+
+      --index buffer pointer to start pass
+      move_to_start_pass
+
+    ENDIF
+
+    RETURN(eof)
+  END next_layer
+
+ROUTINE next_pass
+  --returns true if at the end of the layer buffer
+  VAR
+    layer_len : INTEGER
+  BEGIN
+
+    -- if buffer is empty, exit
+    IF PATH_LEN(buffer) = 0 THEN
+      karelError(PATH_INDEX_OUT_OF_RANGE,'Nothing is in the path buffer.', ER_WARN)
+      RETURN(TRUE)
+    ENDIF
+
+    --clear previous path_make pth
+    paths__clear_toolpath(pth)
+
+    --start buffer index at the next line/pass
+    REPEAT
+      this.last_idx = this.last_idx + 1
+      --make t_TOOLPATH node (convert from buffer to t_TOOLPATH)
+      layout_to_toolpath((this.last_idx), pth)
+      --repeat until at the end of a toolpath segment
+    UNTIL(pth[PATH_LEN(pth)].code = PTH_CLOSE)
+
+    IF this.last_idx >= PATH_LEN(buffer) THEN
+      --at the end of the layer buffer
+      RETURN(TRUE)
+    ENDIF
+
+    RETURN(FALSE)
+
+  END next_pass
+
+  ROUTINE next_toolpath
+    VAR
+      end_buffer : BOOLEAN
+      end_layer : BOOLEAN
+    BEGIN
+
+      REPEAT
+        end_buffer = next_layer
+        REPEAT
+          end_layer = next_pass
+          `PATH_OBJECT_NAME`__set_path_end(end_layer)
+        UNTIL(end_layer)
+      UNTIL(end_buffer)
+
+    END next_toolpath
+
+BEGIN
+END class_name

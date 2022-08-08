@@ -1,0 +1,57 @@
+--convert between buffer and t_TOOLPATH
+%mode push
+%mode string QQQ "$" "$" "\\"
+%define impl_buffer_conversion $
+  ROUTINE layout_to_toolpath
+    VAR
+      status : INTEGER
+    BEGIN
+      APPEND_NODE(out_pth,status)
+      out_pth[PATH_LEN(out_pth)].v = POS((buffer[idx].pose.x), (buffer[idx].pose.y), (buffer[idx].pose.z), & 
+                      (buffer[idx].orient.x), (buffer[idx].orient.y), (buffer[idx].orient.z), & 
+                      (params.frm.config_data) )
+      
+      -- must set powprm.powder in lam before this 
+      out_pth[PATH_LEN(pth)].speed   = `LAM_NAME`__getSpeedFromDepth(0, buffer[idx].depth)
+      out_pth[PATH_LEN(pth)].code    = buffer[idx].code
+      out_pth[PATH_LEN(pth)].typ     = PTH_TOOLING
+      
+      -- ..warning:: tangent is not calculated for cartesian points
+
+    END layout_to_toolpath
+
+  ROUTINE layout_to_vecpath
+    BEGIN
+      APPEND_NODE(out_pth,status)
+      out_pth[PATH_LEN(out_pth)].v = VEC((buffer[idx].pose.x), (buffer[idx].pose.y), (buffer[idx].pose.z))
+      out_pth[PATH_LEN(out_pth)].code  = buffer[idx].code
+      out_pth[PATH_LEN(out_pth)].polygon = 1
+
+      --ijk vector of tool normal
+      --..warning:: NEED TO CONVERT FIRST FROM NORMAL VECTOR TO TANGENT VECTOR
+      --            THEN FROM TANGENT VECTOR TO WPR
+      out_pth[PATH_LEN(out_pth)].tangent = VEC((buffer[idx].orient.x), (buffer[idx].orient.y), (buffer[idx].orient.z))
+
+    END layout_to_vecpath
+$
+%mode pop
+
+--layout
+------------------
+%define LAYOUT_OBJECT_NAME tstlay
+%define LAYOUT_CONFIG_FILENAME defaultpathlayout.klt
+
+--pathclass object
+------------------
+%define PATH_OBJECT_NAME tstpth
+
+-- pathdraw object
+------------------
+%define PATHDRAW_NAME tspdrw
+%define DRAW_OBJECT_NAME tstpoly
+
+-- lam object
+-----------------
+%define LAM_NAME tstlam
+%define LAM_CNFG default_lam.klt
+

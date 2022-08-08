@@ -11,6 +11,10 @@
   "depends" : [
     "ktransw-macros",
     "errors",
-    "systemlib"
+    "systemlib",
+    "pathlib",
+    "pathmake",
+    "pathdraw",
+    "pathlayout"
   ]
 }

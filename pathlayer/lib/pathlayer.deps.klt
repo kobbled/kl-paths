@@ -1,0 +1,16 @@
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+--csv dependency
+%define define_pathlayout(object_name,cnfg_file) `%class object_name('pathlayout.klc','pathlayout.klh','cnfg_file')`
+
+--pathmake dependency
+%define path_make_define(object_name,cnfg_file) `%class object_name('pathmake.klc','pathmake.klh','cnfg_file')`
+
+--pathdraw dependency
+%define path_draw_define(object_name,cnfg_file) `%class object_name('pathdraw.klc','pathdraw.klh','cnfg_file')`
+
+--lam dependency
+%define lam_define(object_name,cnfg_file) `%class object_name('lam.klc','lam.klh','cnfg_file')`
+
+%mode pop
