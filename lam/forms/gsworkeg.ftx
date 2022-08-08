@@ -26,5 +26,5 @@ $-,enum_feeder
 * eol
 
 $-,enum_powder
-    "FORM_NAME" &new_line * program name of variable
+    "LAM_NAME" &new_line * program name of variable
     "powder_names" &new_line * variable name containing choices

@@ -30,8 +30,8 @@
 %define define_depth_maps `ROUTINE initDepthMap
   BEGIN
     -- Inconel 625
-    depth_maps[POWDER_INCONEL].slope = -12.275
-    depth_maps[POWDER_INCONEL].intercept = 21.146
+    depth_maps[POWDER_INCONEL].slope = -12.114
+    depth_maps[POWDER_INCONEL].intercept = 20.308
     -- 431L HC
     depth_maps[POWDER_431L].slope = -10.124
     depth_maps[POWDER_431L].intercept = 13.571

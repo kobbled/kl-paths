@@ -21,13 +21,13 @@ BEGIN
 
   tstlam__new
 
-  set_laser_power(3000)
-  set_powder_params(2, POWDER_INCONEL, 2.6, 4, 0.95, 1.27)
+  tstlam__set_laser_power(3000)
+  tstlam__set_powder_params(2, POWDER_INCONEL, 2.6, 4, 0.95, 1.27)
 
-  set_registers
+  tstlam__set_registers
 
-  WRITE TPDISPLAY('depth: 0.60; speed: ', getSpeedFromDepth((powprm.powder), 0.60)::5::2, CR)
-  WRITE TPDISPLAY('depth: 1; speed: ', getSpeedFromDepth((powprm.powder), 1)::5::2, CR)
-  WRITE TPDISPLAY('depth: 1.4; speed: ', getSpeedFromDepth((powprm.powder), 1.4)::5::2, CR)
+  WRITE TPDISPLAY('depth: 0.60; speed: ', tstlam__getSpeedFromDepth((powprm.powder), 0.60)::5::2, CR)
+  WRITE TPDISPLAY('depth: 1; speed: ', tstlam__getSpeedFromDepth((powprm.powder), 1)::5::2, CR)
+  WRITE TPDISPLAY('depth: 1.4; speed: ', tstlam__getSpeedFromDepth((powprm.powder), 1.4)::5::2, CR)
 
 END test_lam
