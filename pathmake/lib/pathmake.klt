@@ -1,12 +1,4 @@
 %ifndef pathmake_types_t
 %define pathmake_types_t
 
-  t_PATH_PARAM FROM pathmake = STRUCTURE
-    frm : XYZWPR
-    idod : INTEGER
-    coord_system : t_COORD_SYS
-    origin : XYZWPR
-    usePathPlan : BOOLEAN
-  ENDSTRUCTURE
-
 %endif --pathmake_types_t

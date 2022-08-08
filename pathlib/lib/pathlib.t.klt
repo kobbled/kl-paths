@@ -50,4 +50,20 @@ TYPE
     z_axis : SHORT
   ENDSTRUCTURE
 
+  t_PATH_PARAM FROM paths = STRUCTURE
+    frm : XYZWPR
+    idod : INTEGER
+    coord_system : t_COORD_SYS
+    origin : XYZWPR
+    usePathPlan : BOOLEAN
+  ENDSTRUCTURE
+
+  t_PATH_LAYER FROM paths = STRUCTURE
+    start_pass : INTEGER
+    start_layer : INTEGER
+    curr_pass : INTEGER
+    curr_layer : INTEGER
+    last_idx : INTEGER
+  ENDSTRUCTURE
+
 %endif --pathlib_types_t

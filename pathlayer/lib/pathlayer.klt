@@ -1,0 +1,4 @@
+%ifndef pathlayer_types_t
+%define pathlayer_types_t
+
+%endif --pathlayer_types_t
