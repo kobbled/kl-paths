@@ -50,7 +50,7 @@ BEGIN
   clear_list
 
   --construct
-  tstlay__new(FILE_NAME)
+  tstlay__new(FILE_NAME, PTH_CARTESAN, Z_AXES)
 
   -- ** predetermine number of layers and passes in each layer **
 

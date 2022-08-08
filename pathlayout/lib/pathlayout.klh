@@ -8,7 +8,7 @@ header_if -- ifndef class
 header_def -- define class
 
 declare_member(class_name,new,class_name,new)
-ROUTINE new(filename : STRING) FROM class_name
+ROUTINE new(filename : STRING; system : INTEGER ; z_axis : INTEGER) FROM class_name
 declare_member(class_name,delete,class_name,del)
 ROUTINE delete FROM class_name
 
@@ -19,6 +19,10 @@ ROUTINE closefile FROM class_name
 
 declare_member(class_name,clear_buffer,class_name,clrbf)
 ROUTINE clear_buffer FROM class_name
+
+--getters
+declare_member(class_name,get_coord_sys,class_name,gtcs)
+ROUTINE get_coord_sys : t_COORD_SYS FROM class_name
 
 declare_member(class_name,bufferLength,class_name,bufln)
 ROUTINE bufferLength : INTEGER FROM class_name

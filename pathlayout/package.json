@@ -24,6 +24,7 @@
     "pathlib"
   ],
   "tests-depends" :  [
-    "display"
+    "display",
+    "pose"
   ]
 }
