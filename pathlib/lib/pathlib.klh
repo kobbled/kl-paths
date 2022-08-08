@@ -27,8 +27,10 @@ declare_function(prog_name,new_tpath,prog_name_alias,ntpth)
 ROUTINE paths__new_tpath(v : XYZWPR ; code : INTEGER ; typ : INTEGER; speed : REAL; tangent : VECTOR) : t_TOOLPATH FROM paths
 declare_function(prog_name,new_coord_sys,prog_name_alias,ncord)
 ROUTINE paths__new_coord_sys(system : INTEGER ; z_axis : INTEGER) : t_COORD_SYS FROM paths
-declare_function(prog_name,set_orientation,prog_name_alias,storn)
-ROUTINE paths__set_orientation(crd_sys : INTEGER; idod : INTEGER) : VECTOR FROM paths
+declare_function(prog_name,new_make_params,prog_name_alias,nmprm)
+ROUTINE paths__new_make_params(coord_frm : XYZWPR; coord_sys : t_COORD_SYS; origin : XYZWPR; idod : INTEGER; doPathPlan : BOOLEAN) : t_PATH_PARAM FROM paths
+declare_function(prog_name,new_layer_params,prog_name_alias,nlprm)
+ROUTINE paths__new_layer_params(start_pass : INTEGER; start_layer : INTEGER) : t_PATH_LAYER FROM paths
 
 %ifdef toolpath_structs_t
 declare_function(prog_name,toolvec_to_vec,prog_name_alias,tv2v)
@@ -40,6 +42,8 @@ ROUTINE paths__vec_to_toolvec(v : VECTOR) : t_TOOL_VEC FROM paths
 --setters
 declare_member(prog_name,set_speed,prog_name,stspd)
 ROUTINE paths__set_speed(ndes : PATH nodedata = t_TOOLPATH; speed : REAL) FROM paths
+declare_function(prog_name,set_orientation,prog_name_alias,storn)
+ROUTINE paths__set_orientation(crd_sys : INTEGER; idod : INTEGER) : VECTOR FROM paths
 
 --planning functions
 declare_function(prog_name,opposite_code,prog_name_alias,ocde)

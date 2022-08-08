@@ -409,6 +409,33 @@ ROUTINE paths__new_coord_sys
     RETURN(cs)
   END paths__new_coord_sys
 
+ROUTINE paths__new_make_params
+  VAR
+    prm : t_PATH_PARAM
+  BEGIN
+    prm.frm = coord_frm
+    prm.origin = origin
+    prm.coord_system = coord_sys
+    prm.usePathPlan = doPathPlan
+    prm.idod = idod
+
+    RETURN(prm)
+  END paths__new_make_params
+
+ROUTINE paths__new_layer_params
+  VAR
+    prm : t_PATH_LAYER
+  BEGIN
+    prm.start_pass = start_pass
+    prm.start_layer = start_layer
+  
+    prm.curr_pass = 0
+    prm.curr_layer = 0
+    prm.last_idx = 0
+
+    RETURN(prm)
+  END paths__new_layer_params
+
 ROUTINE paths__toolvec_to_vec
   VAR
     v : VECTOR
