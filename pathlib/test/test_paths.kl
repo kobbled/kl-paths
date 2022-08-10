@@ -174,10 +174,8 @@ ROUTINE t_flat_pnts : BOOLEAN
     REPEAT
       SELECT (tstpln__next_toolpath) OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-           tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
     UNTIL( tstpln__is_path_end )
@@ -266,10 +264,8 @@ ROUTINE t_hex_pnts : BOOLEAN
     REPEAT
       SELECT (tstpln__next_toolpath) OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
     UNTIL( tstpln__is_path_end )
@@ -359,10 +355,8 @@ ROUTINE t_pads : BOOLEAN
     REPEAT
       SELECT (tstpln__next_toolpath) OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
     UNTIL( tstpln__is_path_end )
@@ -453,10 +447,8 @@ ROUTINE t_lpads : BOOLEAN
     REPEAT
       SELECT (tstpln__next_toolpath) OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
     UNTIL( tstpln__is_path_end )
@@ -544,10 +536,8 @@ ROUTINE t_cyld_yaxe : BOOLEAN
     REPEAT
       SELECT tstpln__next_toolpath OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
 
@@ -637,10 +627,8 @@ ROUTINE t_cyld_xaxe : BOOLEAN
     REPEAT
       SELECT tstpln__next_toolpath OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
 
@@ -732,10 +720,8 @@ ROUTINE t_cyld_zaxe : BOOLEAN
     REPEAT
       SELECT tstpln__next_toolpath OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
 
@@ -836,10 +822,8 @@ ROUTINE t_pvert_OD : BOOLEAN
     REPEAT
       SELECT (tstpln__next_toolpath) OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
     UNTIL( tstpln__is_path_end )
@@ -931,10 +915,8 @@ ROUTINE t_pvert_ID : BOOLEAN
     REPEAT
       SELECT (tstpln__next_toolpath) OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
     UNTIL( tstpln__is_path_end )
@@ -1031,10 +1013,8 @@ ROUTINE t_porient_OD : BOOLEAN
     REPEAT
       SELECT (tstpln__next_toolpath) OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
     UNTIL( tstpln__is_path_end )
@@ -1127,10 +1107,8 @@ ROUTINE t_delta_ornt : BOOLEAN
     REPEAT
       SELECT (tstpln__next_toolpath) OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
     UNTIL( tstpln__is_path_end )
@@ -1220,10 +1198,8 @@ ROUTINE t_pol_pnts : BOOLEAN
     REPEAT
       SELECT tstpln__next_toolpath OF
         CASE(PTH_TOOLING):
-          tstpln__set_segment_speed(TOOLING_SPEED)
           tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstpln__set_segment_speed(LINKING_SPEED)
           tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
 

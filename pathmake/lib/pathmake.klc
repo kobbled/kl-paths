@@ -70,10 +70,6 @@ ROUTINE next_toolpath
     IF this.usePathPlan THEN
       SELECT `PATH_PLAN_NAME`__next_toolpath OF
         CASE(PTH_TOOLING):
-          --set speed
-          -- ..warning:: This will override set the speed to a static
-          --             speed 'tool_speed' for the whole tool_segment 
-          `PATH_PLAN_NAME`__set_segment_speed(tool_speed)
 
           --get toolpath from pathplan
           IF interp_tool THEN
@@ -83,12 +79,18 @@ ROUTINE next_toolpath
           ELSE
             `PATH_PLAN_NAME`__get_toolpath(pth)
           ENDIF
-        CASE(PTH_LINKING):
+
           --set speed
-          `PATH_PLAN_NAME`__set_segment_speed(link_speed)
+          -- ..warning:: This will override set the speed to a static
+          --             speed 'tool_speed' for the whole tool_segment 
+          paths__set_speed(pth, tool_speed)
+        CASE(PTH_LINKING):
 
           --get toolpath from linkingTransition user defined member
           linkingTransition(pth, (this.frm), (link_step), this.idod)
+
+          --set speed
+          paths__set_speed(pth, link_speed)
       ENDSELECT
     ENDIF
 
@@ -120,8 +122,11 @@ ROUTINE get_toolpath
       REPEAT
         SELECT (`PATH_PLAN_NAME`__next_toolpath) OF
           CASE(PTH_TOOLING):
+
             --set speed
-            `PATH_PLAN_NAME`__set_segment_speed(tool_speed)
+            -- ..warning:: This will override set the speed to a static
+            --             speed 'tool_speed' for the whole tool_segment 
+            paths__set_speed(tool_segment, tool_speed)
 
             --get toolpath from pathplan
             IF interp_tool THEN
@@ -131,7 +136,7 @@ ROUTINE get_toolpath
             ENDIF
           CASE(PTH_LINKING):
             --set speed
-            `PATH_PLAN_NAME`__set_segment_speed(link_speed)
+            paths__set_speed(tool_segment, link_speed)
 
             --get toolpath from linkingTransition user defined member
             linkingTransition(pth, (this.frm), (link_step), this.idod)
