@@ -19,7 +19,9 @@
     "test/configs"
   ],
   "tests-depends" : [
-    "KUnit"
+    "KUnit",
+    "pathplan",
+    "pathmake"
   ],
   "depends" : [
     "ktransw-macros",
@@ -29,7 +31,6 @@
     "math",
     "display",
     "draw",
-    "pose",
-    "pathplan"
+    "pose"
   ]
 }
