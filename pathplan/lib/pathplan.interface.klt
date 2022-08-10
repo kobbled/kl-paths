@@ -12,10 +12,6 @@
 ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE FROM parent
 declare_member(parent,convert2pos,parent,cn2ps)
 ROUTINE convert2pos(n : t_VEC_PATH ; ofst_orient : VECTOR; parent_frm : XYZWPR) : XYZWPR FROM parent
-declare_member(parent,speed_blending,parent,spdbl)
-ROUTINE speed_blending(start_speed : REAL ; end_speed : REAL; blendRatio : REAL; outNode : t_TOOLPATH) FROM parent
-declare_member(parent,path_blending,parent,pthbl)
-ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm : XYZWPR; blendRatio : REAL; outNode : t_TOOLPATH) FROM parent
 `
 %mode pop
 
@@ -37,29 +33,6 @@ ROUTINE convert2pos(n : t_VEC_PATH ; ofst_orient : VECTOR; parent_frm : XYZWPR) 
     -- ( pose__vector_to_pose(frm:v.v, pose__get_orientation(frm), frm.config_data) )
     RETURN( pose__vector_to_pose(n.v, ofst_orient, parent_frm.config_data) )
   END convert2pos
-declare_member(parent,speed_blending,parent,spdbl)
-ROUTINE speed_blending(start_speed : REAL ; end_speed : REAL; blendRatio : REAL; outNode : t_TOOLPATH)
-  BEGIN
-    outNode.speed = blendRatio*start_speed + (1-blendRatio)*end_speed
-  END speed_blending
-declare_member(parent,path_blending,parent,pthbl)
-ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm : XYZWPR; blendRatio : REAL; outNode : t_TOOLPATH)
-  VAR
-    v1, v2 : VECTOR
-    vs, os : VECTOR
-  BEGIN
-    v1 = pose__pose_to_vector(p[i].v)
-    v2 = pose__pose_to_vector(p[i+1].v)
-
-    vs = blendRatio*v2 + (1-blendRatio)*v1
-    os = pose__get_orientation(p[i].v)
-
-    outNode.v = parent_frm:POS(vs.x, vs.y, vs.z, os.x, os.y, os.z, parent_frm.config_data)
-    outNode.tangent = p[i].tangent
-
-    speed_blending((p[i].speed), (p[i+1].speed), blendRatio, outNode)
-
-  END path_blending
 `
 %mode pop
 

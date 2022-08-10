@@ -8,7 +8,11 @@
 %mode push
 %mode string QQQ "`" "`" "\\"
 
-%define define_pmake_headers(parent) `declare_member(parent,convertOrientation,parent,cnvor)
+%define define_pmake_headers(parent) `declare_member(parent,speed_blending,parent,spdbl)
+ROUTINE speed_blending(start_speed : REAL ; end_speed : REAL; blendRatio : REAL; outNode : t_TOOLPATH) FROM parent
+declare_member(parent,path_blending,parent,pthbl)
+ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm : XYZWPR; blendRatio : REAL; outNode : t_TOOLPATH) FROM parent
+declare_member(parent,convertOrientation,parent,cnvor)
 ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius : REAL; system : INTEGER; z_axis : INTEGER; flip : BOOLEAN) FROM parent
 declare_member(parent,linkingTransition,parent,lktrs)
 ROUTINE linkingTransition(p : PATH nodedata = t_TOOLPATH; frm : XYZWPR; spacing : REAL; idod : INTEGER) FROM parent
@@ -23,7 +27,30 @@ ROUTINE linkingTransition(p : PATH nodedata = t_TOOLPATH; frm : XYZWPR; spacing 
 %mode push
 %mode string QQQ "`" "`" "\\"
 
-%define define_pmake_members(parent) `declare_member(parent,convertOrientation,parent,cnvor)
+%define define_pmake_members(parent) `declare_member(parent,speed_blending,parent,spdbl)
+ROUTINE speed_blending(start_speed : REAL ; end_speed : REAL; blendRatio : REAL; outNode : t_TOOLPATH)
+  BEGIN
+    outNode.speed = blendRatio*start_speed + (1-blendRatio)*end_speed
+  END speed_blending
+declare_member(parent,path_blending,parent,pthbl)
+ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm : XYZWPR; blendRatio : REAL; outNode : t_TOOLPATH)
+  VAR
+    v1, v2 : VECTOR
+    vs, os : VECTOR
+  BEGIN
+    v1 = pose__pose_to_vector(p[i].v)
+    v2 = pose__pose_to_vector(p[i+1].v)
+
+    vs = blendRatio*v2 + (1-blendRatio)*v1
+    os = pose__get_orientation(p[i].v)
+
+    outNode.v = parent_frm:POS(vs.x, vs.y, vs.z, os.x, os.y, os.z, parent_frm.config_data)
+    outNode.tangent = p[i].tangent
+
+    speed_blending((p[i].speed), (p[i+1].speed), blendRatio, outNode)
+
+  END path_blending
+declare_member(parent,convertOrientation,parent,cnvor)
 ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius : REAL; system : INTEGER; z_axis : INTEGER; flip : BOOLEAN)
   VAR
     i : INTEGER
