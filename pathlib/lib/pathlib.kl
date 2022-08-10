@@ -959,6 +959,22 @@ ROUTINE paths__offset_toolpath
     ENDFOR
   END paths__offset_toolpath
 
+ROUTINE paths__reverse_toolpath
+  VAR
+    i, status : INTEGER
+    size : INTEGER
+  BEGIN
+    size = PATH_LEN(p)
+    i = size
+    WHILE i > 1 DO
+      APPEND_NODE(p, status)
+      p[size+1] = p[i]
+      DELETE_NODE(p, i, status)
+
+      i = i - 1
+    ENDWHILE
+  END paths__reverse_toolpath
+
 ROUTINE paths__cylindrical_to_cartesian
   VAR
     i : INTEGER

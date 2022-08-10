@@ -79,6 +79,8 @@ ROUTINE paths__vpath_to_pos(vpath : PATH nodedata = t_VEC_PATH ; ref_frame : XYZ
 
 declare_function(prog_name,offset_toolpath,prog_name_alias,ofstt)
 ROUTINE paths__offset_toolpath(p : PATH nodedata = t_TOOLPATH ; offset_pos : XYZWPR; filter_code, filter_typ : INTEGER) FROM paths
+declare_function(prog_name,reverse_toolpath,prog_name_alias,revtl)
+ROUTINE paths__reverse_toolpath(p : PATH nodedata = t_TOOLPATH) FROM paths
 
 --convert coordinate systems
 declare_function(prog_name,cylindrical_to_cartesian,prog_name_alias,cy2cr)

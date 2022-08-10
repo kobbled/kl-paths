@@ -424,7 +424,7 @@ ROUTINE get_line
     `PATH_PLAN_NAME`__set_line(line_no, revrs_ordr, line_typ)
 
     IF reverse_line THEN
-      `PATH_PLAN_NAME`__reverse_toolpath
+      paths__reverse_toolpath(tool_segment)
     ENDIF
 
     IF NOT append THEN
