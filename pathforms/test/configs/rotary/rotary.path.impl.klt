@@ -15,7 +15,7 @@ ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm :
 declare_member(parent,convertOrientation,parent,cnvor)
 ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius : REAL; system : INTEGER; z_axis : INTEGER; flip : BOOLEAN) FROM parent
 declare_member(parent,linkingTransition,parent,lktrs)
-ROUTINE linkingTransition(p : PATH nodedata = t_TOOLPATH; frm : XYZWPR; spacing : REAL; idod : INTEGER) FROM parent
+ROUTINE linkingTransition(endpnts: PATH nodedata = t_TOOLPATH; frm: XYZWPR; spacing: REAL; idod: INTEGER; append : BOOLEAN; outpth: PATH nodedata = t_TOOLPATH) FROM parent
 `
 %mode pop
 
@@ -99,34 +99,45 @@ ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius
     ENDSELECT
   END convertOrientation
 declare_member(parent,linkingTransition,parent,lktrs)
-ROUTINE linkingTransition(p : PATH nodedata = t_TOOLPATH; frm : XYZWPR; spacing : REAL; idod : INTEGER)
+ROUTINE linkingTransition(endpnts: PATH nodedata = t_TOOLPATH; frm: XYZWPR; spacing: REAL; idod: INTEGER; append : BOOLEAN; outpth: PATH nodedata = t_TOOLPATH)
   VAR
 %define LINKING_FULL_WRAP 180
-    endpnts : ARRAY[2] OF XYZWPR
+    startPnt : XYZWPR
+    endPnt : XYZWPR
     status : INTEGER
   BEGIN
     --If rotary group (ROT_GRP) and line is < 90 deg
     --only include endpoints in line. If path is 0->360
     --it will not rotate all the way back around
-    endpnts[1] = tool_segment[1].v
-    endpnts[2] = tool_segment[PATH_LEN(tool_segment)].v
-    IF UNINIT(endpnts[1]) THEN
-      paths__clear_toolpath(p)
+    IF PATH_LEN(endpnts) <= 0 THEN
+      IF (NOT append) THEN
+        --return empty to ignore linking path
+        paths__clear_toolpath(outpth)
+      ENDIF
     ELSE
-      --need to evaluate how close the endpoints are in degree to eachother.
+      --get start point
+      startPnt = endpnts[1].v
+      --get end point
+      endPnt = endpnts[PATH_LEN(endpnts)].v
+      
+      --need to evaluate how close the endpoints (in theta axis) are in degree to eachother.
       --if > than epsilon run an arc
-      IF(ABS((endpnts[2].x/frm.z*180/M_PI)-(endpnts[1].x/frm.z*180/M_PI)) < LINKING_FULL_WRAP) THEN
-        get_toolpath_interpolate(spacing, PTH_LINETO, FALSE, p)
+      IF(ABS((endPnt.x/frm.z*180/M_PI)-(startPnt.x/frm.z*180/M_PI)) < LINKING_FULL_WRAP) THEN
+        --if < 180 move between the two point in circular arc
+        interpolate_toolpath(endpnts, (spacing), 1, PTH_LINETO, (frm), append, outpth)
       ELSE
         --add 360 to endpnt 2 so that it is always rotating forward
-        endpnts[2].x = (endpnts[2].x/frm.z*180/M_PI) - idod*360
-        endpnts[2].x = (endpnts[2].x*frm.z*M_PI/180)
+        endPnt.x = (endPnt.x/frm.z*180/M_PI) - idod*360
+        --put back into mm
+        endPnt.x = (endPnt.x*frm.z*M_PI/180)
         --put back into tool segment to interpolate
-        tool_segment[PATH_LEN(tool_segment)].v = endpnts[2]
+        endpnts[PATH_LEN(endpnts)].v = endPnt
 
-        reverse_toolpath
+        --move in opposite direction
+        paths__reverse_toolpath(endpnts)
 
-        get_toolpath_interpolate(spacing, PTH_LINETO, FALSE, p)
+        --interpolate path
+        interpolate_toolpath(endpnts, (spacing), 1, PTH_LINETO, (frm), append, outpth)
       ENDIF
     ENDIF
   END linkingTransition

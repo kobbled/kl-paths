@@ -14,8 +14,6 @@ declare_member(parent,path_blending,parent,pthbl)
 ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm : XYZWPR; blendRatio : REAL; outNode : t_TOOLPATH) FROM parent
 declare_member(parent,convertOrientation,parent,cnvor)
 ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius : REAL; system : INTEGER; z_axis : INTEGER; flip : BOOLEAN) FROM parent
-declare_member(parent,linkingTransition,parent,lktrs)
-ROUTINE linkingTransition(p : PATH nodedata = t_TOOLPATH; frm : XYZWPR; spacing : REAL; idod : INTEGER) FROM parent
 `
 %mode pop
 
@@ -98,10 +96,5 @@ ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius
       ELSE:
     ENDSELECT
   END convertOrientation
-declare_member(parent,linkingTransition,parent,lktrs)
-ROUTINE linkingTransition(p : PATH nodedata = t_TOOLPATH; frm : XYZWPR; spacing : REAL; idod : INTEGER)
-  BEGIN
-    get_toolpath_interpolate(spacing, PTH_LINETO, TRUE, p)
-  END linkingTransition
 `
 %mode pop

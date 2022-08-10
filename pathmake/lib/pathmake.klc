@@ -87,8 +87,8 @@ ROUTINE next_toolpath
         CASE(PTH_LINKING):
 
           --get toolpath from linkingTransition user defined member
-          linkingTransition(pth, (this.frm), (link_step), this.idod)
-
+          linkingTransition(tool_segment, (this.frm), (link_step), (this.idod), FALSE, pth)
+          
           --set speed
           paths__set_speed(pth, link_speed)
       ENDSELECT
@@ -139,7 +139,7 @@ ROUTINE get_toolpath
             paths__set_speed(tool_segment, link_speed)
 
             --get toolpath from linkingTransition user defined member
-            linkingTransition(pth, (this.frm), (link_step), this.idod)
+            linkingTransition(tool_segment, (this.frm), (link_step), (this.idod), TRUE, pth)
         ENDSELECT
       UNTIL( is_path_end )
     ELSE
@@ -411,7 +411,7 @@ ROUTINE makeline
     --`PATH_PLAN_NAME`__set_toolpath(line_endpnts)
 
     paths__clear_toolpath(pth)
-    `PATH_PLAN_NAME`__interpolate_path(line_endpnts, (spacing), dir, line_code, ref_frame, FALSE, pth)
+    interpolate_toolpath(line_endpnts, (spacing), dir, line_code, ref_frame, FALSE, pth)
 
     IF UNINIT(this.coord_system.system) THEN
       karelError(VAR_UNINIT,'coordinate system must be set in class_name', ER_ABORT)
@@ -458,7 +458,7 @@ ROUTINE interpolate_toolpath
     status : INTEGER
   BEGIN
     IF NOT append THEN
-      clear_toolpath(out_path)
+      paths__clear_toolpath(out_path)
     ENDIF
 
     IF PATH_LEN(endpnts) > 0 THEN
