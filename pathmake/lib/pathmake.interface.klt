@@ -1,0 +1,70 @@
+%ifndef pathmake_interface_t
+%define pathmake_interface_t
+
+-- ***********
+-- Define interface header
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define define_pmake_headers(parent) `declare_member(parent,convertOrientation,parent,cnvor)
+ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius : REAL; system : INTEGER; z_axis : INTEGER; flip : BOOLEAN) FROM parent
+declare_member(parent,linkingTransition,parent,lktrs)
+ROUTINE linkingTransition(p : PATH nodedata = t_TOOLPATH; frm : XYZWPR; spacing : REAL; idod : INTEGER) FROM parent
+
+`
+%mode pop
+
+-- ***********
+-- Define interface
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define define_pmake_members(parent) `declare_member(parent,convertOrientation,parent,cnvor)
+ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius : REAL; system : INTEGER; z_axis : INTEGER; flip : BOOLEAN)
+  VAR
+    i : INTEGER
+    surfpos : XYZWPR
+  BEGIN
+    --convert to cartesian
+    SELECT (system) OF
+      CASE(PTH_CYLINDER):
+        FOR i=1 TO PATH_LEN(p) DO
+          --convert surface arc into degrees
+          surfpos = p[i].v
+          --convert coordinates
+          p[i].v = pose__cylindrical_to_cartesian(frm, (surfpos), (z_axis))
+
+          p[i].v.w = p[i].v.w + surfpos.w ; p[i].v.p = p[i].v.p + surfpos.p ; p[i].v.r = p[i].v.r + surfpos.r ;
+          --rotation for VERT_AXES
+          IF (z_axis = VERT_AXES) THEN
+            p[i].v.w = p[i].v.w - 90
+          ENDIF
+
+          IF flip THEN
+            p[i].v.w = p[i].v.w + 180 ;
+          ENDIF
+        ENDFOR
+      CASE(PTH_POLAR):
+        FOR i=1 TO PATH_LEN(p) DO
+          --convert surface uv into theta and phi angles
+          surfpos = p[i].v
+          --convert coordinates
+          p[i].v = pose__polar_to_cartesian(frm, (surfpos), (z_axis))
+        ENDFOR
+      CASE(PTH_CARTESAN):
+      ELSE:
+    ENDSELECT
+  END convertOrientation
+declare_member(parent,linkingTransition,parent,lktrs)
+ROUTINE linkingTransition(p : PATH nodedata = t_TOOLPATH; frm : XYZWPR; spacing : REAL; idod : INTEGER)
+  BEGIN
+    get_toolpath_interpolate(spacing, PTH_LINETO, TRUE, p)
+  END linkingTransition
+`
+%mode pop
+
+%endif -- pathplan_interface_t
