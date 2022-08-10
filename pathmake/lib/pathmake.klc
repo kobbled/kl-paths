@@ -3,6 +3,8 @@ PROGRAM class_name
 %COMMENT = 'pathmake'
 %NOLOCKGROUP
 
+%define M_PI 3.14159
+
 %ifdef ROT_GRP
 %ifeq ROT_GRP 0
 %undef ROT_GRP
@@ -19,6 +21,7 @@ PROGRAM class_name
 %include errors.klt
 %include systemlib.types.klt
 %include systemvars.klt
+%include pose.const.klt
 %include pathlib.klt
 %include pathplan.klt
 %include draw.klt
@@ -32,6 +35,10 @@ VAR
   pth_end : BOOLEAN
   line_endpnts : PATH nodedata = t_TOOLPATH
   pth : PATH nodedata = t_TOOLPATH
+
+-- include reference to pathplan "tool_segment".
+%include pathplan.friend.members.klt
+pathplan_friends(PATH_PLAN_NAME)
 
 %include errors.klh
 %include pose.klh
@@ -47,6 +54,11 @@ define_pplan_headers(PATH_PLAN_NAME)
 
 %include pathmake.klh
 
+--implement pathmake interface
+define_pmake_members(class_name)
+
+%defeval class_name BASE_CLASSNAME
+
 --private
 
 --public
@@ -59,10 +71,14 @@ ROUTINE next_toolpath
       SELECT `PATH_PLAN_NAME`__next_toolpath OF
         CASE(PTH_TOOLING):
           --set speed
+          -- ..warning:: This will override set the speed to a static
+          --             speed 'tool_speed' for the whole tool_segment 
           `PATH_PLAN_NAME`__set_segment_speed(tool_speed)
 
           --get toolpath from pathplan
           IF interp_tool THEN
+            -- ..note:: Speed is blended during toolpath_interpolate. in `path_blending` implementation
+            --          calling speed_blending
             `PATH_PLAN_NAME`__get_toolpath_interpolate((tool_step), PTH_LINETO, FALSE, pth)
           ELSE
             `PATH_PLAN_NAME`__get_toolpath(pth)
@@ -72,7 +88,7 @@ ROUTINE next_toolpath
           `PATH_PLAN_NAME`__set_segment_speed(link_speed)
 
           --get toolpath from linkingTransition user defined member
-          `PATH_PLAN_NAME`__linkingTransition(pth, (link_step), this.idod)
+          linkingTransition(pth, (this.frm), (link_step), this.idod)
       ENDSELECT
     ENDIF
 
@@ -86,7 +102,7 @@ ROUTINE next_toolpath
 
       --convert to cartesian
       -- ..note:: this function will not do anything if the coord system is cartesian
-      `PATH_PLAN_NAME`__convertOrientation(pth, this.frm, (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
+      convertOrientation(pth, (this.frm), (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
     ENDIF
   END next_toolpath
 
@@ -118,7 +134,7 @@ ROUTINE get_toolpath
             `PATH_PLAN_NAME`__set_segment_speed(link_speed)
 
             --get toolpath from linkingTransition user defined member
-            `PATH_PLAN_NAME`__linkingTransition(pth, (link_step), this.idod)
+            linkingTransition(pth, (this.frm), (link_step), this.idod)
         ENDSELECT
       UNTIL( is_path_end )
     ELSE
@@ -129,7 +145,7 @@ ROUTINE get_toolpath
     paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
 
     --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, this.frm, (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
+    convertOrientation(pth, (this.frm), (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
   END get_toolpath
 
 ROUTINE get_midpoint
@@ -397,7 +413,7 @@ ROUTINE makeline
     ENDIF
 
     --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, this.frm, (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
+    convertOrientation(pth, (this.frm), (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
 
   END makeline
 
@@ -426,7 +442,7 @@ ROUTINE get_line
     ENDIF
 
     --convert to cartesian
-    `PATH_PLAN_NAME`__convertOrientation(pth, this.frm, (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
+    convertOrientation(pth, (this.frm), (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
 
   END get_line
 
