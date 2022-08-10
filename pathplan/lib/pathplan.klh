@@ -62,10 +62,11 @@ ROUTINE set_segment_speed(speed : REAL) FROM class_name
 declare_member(class_name,set_segment_speed_bounds,class_name,stspb)
 ROUTINE set_segment_speed_bounds(start_speed : REAL ; end_speed : REAL) FROM class_name
 --
+-- **DEPRECIATED **
+-- use method in pathmake instead
 declare_member(class_name,get_toolpath_interpolate,class_name,gtpi)
 ROUTINE get_toolpath_interpolate(spacing : REAL ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = t_TOOLPATH) FROM class_name
-declare_member(class_name,interpolate_path,class_name,intpp)
-ROUTINE interpolate_path(vpath : PATH nodedata = t_TOOLPATH; spacing : REAL ; dir : INTEGER ; line_type : INTEGER ; ref_frame : XYZWPR; append : BOOLEAN ; out_path : PATH nodedata = t_TOOLPATH) FROM class_name
+--
 declare_member(class_name,closest_point,class_name,cpnt)
 ROUTINE closest_point(point : t_VEC_PATH) : INTEGER FROM class_name
 declare_member(class_name,closest_bounding_box,class_name,cbbx)

@@ -446,5 +446,65 @@ ROUTINE get_line
 
   END get_line
 
+ROUTINE interpolate_toolpath
+  VAR
+    i, j : INTEGER
+    inc : INTEGER
+    status : INTEGER
+  BEGIN
+    IF NOT append THEN
+      clear_toolpath(out_path)
+    ENDIF
+
+    IF PATH_LEN(endpnts) > 0 THEN
+      FOR i=1 TO PATH_LEN(endpnts)-1 DO
+        
+        inc = paths__get_increments(pose__pose_to_vector(endpnts[i].v), pose__pose_to_vector(endpnts[i+1].v), (spacing))
+        
+        --add start point
+        APPEND_NODE(out_path,status)
+        out_path[PATH_LEN(out_path)] = endpnts[i]
+
+        path_blending(endpnts, i, ref_frame, dir*0, out_path[PATH_LEN(out_path)])
+
+        IF inc > 0 THEN
+          FOR j=1 TO (inc-1) DO
+            --interpolate points
+            APPEND_NODE(out_path,status)
+            out_path[PATH_LEN(out_path)] = endpnts[i+1]
+            out_path[PATH_LEN(out_path)].code = line_type
+
+            path_blending(endpnts, i, ref_frame, dir*(j/inc), out_path[PATH_LEN(out_path)])
+
+          ENDFOR
+        ENDIF
+
+        --add end point
+        -- Do not duplicate points between connecting line segments
+        IF (endpnts[i+1].code=PTH_MOVETO) OR (endpnts[i+1].code=PTH_CLOSE) THEN
+          APPEND_NODE(out_path,status)
+          out_path[PATH_LEN(out_path)] = endpnts[i+1]
+
+          path_blending(endpnts, i, ref_frame, dir*1, out_path[PATH_LEN(out_path)])
+        ENDIF
+      ENDFOR
+    ENDIF
+  END interpolate_toolpath
+
+ROUTINE set_segment_speed_bounds
+  VAR
+    i : INTEGER
+  BEGIN
+    --set bounds
+    inpth[1].speed = start_speed
+    inpth[PATH_LEN(tool_segment)].speed = end_speed
+
+    IF (PATH_LEN(tool_segment) > 2) THEN
+      FOR i=2 TO (PATH_LEN(tool_segment) - 1) DO
+        speed_blending(start_speed, end_speed, (i-1)/(PATH_LEN(inpth)-1), inpth[i])
+      ENDFOR
+    ENDIF
+  END set_segment_speed_bounds
+
 BEGIN
 END class_name

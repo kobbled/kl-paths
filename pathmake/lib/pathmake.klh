@@ -79,4 +79,13 @@ ROUTINE get_line(line_no : INTEGER; revrs_ordr, reverse_line : BOOLEAN; &
                  line_typ : INTEGER; spacing : REAL; append : BOOLEAN; &
                  doOffset : BOOLEAN; offset : XYZWPR) FROM class_name
 
+--interpolate path between two endpoints
+  -- depends on `path_blending` interface for how
+  -- the line is interpolated
+declare_member(class_name,interpolate_toolpath,class_name,inttp)
+ROUTINE interpolate_toolpath(endpnts : PATH nodedata = t_TOOLPATH ; spacing : REAL ; dir : INTEGER ; line_type : INTEGER ; ref_frame : XYZWPR; append : BOOLEAN ; out_path : PATH nodedata = t_TOOLPATH) FROM class_name
+--speed profile setting functions
+declare_member(class_name,set_segment_speed_bounds,class_name,stspb)
+ROUTINE set_segment_speed_bounds(inpth : PATH nodedata = t_TOOLPATH ; start_speed : REAL ; end_speed : REAL) FROM class_name
+
 %endif --end header

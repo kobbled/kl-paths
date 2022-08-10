@@ -749,6 +749,8 @@ ROUTINE get_path_interpolate
     ENDIF
   END get_path_interpolate
 
+-- **DEPRECIATED **
+-- use method in pathmake instead
 ROUTINE get_toolpath_interpolate
   VAR
     i, j : INTEGER
@@ -793,51 +795,6 @@ ROUTINE get_toolpath_interpolate
       ENDFOR
     ENDIF
   END get_toolpath_interpolate
-
-ROUTINE interpolate_path
-  VAR
-    i, j : INTEGER
-    inc : INTEGER
-    status : INTEGER
-  BEGIN
-    IF NOT append THEN
-      clear_toolpath(out_path)
-    ENDIF
-
-    IF PATH_LEN(vpath) > 0 THEN
-      FOR i=1 TO PATH_LEN(vpath)-1 DO
-        
-        inc = paths__get_increments(pose__pose_to_vector(vpath[i].v), pose__pose_to_vector(vpath[i+1].v), (spacing))
-        
-        --add start point
-        APPEND_NODE(out_path,status)
-        out_path[PATH_LEN(out_path)] = vpath[i]
-
-        path_blending(vpath, i, ref_frame, dir*0, out_path[PATH_LEN(out_path)])
-
-        IF inc > 0 THEN
-          FOR j=1 TO (inc-1) DO
-            --interpolate points
-            APPEND_NODE(out_path,status)
-            out_path[PATH_LEN(out_path)] = vpath[i+1]
-            out_path[PATH_LEN(out_path)].code = line_type
-
-            path_blending(vpath, i, ref_frame, dir*(j/inc), out_path[PATH_LEN(out_path)])
-
-          ENDFOR
-        ENDIF
-
-        --add end point
-        -- Do not duplicate points between connecting line segments
-        IF (vpath[i+1].code=PTH_MOVETO) OR (vpath[i+1].code=PTH_CLOSE) THEN
-          APPEND_NODE(out_path,status)
-          out_path[PATH_LEN(out_path)] = vpath[i+1]
-
-          path_blending(vpath, i, ref_frame, dir*1, out_path[PATH_LEN(out_path)])
-        ENDIF
-      ENDFOR
-    ENDIF
-  END interpolate_path
 
 ROUTINE closest_point
   VAR
