@@ -43,8 +43,11 @@
 %defeval OD_CORNER RIGHT_BOTTOM
 %defeval ID_CORNER 0
 
---path implementation
-%include base.paths.impl.klt
+--motion implementation
+%include base.motion.impl.klt
+
+--pathmake implementation
+%include base.path.impl.klt
 
 --pathplan
 ------------------
