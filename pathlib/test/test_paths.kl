@@ -4,6 +4,8 @@ PROGRAM test_paths
 %NOPAUSE = COMMAND + TPENABLE + ERROR
 %STACKSIZE = 1000
 
+%define M_PI 3.14159
+
 --robot config parameters
 %define RBT_CONFIG 'F U T, 0, 0, 0'
 
@@ -13,6 +15,7 @@ PROGRAM test_paths
 %include display.c.klt
 %endif
 
+%include errors.klt
 %include systemlib.types.klt
 %include systemvars.klt
 %include pose.const.klt
@@ -30,6 +33,7 @@ VAR
 
 %include kunit.klh
 %from systemlib.klh %import VEC, VEC2D
+%include errors.klh
 %include pose.klh
 %from strings.klh %import i_to_s, p_to_s, pose_to_s
 %from registers.klh %import set_real, set_int
@@ -39,13 +43,17 @@ VAR
 %class tstpln('pathplan.klc','pathplan.klh','vecpathplan.klt')
 define_pplan_headers(tstpln)
 
---planning object orientation
-%class tstorn('pathplan.klc','pathplan.klh','vecpathplan_orient.klt')
-define_pplan_headers(tstorn)
+--dont load in full pathmake
+--only load in interface as `convertOrientation`
+--is all that is needed
+%include path.impl.klt
+define_pmake_members(tspth)
 
---svg planning
-%class tstsrf('pathplan.klc','pathplan.klh','vecpathplan_surf.klt')
-define_pplan_headers(tstsrf)
+%include path.impl.orientation.klt
+define_pmake_members(tsorn)
+
+%include path.impl.surf.klt
+define_pmake_members(tssrf)
 
 --polygon object
 %class tstpoly('polygon.klc', 'polygon.klh')
@@ -102,8 +110,7 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
     polygon[8].coords = VEC2D(-20,60)
 
     --initialize polygon object
-    tstsrf__delete
-    tstorn__delete
+    tstpln__delete
     tstpoly__init((ZEROPOS(1)), TRUE)
     tstpoly__append_polygon(polygon)
 
@@ -518,38 +525,38 @@ ROUTINE t_cyld_yaxe : BOOLEAN
     --generate path
     radius = 50
     -- (theta, z, r)
-    tstsrf__init(lines, POS(0,0,radius,0,0,0, (ZEROPOS(1).config_data)))
+    tstpln__init(lines, POS(0,0,radius,0,0,0, (ZEROPOS(1).config_data)))
     --(poly_depend, strict_dir)
-    tstsrf__raster_graph(ONEWAY, FALSE, FALSE)
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
       --append contours after to not include in rastering process
       -- (add to kd tree)
-    tstsrf__append_path(contours, FALSE)
+    tstpln__append_path(contours, FALSE)
     
-     --get start nodetstsrf__append_path(contours, FALSE)
+     --get start nodetstpln__append_path(contours, FALSE)
     apprch_pnt = paths__new_vpath(bbox.verts[1], PTH_STOP, 0, VEC(1,0,0))
-    tstsrf__MST(tstsrf__closest_point(apprch_pnt))
+    tstpln__MST(tstpln__closest_point(apprch_pnt))
 
     paths__clear_toolpath(pth)
 
     --set point orientation
-    tstsrf__set_orientation(DOWN_NORMAL)
+    tstpln__set_orientation(DOWN_NORMAL)
 
     REPEAT
-      SELECT tstsrf__next_toolpath OF
+      SELECT tstpln__next_toolpath OF
         CASE(PTH_TOOLING):
-          tstsrf__set_segment_speed(TOOLING_SPEED)
-          tstsrf__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(TOOLING_SPEED)
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstsrf__set_segment_speed(LINKING_SPEED)
-          tstsrf__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(LINKING_SPEED)
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
 
-    UNTIL( tstsrf__is_path_end )
+    UNTIL( tstpln__is_path_end )
 
     --raise linking path
     paths__offset_toolpath(pth, POS(0,0,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
     --convert coordinate systems
-    tstsrf__convertOrientation(pth, origin, radius, PTH_CYLINDER, Y_AXES, FALSE)
+    tssrf__convertOrientation(pth, origin, radius, PTH_CYLINDER, Y_AXES, FALSE)
 
     j = 1
     i=SAMPLE_START
@@ -612,37 +619,37 @@ ROUTINE t_cyld_xaxe : BOOLEAN
     --generate path
     radius = 50
     -- (theta, z, r)
-    tstsrf__init(lines, POS(0,0,radius,0,0,0, (ZEROPOS(1).config_data)))
+    tstpln__init(lines, POS(0,0,radius,0,0,0, (ZEROPOS(1).config_data)))
     --(poly_depend, strict_dir)
-    tstsrf__raster_graph(ONEWAY, FALSE, FALSE)
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
       --append contours after to not include in rastering process
       -- (add to kd tree)
-    tstsrf__append_path(contours, FALSE)
+    tstpln__append_path(contours, FALSE)
      --get start node
     apprch_pnt = paths__new_vpath(bbox.verts[1], PTH_STOP, 0, VEC(1,0,0))
-    tstsrf__MST(tstsrf__closest_point(apprch_pnt))
+    tstpln__MST(tstpln__closest_point(apprch_pnt))
 
     paths__clear_toolpath(pth)
 
     --set point orientation
-    tstsrf__set_orientation(DOWN_NORMAL)
+    tstpln__set_orientation(DOWN_NORMAL)
 
     REPEAT
-      SELECT tstsrf__next_toolpath OF
+      SELECT tstpln__next_toolpath OF
         CASE(PTH_TOOLING):
-          tstsrf__set_segment_speed(TOOLING_SPEED)
-          tstsrf__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(TOOLING_SPEED)
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstsrf__set_segment_speed(LINKING_SPEED)
-          tstsrf__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(LINKING_SPEED)
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
 
-    UNTIL( tstsrf__is_path_end )
+    UNTIL( tstpln__is_path_end )
 
     --raise linking path
     paths__offset_toolpath(pth, POS(0,0,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
     --convert coordinate systems
-    tstsrf__convertOrientation(pth, origin, radius, PTH_CYLINDER, X_AXES, FALSE)
+    tssrf__convertOrientation(pth, origin, radius, PTH_CYLINDER, X_AXES, FALSE)
 
     j = 1
     i=SAMPLE_START
@@ -707,37 +714,37 @@ ROUTINE t_cyld_zaxe : BOOLEAN
     --generate path
     radius = 50
     -- (theta, z, r)
-    tstsrf__init(lines, POS(0,radius,0,90,0,180, (ZEROPOS(1).config_data)))
+    tstpln__init(lines, POS(0,radius,0,90,0,180, (ZEROPOS(1).config_data)))
     --(poly_depend, strict_dir)
-    tstsrf__raster_graph(ONEWAY, FALSE, FALSE)
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
       --append contours after to not include in rastering process
       -- (add to kd tree)
-    tstsrf__append_path(contours, FALSE)
+    tstpln__append_path(contours, FALSE)
      --get start node
     apprch_pnt = paths__new_vpath(bbox.verts[1], PTH_STOP, 0, VEC(1,0,0))
-    tstsrf__MST(tstsrf__closest_point(apprch_pnt))
+    tstpln__MST(tstpln__closest_point(apprch_pnt))
 
     paths__clear_toolpath(pth)
 
     --set point orientation
-    tstsrf__set_orientation(DOWN_NORMAL)
+    tstpln__set_orientation(DOWN_NORMAL)
 
     REPEAT
-      SELECT tstsrf__next_toolpath OF
+      SELECT tstpln__next_toolpath OF
         CASE(PTH_TOOLING):
-          tstsrf__set_segment_speed(TOOLING_SPEED)
-          tstsrf__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(TOOLING_SPEED)
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstsrf__set_segment_speed(LINKING_SPEED)
-          tstsrf__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(LINKING_SPEED)
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
 
-    UNTIL( tstsrf__is_path_end )
+    UNTIL( tstpln__is_path_end )
 
     --raise linking path
     paths__offset_toolpath(pth, POS(0,0,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
     --convert coordinate systems
-    tstsrf__convertOrientation(pth, origin, radius, PTH_CYLINDER, Z_AXES, FALSE)
+    tssrf__convertOrientation(pth, origin, radius, PTH_CYLINDER, Z_AXES, FALSE)
     
 
     j = 1
@@ -841,7 +848,7 @@ ROUTINE t_pvert_OD : BOOLEAN
     paths__offset_toolpath(pth, POS(0,0,RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
     --convert coordinate systems
     origin = POS(100,100,0,0,0,0, pose__set_config(RBT_CONFIG))
-    tstpln__convertOrientation(pth, origin, PAD_RADIUS, PTH_CYLINDER, VERT_AXES, FALSE)
+    tspth__convertOrientation(pth, origin, PAD_RADIUS, PTH_CYLINDER, VERT_AXES, FALSE)
 
     j = 1
     i=SAMPLE_START
@@ -936,7 +943,7 @@ ROUTINE t_pvert_ID : BOOLEAN
     paths__offset_toolpath(pth, POS(0,0,RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
     --convert coordinate systems
     origin = POS(0,0,0,0,0,0, pose__set_config(RBT_CONFIG))
-    tstpln__convertOrientation(pth, origin, PAD_RADIUS, PTH_CYLINDER, VERT_AXES, FALSE)
+    tspth__convertOrientation(pth, origin, PAD_RADIUS, PTH_CYLINDER, VERT_AXES, FALSE)
 
     j = 1
     i=SAMPLE_START
@@ -1006,37 +1013,37 @@ ROUTINE t_porient_OD : BOOLEAN
 
     -- ** planning **
     --generate path
-    tstorn__init(lines, POS(0,0,PAD_RADIUS,0,0,0, (ZEROPOS(1).config_data)))
+    tstpln__init(lines, POS(0,0,PAD_RADIUS,0,0,0, (ZEROPOS(1).config_data)))
     --(poly_depend, strict_dir)
-    tstorn__raster_graph(ONEWAY, TRUE, TRUE)
+    tstpln__raster_graph(ONEWAY, TRUE, TRUE)
     -- (add to kd tree)
-    tstorn__append_path(contours, FALSE)
+    tstpln__append_path(contours, FALSE)
      --get start node
     bbox = tstpoly__get_bounding_box
-    tstorn__MST(tstorn__closest_bounding_box(3))
+    tstpln__MST(tstpln__closest_bounding_box(3))
     --set point orientation
-    tstorn__set_orientation(DOWN_NORMAL_VERT)
+    tstpln__set_orientation(DOWN_NORMAL_VERT)
 
     clear_list(path_plan)
-    tstorn__get_plan(path_plan)
+    tstpln__get_plan(path_plan)
 
     paths__clear_toolpath(pth)
     REPEAT
-      SELECT (tstorn__next_toolpath) OF
+      SELECT (tstpln__next_toolpath) OF
         CASE(PTH_TOOLING):
-          tstorn__set_segment_speed(TOOLING_SPEED)
-          tstorn__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(TOOLING_SPEED)
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstorn__set_segment_speed(LINKING_SPEED)
-          tstorn__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(LINKING_SPEED)
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
-    UNTIL( tstorn__is_path_end )
+    UNTIL( tstpln__is_path_end )
 
     --raise linking path
     paths__offset_toolpath(pth, POS(0,0,RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
     --convert coordinate systems
     origin = POS(100,100,0,0,0,0, pose__set_config(RBT_CONFIG))
-    tstorn__convertOrientation(pth, origin, PAD_RADIUS, PTH_CYLINDER, VERT_AXES, FALSE)
+    tsorn__convertOrientation(pth, origin, PAD_RADIUS, PTH_CYLINDER, VERT_AXES, FALSE)
 
     j = 1
     i=SAMPLE_START
@@ -1098,40 +1105,40 @@ ROUTINE t_delta_ornt : BOOLEAN
 
     -- ** planning **
     --generate path
-    tstorn__init(lines, POS(0,0,PAD_RADIUS,0,0,0,(ZEROPOS(1).config_data)))
+    tstpln__init(lines, POS(0,0,PAD_RADIUS,0,0,0,(ZEROPOS(1).config_data)))
     --(poly_depend, strict_dir)
-    tstorn__raster_graph(ONEWAY, FALSE, FALSE)
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
     -- (add to kd tree)
-    tstorn__append_path(contours, FALSE)
+    tstpln__append_path(contours, FALSE)
      --get start node
      bbox = tstpoly__get_bounding_box
     --    -- Contour last
     apprch_pnt = paths__new_vpath(bbox.verts[1], PTH_STOP, 0, VEC(1,0,0))
-    tstorn__MST(tstorn__closest_point(apprch_pnt))
+    tstpln__MST(tstpln__closest_point(apprch_pnt))
       --Contour first
-    -- tstorn__MST(tstorn__closest_bounding_box(1))
+    -- tstpln__MST(tstpln__closest_bounding_box(1))
     --set point orientation
-    tstorn__set_orientation(DOWN_NORMAL_VERT)
+    tstpln__set_orientation(DOWN_NORMAL_VERT)
 
     clear_list(path_plan)
-    tstorn__get_plan(path_plan)
+    tstpln__get_plan(path_plan)
 
     paths__clear_toolpath(pth)
     REPEAT
-      SELECT (tstorn__next_toolpath) OF
+      SELECT (tstpln__next_toolpath) OF
         CASE(PTH_TOOLING):
-          tstorn__set_segment_speed(TOOLING_SPEED)
-          tstorn__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(TOOLING_SPEED)
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstorn__set_segment_speed(LINKING_SPEED)
-          tstorn__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(LINKING_SPEED)
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
-    UNTIL( tstorn__is_path_end )
+    UNTIL( tstpln__is_path_end )
 
     --raise linking path
     paths__offset_toolpath(pth, POS(0,0,RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
     --convert coordinate systems
-    tstorn__convertOrientation(pth, origin, PAD_RADIUS, PTH_CYLINDER, VERT_AXES, TRUE)
+    tsorn__convertOrientation(pth, origin, PAD_RADIUS, PTH_CYLINDER, VERT_AXES, TRUE)
 
     j = 1
     i=SAMPLE_START
@@ -1193,39 +1200,39 @@ ROUTINE t_pol_pnts : BOOLEAN
     --generate path
     -- 50 = radius
     -- (theta, z, r)
-    tstsrf__init(lines, POS(0,0,PAD_RADIUS,0,0,0, (ZEROPOS(1).config_data))) --cylindrical
+    tstpln__init(lines, POS(0,0,PAD_RADIUS,0,0,0, (ZEROPOS(1).config_data))) --cylindrical
     --(poly_depend, strict_dir)
-    tstsrf__raster_graph(ONEWAY, FALSE, FALSE)
+    tstpln__raster_graph(ONEWAY, FALSE, FALSE)
       --append contours after to not include in rastering process
       -- (add to kd tree)
-    tstsrf__append_path(contours, FALSE)
+    tstpln__append_path(contours, FALSE)
      --get start node
     apprch_pnt = paths__new_vpath(bbox.verts[1], PTH_STOP, 0, VEC(1,0,0))
-    tstsrf__MST(tstsrf__closest_point(apprch_pnt))
+    tstpln__MST(tstpln__closest_point(apprch_pnt))
 
     clear_list(path_plan)
-    tstsrf__get_plan(path_plan)
+    tstpln__get_plan(path_plan)
 
     paths__clear_toolpath(pth)
     --set point orientation
-    tstsrf__set_orientation(POLAR_DOWN_NORMAL)
+    tstpln__set_orientation(POLAR_DOWN_NORMAL)
 
     REPEAT
-      SELECT tstsrf__next_toolpath OF
+      SELECT tstpln__next_toolpath OF
         CASE(PTH_TOOLING):
-          tstsrf__set_segment_speed(TOOLING_SPEED)
-          tstsrf__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(TOOLING_SPEED)
+          tstpln__get_toolpath_interpolate(TOOLING_STEP, PTH_LINETO, TRUE, pth)
         CASE(PTH_LINKING):
-          tstsrf__set_segment_speed(LINKING_SPEED)
-          tstsrf__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
+          tstpln__set_segment_speed(LINKING_SPEED)
+          tstpln__get_toolpath_interpolate(LINKING_STEP, PTH_LINETO, TRUE, pth)
       ENDSELECT
 
-    UNTIL( tstsrf__is_path_end )
+    UNTIL( tstpln__is_path_end )
 
     --offset linking path
     paths__offset_toolpath(pth, POS(0,RETRACT_HEIGHT,0,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
     --convert coordinate systems
-    tstsrf__convertOrientation(pth, origin, PAD_RADIUS, PTH_POLAR, Z_AXES, FALSE)
+    tssrf__convertOrientation(pth, origin, PAD_RADIUS, PTH_POLAR, Z_AXES, FALSE)
 
     j = 1
     i=SAMPLE_START
@@ -1282,8 +1289,6 @@ BEGIN
   -- clean up
   tstpoly__delete
   tstpln__delete
-  tstorn__delete
-  tstsrf__delete
 
 %ifdef DEBUG_BUILD
   usrdis__write_pipe

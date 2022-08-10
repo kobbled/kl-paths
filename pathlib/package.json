@@ -15,6 +15,9 @@
   "tests" : [
     "test/test_paths.kl"
   ],
+  "tests-includes" : [
+    "test/configs"
+  ],
   "tests-depends" : [
     "KUnit"
   ],
