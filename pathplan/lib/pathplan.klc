@@ -681,30 +681,6 @@ ROUTINE set_toolpath
     COPY_PATH(inpth, 0, 0, tool_segment, status)
   END set_toolpath
 
-ROUTINE set_segment_speed
-  VAR
-    i : INTEGER
-  BEGIN
-    FOR i=1 TO (PATH_LEN(tool_segment)) DO
-      tool_segment[i].speed = speed
-    ENDFOR
-  END set_segment_speed
-
-ROUTINE set_segment_speed_bounds
-  VAR
-    i : INTEGER
-  BEGIN
-    --set bounds
-    tool_segment[1].speed = start_speed
-    tool_segment[PATH_LEN(tool_segment)].speed = end_speed
-
-    IF (PATH_LEN(tool_segment) > 2) THEN
-      FOR i=2 TO (PATH_LEN(tool_segment) - 1) DO
-        speed_blending(start_speed, end_speed, (i-1)/(PATH_LEN(tool_segment)-1), tool_segment[i])
-      ENDFOR
-    ENDIF
-  END set_segment_speed_bounds
-
 ROUTINE get_endpoints
   VAR
     endpnts : ARRAY[2] OF t_TOOLPATH
