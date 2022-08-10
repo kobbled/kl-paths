@@ -729,12 +729,14 @@ ROUTINE get_path_interpolate
 -- use method in pathmake instead
 ROUTINE get_toolpath_interpolate
   VAR
+    v1, v2 : VECTOR
+    vs, os : VECTOR
     i, j : INTEGER
     inc : INTEGER
     status : INTEGER
   BEGIN
     IF NOT append THEN
-      clear_toolpath(out_path)
+      paths__clear_toolpath(out_path)
     ENDIF
 
     IF PATH_LEN(tool_segment) > 0 THEN
@@ -746,17 +748,19 @@ ROUTINE get_toolpath_interpolate
         APPEND_NODE(out_path,status)
         out_path[PATH_LEN(out_path)] = tool_segment[i]
 
-        path_blending(tool_segment, i, frm, 0, out_path[PATH_LEN(out_path)])
-
         IF inc > 0 THEN
           FOR j=1 TO (inc-1) DO
             --interpolate points
             APPEND_NODE(out_path,status)
             out_path[PATH_LEN(out_path)] = tool_segment[i+1]
+
+            v1 = pose__pose_to_vector(tool_segment[i].v)
+            v2 = pose__pose_to_vector(tool_segment[i+1].v)
+            vs = (j/inc)*v2 + (1-(j/inc))*v1
+            os = pose__get_orientation(tool_segment[i].v)
+
+            out_path[PATH_LEN(out_path)].v = frm:POS(vs.x, vs.y, vs.z, os.x, os.y, os.z, frm.config_data)
             out_path[PATH_LEN(out_path)].code = line_type
-
-            path_blending(tool_segment, i, frm, (j/inc), out_path[PATH_LEN(out_path)])
-
           ENDFOR
         ENDIF
 
@@ -765,8 +769,6 @@ ROUTINE get_toolpath_interpolate
         IF (tool_segment[i+1].code=PTH_MOVETO) OR (tool_segment[i+1].code=PTH_CLOSE) THEN
           APPEND_NODE(out_path,status)
           out_path[PATH_LEN(out_path)] = tool_segment[i+1]
-
-          path_blending(tool_segment, i, frm, 1, out_path[PATH_LEN(out_path)])
         ENDIF
       ENDFOR
     ENDIF
