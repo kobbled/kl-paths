@@ -42,7 +42,7 @@
 --planning corner start
 %defeval PLATE_CORNER RIGHT_BOTTOM
 
---path implementation
+--motion implementation
 %include motion.interface.klt
 
 --pathplan

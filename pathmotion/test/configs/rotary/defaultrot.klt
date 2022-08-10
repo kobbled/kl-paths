@@ -56,8 +56,11 @@
 %define TOOL_ORIENT_UP 0,0,0
 %define TOOL_ORIENT_DOWN 0,0,180
 
---path implementation
-%include rotary.paths.impl.klt
+--pathmake implementation
+%include rotaryPath.impl.klt
+
+--motion implementation
+%include rotary.motion.impl.klt
 
 --pathplan
 ------------------
