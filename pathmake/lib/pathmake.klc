@@ -225,7 +225,14 @@ ROUTINE init2
     paths__clear_toolpath(line_endpnts)
     paths__clear_toolpath(pth)
 
-    this = make_prm
+    --make copy
+    this.frm = (make_prm.frm)
+    this.idod = (make_prm.idod)
+    this.origin = (make_prm.origin)
+    this.coord_system = paths__new_coord_sys((make_prm.coord_system.system), (make_prm.coord_system.z_axis))
+    set_linking_coordinate_system((make_prm.coord_system.system), (make_prm.coord_system.z_axis))
+
+    this.usePathPlan = (make_prm.usePathPlan)
 
     pth_end = FALSE
   END init2
