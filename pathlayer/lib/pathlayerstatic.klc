@@ -90,14 +90,29 @@ impl_buffer_conversion
 
 --public
 ROUTINE new
+  VAR
+    prm : t_PATH_PARAM
+    cds : t_COORD_SYS
   BEGIN
     --initialize lam
     `LAM_NAME`__new
 
     --set params
-    params = make_prm
+    --make copy
+    params.frm = (make_prm.frm)
+    params.idod = (make_prm.idod)
+    params.origin = (make_prm.origin)
+    params.coord_system = paths__new_coord_sys((make_prm.coord_system.system), (make_prm.coord_system.z_axis))
+    params.usePathPlan = (make_prm.usePathPlan)
+
+    --with static input assume it is always in cartesean
+    --save PTH_CYLINDER, or PTH_POLAR in layer object to differentiate
+    cds = paths__new_coord_sys(PTH_CARTESAN, (make_prm.coord_system.z_axis))
+
     --initialize pathmake
-    `PATH_OBJECT_NAME`__init2(params)
+    `PATH_OBJECT_NAME`__init((params.frm), cds, (params.origin), (params.idod), (params.usePathPlan))
+    --set linking coordinate system. Set as PTH_CYLINDER, or PTH_POLAR to transform linking
+    `PATH_OBJECT_NAME`__set_linking_coordinate_system((make_prm.coord_system.system), (make_prm.coord_system.z_axis))
 
     clear_passes
     layers = 0
