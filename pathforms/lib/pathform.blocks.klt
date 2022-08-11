@@ -207,6 +207,34 @@ $
     ENDSELECT
 $
 
+--set registers and start lam
+%define start_lam $
+    `LAM_NAME`__set_registers
+    `LAM_NAME`__start
+$
+
+%define stop_lam $
+    `LAM_NAME`__stop
+$
+
+--initialize and start scanner
+%define start_scanning $
+    --load variables into scanning object
+    -- ..note:: `orient` is unused in scan_part_dyn. Need to make seperate
+    --          header file to exclude this parameter
+    `SCANNING_OBJECT_NAME`__init((toolprm.coordSys.system), (toolprm.coordSys.z_axis), VEC(0,0,0))
+    --enable scanner
+    IF NOT task__thread('SCANNING_OBJECT_NAME') THEN
+        karelError(RUN_TASK_FAILED, 'scan task did not start',ER_ABORT)
+    ENDIF
+$
+
+%define stop_scanning $
+    IF (program_type = MOVE_SCANING) THEN
+      --stop scanning process
+      `SCANNING_OBJECT_NAME`__set_scan_finished
+    ENDIF
+$
 
 --form branch for subform of whichever 'Shape'
 --is selected in station form

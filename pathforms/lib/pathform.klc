@@ -235,21 +235,10 @@ forms__show(stat_str, stat_val_arr)
         -- convert units (deg to mm) if nessecary
         cnvrt_to_mm
 
-        -- ** set frames **
-        frm = POS(0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG))
-        -- ..note:: tool offset is defined in motion constructor
-        --          under the `define_tool_offset` member
-        origin = POS((polyprm.xStart), (polyprm.yStart), (polyprm.height), (polyprm.polyAngle*toolprm.idod),0,0, pose__set_config(DEFAULT_CONFIG))
-        --set coordinate system
-        SELECT (toolprm.coordSys) OF
-          CASE(PTH_CYLINDER):
-            cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
-          CASE(PTH_CARTESAN):
-            cds = paths__new_coord_sys(PTH_CARTESAN, Z_AXES)
-          ELSE:
-            WRITE TPDISPLAY(CR, 'coordinate system not set')
-            display__show
-        ENDSELECT
+
+        -- intialize frames, and coordinate system
+        --** MACRO **
+        initialize_frames
 
         -- ** preprocess functionality **
         SELECT program_type OF
@@ -261,20 +250,14 @@ forms__show(stat_str, stat_val_arr)
             forms__show(work_str, work_val_arr)
 
             IF (term_char = ky_f1) THEN
-              `LAM_NAME`__set_registers
-              `LAM_NAME`__start
+              --** MACRO **
+              start_lam
             ENDIF
           --scanning toolpath
 %ifeq ENABLE_SCANNING TRUE
           CASE(MOVE_SCANING):
-            --load variables into scanning object
-            -- ..note:: `orient` is unused in scan_part_dyn. Need to make seperate
-            --          header file to exclude this parameter
-            `SCANNING_OBJECT_NAME`__init(toolprm.coordSys, Z_AXES, VEC(0,0,0))
-            --enable scanner
-            IF NOT task__thread('SCANNING_OBJECT_NAME') THEN
-                karelError(RUN_TASK_FAILED, 'scan task did not start',ER_ABORT)
-            ENDIF
+            --** MACRO **
+            start_scanning
 %endif
           --dry run toolpath
           ELSE:
@@ -299,14 +282,13 @@ forms__show(stat_str, stat_val_arr)
         SELECT program_type OF
           --working toolpath
           CASE(MOVE_WORKING):
-            `LAM_NAME`__stop
+            --** MACRO **
+            stop_lam
           --scanning toolpath
 %ifeq ENABLE_SCANNING TRUE
           CASE(MOVE_SCANING):
-            IF (program_type = MOVE_SCANING) THEN
-              --stop scanning process
-              `SCANNING_OBJECT_NAME`__set_scan_finished
-            ENDIF
+            --** MACRO **
+            stop_scanning
 %endif
           --dry run toolpath
           ELSE:
