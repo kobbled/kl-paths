@@ -36,6 +36,64 @@
 $
 %mode pop
 
+%mode push
+%mode string QQQ "$" "$" "\\"
+%define impl_inter_logic $
+  ROUTINE interlayer
+    BEGIN
+      pause
+    END interlayer
+
+  ROUTINE interpass
+    VAR
+      n : REAL
+      status : INTEGER
+    BEGIN
+      --store endpoints
+      paths__clear_toolpath(line_endpnts)
+
+      -- Do not do on last pass of layer
+      IF this.last_idx < PATH_LEN(buffer) THEN
+        --create a line inbetween the stop pass and the start of
+        --the next pass
+        APPEND_NODE(line_endpnts,status)
+        line_endpnts[1] = layout_to_toolpath((this.last_idx), pth)
+        APPEND_NODE(line_endpnts,status)
+        line_endpnts[2] = layout_to_toolpath((this.last_idx+1), pth)
+        
+        SELECT params.coord_system.system OF
+          CASE(PTH_CYLINDER):
+            --convert to cylindrical
+            line_endpnts[1].v = pose__cartesian_to_cylindrical((ZEROPOS(1)), (line_endpnts[1].v), VERT_AXES)
+            line_endpnts[2].v = pose__cartesian_to_cylindrical((ZEROPOS(1)), (line_endpnts[2].v), VERT_AXES)
+          CASE(PTH_POLAR):
+            karelError(INVALID_TYPE_CODE, 'class_name: interpass doesnt support spherical systems yet.', ER_ABORT)
+          ELSE:
+        ENDSELECT
+
+        --update type
+        line_endpnts[1].typ = PTH_LINKING
+        line_endpnts[2].typ = PTH_LINKING
+        --update code
+        line_endpnts[1].code = PTH_MOVETO
+        line_endpnts[2].code = PTH_CLOSE
+        
+        --update tangent
+        n = math__norm((line_endpnts[2].v-line_endpnts[1].v))
+        IF n > 0 THEN
+          line_endpnts[1].tangent = (line_endpnts[2].v-line_endpnts[1].v)/n
+        ELSE
+          line_endpnts[1].tangent = pth[1].tangent
+        ENDIF
+        line_endpnts[2].tangent = line_endpnts[1].tangent
+
+      ENDIF
+
+      --use line_endpnts in next_toolpath to create pth
+    END interpass
+$
+%mode pop
+
 --layout
 ------------------
 %define LAYOUT_OBJECT_NAME tstlay

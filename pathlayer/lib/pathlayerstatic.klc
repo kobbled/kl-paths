@@ -30,6 +30,7 @@ pathmake_friends(PATH_OBJECT_NAME)
 pathlayout_friends(LAYOUT_OBJECT_NAME)
 
 %include errors.klh
+%from math.klh %import norm
 %from pathlib.klh %import clear_toolpath
 
 
@@ -208,6 +209,7 @@ ROUTINE next_pass
 
     --clear previous path_make pth
     paths__clear_toolpath(pth)
+    paths__clear_toolpath(line_endpnts)
 
     --start buffer index at the next line/pass
     REPEAT
@@ -226,21 +228,8 @@ ROUTINE next_pass
 
   END next_pass
 
-  ROUTINE next_toolpath
-    VAR
-      end_buffer : BOOLEAN
-      end_layer : BOOLEAN
-    BEGIN
-
-      REPEAT
-        end_buffer = next_layer
-        REPEAT
-          end_layer = next_pass
-          `PATH_OBJECT_NAME`__set_path_end(end_layer)
-        UNTIL(end_layer)
-      UNTIL(end_buffer)
-
-    END next_toolpath
+-- user macro
+impl_inter_logic
 
 BEGIN
 END class_name
