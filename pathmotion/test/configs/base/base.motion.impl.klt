@@ -169,7 +169,7 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
     moveLine
 
     --origin point
-    vpos1 = INV(origin):spos2
+    vpos1 = INV((origin)):spos2
 
     --get start position of path from drawing
     lpos = `PATH_OBJECT_NAME`__get_start_node
