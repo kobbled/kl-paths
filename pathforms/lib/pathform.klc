@@ -74,7 +74,6 @@ VAR
   -- poses
   origin : XYZWPR
   frm : XYZWPR
-  cds : t_COORD_SYS
   --default start corner
   startCorner IN CMOS : INTEGER
   polyprm IN CMOS  : t_PATH_VARS
@@ -83,6 +82,9 @@ VAR
   motnprm IN CMOS  : t_MOTION_PRM
   padprm  IN CMOS  : t_PAD_VARS
   hexprm IN CMOS   : t_HEX_VARS
+
+  makeparams : t_PATH_PARAM
+  layerparams : t_PATH_LAYER
 
   b : BOOLEAN
   term_char FROM forms : INTEGER
@@ -280,7 +282,7 @@ forms__show(stat_str, stat_val_arr)
 
         -- ** intialize objects **
         --** MACRO **
-        initialize_stations
+        initialize_select_stations
         --**
 
         -- ** draw shape, raster, and pathplan  **
