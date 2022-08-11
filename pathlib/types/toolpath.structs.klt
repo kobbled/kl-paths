@@ -23,7 +23,7 @@ TYPE
     pitch : REAL
     pitchLead : REAL
     idod : INTEGER
-    coordSys : INTEGER
+    coordSys : t_COORD_SYS
   ENDSTRUCTURE
 
   t_PATH_RAST FROM t_paths = STRUCTURE

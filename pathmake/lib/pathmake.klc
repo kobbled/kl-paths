@@ -32,6 +32,7 @@ PROGRAM class_name
 
 VAR
   this : t_PATH_PARAM
+  linking_cds : t_COORD_SYS
   pth_end : BOOLEAN
   line_endpnts : PATH nodedata = t_TOOLPATH
   pth : PATH nodedata = t_TOOLPATH
@@ -66,6 +67,8 @@ define_pmake_members(class_name)
 ROUTINE next_toolpath
 -- Retrieves the next path in the pathplan
 -- handles the linking path for cylindrical cartesian, and rotary
+  VAR
+    cds : t_COORD_SYS
   BEGIN
     IF this.usePathPlan THEN
       SELECT `PATH_PLAN_NAME`__next_toolpath OF
@@ -92,6 +95,11 @@ ROUTINE next_toolpath
           --set speed
           paths__set_speed(pth, link_speed)
       ENDSELECT
+
+      --set coord system
+        --tooling and linking will have same coordinate system
+      cds = paths__new_coord_sys((this.coord_system.system), (this.coord_system.z_axis))
+
     ENDIF
 
     IF PATH_LEN(pth) > 0 THEN
@@ -104,18 +112,17 @@ ROUTINE next_toolpath
 
       --convert to cartesian
       -- ..note:: this function will not do anything if the coord system is cartesian
-      convertOrientation(pth, (this.frm), (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
+      convertOrientation(pth, (this.frm), (this.origin.z), (cds.system), (cds.z_axis), FALSE)
     ENDIF
   END next_toolpath
 
 ROUTINE get_toolpath
 -- Retrieves the full path from the pathplan
 -- handles the linking path for cylindrical cartesian, and rotary
-%ifdef ROT_GRP
   VAR
     endpnts : ARRAY[2] OF t_TOOLPATH
     status : INTEGER
-%endif
+    cds : t_COORD_SYS
   BEGIN
     paths__clear_toolpath(pth)
     IF this.usePathPlan THEN
@@ -142,6 +149,9 @@ ROUTINE get_toolpath
             linkingTransition(tool_segment, (this.frm), (link_step), (this.idod), TRUE, pth)
         ENDSELECT
       UNTIL( is_path_end )
+
+      --set coord system
+      cds = paths__new_coord_sys((this.coord_system.system), (this.coord_system.z_axis))
     ELSE
       karelError(UNSUPPORTED_ITEM,'Must currently use Path Planning for "get_toolpath" member.', ER_ABORT)
     ENDIF
@@ -150,7 +160,7 @@ ROUTINE get_toolpath
     paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
 
     --convert to cartesian
-    convertOrientation(pth, (this.frm), (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
+    convertOrientation(pth, (this.frm), (this.origin.z), (cds.system), (cds.z_axis), FALSE)
   END get_toolpath
 
 ROUTINE get_midpoint
@@ -179,6 +189,7 @@ ROUTINE new
     this.origin = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
 
     set_coordinate_system(PTH_CARTESAN, 3)
+    set_linking_coordinate_system(PTH_CARTESAN, 3)
     set_idod(1)
 
     this.usePathPlan = TRUE
@@ -195,7 +206,8 @@ ROUTINE init
     this.frm = coord_frm
     this.origin = origin
 
-    this.coord_system = coord_sys
+    this.coord_system = paths__new_coord_sys((coord_sys.system), (coord_sys.z_axis))
+    set_linking_coordinate_system((coord_sys.system), (coord_sys.z_axis))
 
     this.usePathPlan = doPathPlan
 
@@ -224,6 +236,8 @@ ROUTINE delete
 
     this = unit_param
 
+    linking_cds = unit_sys
+
     pth_end = FALSE
 
     --free path plan
@@ -240,6 +254,12 @@ ROUTINE set_coordinate_system
     this.coord_system.system = system
     this.coord_system.z_axis = z_axis
   END set_coordinate_system
+
+ROUTINE set_linking_coordinate_system
+  BEGIN
+    linking_cds.system = system
+    linking_cds.z_axis = z_axis
+  END set_linking_coordinate_system
 
 ROUTINE set_coord_frame
   BEGIN

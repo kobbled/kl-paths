@@ -23,6 +23,8 @@ declare_member(class_name,set_idod,class_name,stido)
 ROUTINE set_idod(i : INTEGER) FROM class_name
 declare_member(class_name,set_coordinate_system,class_name,stcrd)
 ROUTINE set_coordinate_system(system : INTEGER ; z_axis : INTEGER) FROM class_name
+declare_member(class_name,set_linking_coordinate_system,class_name,stlcd)
+ROUTINE set_linking_coordinate_system(system : INTEGER ; z_axis : INTEGER) FROM class_name
 declare_member(class_name,set_coord_frame,class_name,stcdf)
 ROUTINE set_coord_frame(x,y,z,w,p,r : REAL) FROM class_name
 declare_member(class_name,set_origin,class_name,storg)

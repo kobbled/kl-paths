@@ -415,7 +415,7 @@ ROUTINE paths__new_make_params
   BEGIN
     prm.frm = coord_frm
     prm.origin = origin
-    prm.coord_system = coord_sys
+    prm.coord_system = paths__new_coord_sys((coord_sys.system), (coord_sys.z_axis))
     prm.usePathPlan = doPathPlan
     prm.idod = idod
 
