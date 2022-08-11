@@ -30,6 +30,7 @@ $-,ppth
   "-%t" &bold " Motion Parameters" &standard &new_line
   " In Degrees :  " "-%6B(bool_fkey)" &new_line
   " Retract Vec:  " "-%7.2f" "-%7.2f" "-%7.2f" &new_line
+  " Use Tooling Speed:  " "-%6B(bool_fkey)" &new_line
   " Tooling Speed:      " "-%6.2f" &new_line
   " Linking Speed:      " "-%6.2f" &new_line
   " Tool Step Inc:      " "-%6.2f" &new_line

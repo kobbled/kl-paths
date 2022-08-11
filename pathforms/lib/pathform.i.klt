@@ -160,6 +160,21 @@ ROUTINE frm_cusList
     draw_val_arr[10] = ''
   END frm_cusList
 
+ROUTINE frm_rbdList
+  BEGIN
+    --pad parameters
+    draw_val_arr[1] = '['+ps+']filename'
+    draw_val_arr[2] = ''
+    draw_val_arr[3] = ''
+    draw_val_arr[4] = ''
+    draw_val_arr[5] = ''
+    draw_val_arr[6] = ''
+    draw_val_arr[7] = ''
+    draw_val_arr[8] = ''
+    draw_val_arr[9] = ''
+    draw_val_arr[10] = ''
+  END frm_rbdList
+
 ROUTINE cnvrt_to_mm
   BEGIN
 

@@ -252,6 +252,10 @@ $
         frm_cusList
         b = forms__load(cus_file, cus_str)
         forms__show(cus_str, draw_val_arr)
+      CASE(SHP_REBUILD):
+        frm_rbdList
+        b = forms__load(rebuild_file, rebuild_str)
+        forms__show(rebuild_str, draw_val_arr)
       ELSE:
         WRITE TPDISPLAY(CR, 'Shape type not selected properly')
         display__show
@@ -276,6 +280,9 @@ $
         `PATHDRAW_NAME`__set_origin(toolprm.idod, (toolprm.coordSys.system), 0, (polyprm.polyRotation))
         `PATHDRAW_NAME`__drawCustom(filename, polyprm, rastprm)
         `PATHDRAW_NAME`__raster(rastprm)
+      CASE(SHP_REBUILD):
+        --initialize layout and load file & buffer
+        --defer, no drawing object needed
       ELSE:
         WRITE TPDISPLAY(CR, 'Shape type not selected properly')
         display__show

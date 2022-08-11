@@ -6,7 +6,7 @@
 .kl pcus
 .form
 $-,pcus
-  &home &reverse "Polygon Dimensions" &standard &new_line
+  &home &reverse "SVG/DXF Parameters" &standard &new_line
   &new_line
   " In Degrees :        " "-%6B(bool_fkey)" &new_line
   " Filename:           " "-%12k" &new_line

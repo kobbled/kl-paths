@@ -17,6 +17,8 @@ PROGRAM class_name
 %define hex_str 'PHEX'
 %define cus_file 'gspcuseg'
 %define cus_str 'PCUS'
+%define rebuild_file 'gsprbdeg'
+%define rebuild_str 'PRBD'
 
 --user form for work parameters
 %define work_file 'gsworkeg'
@@ -43,9 +45,10 @@ PROGRAM class_name
 %endif
 
 CONST
-  SHP_PAD = 1
-  SHP_HEX = 2
-  SHP_CUST = 3
+  SHP_PAD     = 1
+  SHP_HEX     = 2
+  SHP_CUST    = 3
+  SHP_REBUILD = 4
 
 %define M_PI 3.14159
 

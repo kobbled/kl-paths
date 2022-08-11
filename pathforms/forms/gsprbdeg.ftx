@@ -1,0 +1,18 @@
+*     Dictionary Form File : gsprbdeg
+*
+
+#include fkeys.fh
+
+.kl prbd
+.form
+$-,prbd
+  &home &reverse "Rebuild/G-code Parameters" &standard &new_line
+  &new_line
+  " Filename:           " "-%12k" &new_line
+  ^prbd_fkey
+.endform
+$-,prbd_fkey     *function key labels
+    "  EXIT" &new_line
+    "  RUN" &new_line
+
+#eval tf_keys
