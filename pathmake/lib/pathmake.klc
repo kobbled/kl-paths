@@ -85,8 +85,10 @@ ROUTINE next_toolpath
 
           --set speed
           -- ..warning:: This will override set the speed to a static
-          --             speed 'tool_speed' for the whole tool_segment 
-          paths__set_speed(pth, tool_speed)
+          --             speed 'tool_speed' for the whole tool_segment
+          IF use_tool_spd THEN
+            paths__set_speed(pth, tool_speed)
+          ENDIF
         CASE(PTH_LINKING):
 
           --get toolpath from linkingTransition user defined member
@@ -132,8 +134,10 @@ ROUTINE get_toolpath
 
             --set speed
             -- ..warning:: This will override set the speed to a static
-            --             speed 'tool_speed' for the whole tool_segment 
-            paths__set_speed(tool_segment, tool_speed)
+            --             speed 'tool_speed' for the whole tool_segment
+            IF use_tool_spd THEN
+              paths__set_speed(tool_segment, tool_speed)
+            ENDIF
 
             --get toolpath from pathplan
             IF interp_tool THEN

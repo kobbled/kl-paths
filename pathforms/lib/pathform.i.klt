@@ -54,11 +54,12 @@ ROUTINE init_statLst
     path_val_arr[20] = '['+ps+']toolprm.retractDist.x'
     path_val_arr[21] = '['+ps+']toolprm.retractDist.y'
     path_val_arr[22] = '['+ps+']toolprm.retractDist.z'
-    path_val_arr[23] = '['+ps+']motnprm.tool_speed'
-    path_val_arr[24] = '['+ps+']motnprm.link_speed'
-    path_val_arr[25] = '['+ps+']motnprm.tool_step'
-    path_val_arr[26] = '['+ps+']motnprm.link_step'
-    path_val_arr[27] = '['+ps+']motnprm.use_arc'
+    path_val_arr[23] = '['+ps+']motnprm.useSetSpeed'
+    path_val_arr[24] = '['+ps+']motnprm.tool_speed'
+    path_val_arr[25] = '['+ps+']motnprm.link_speed'
+    path_val_arr[26] = '['+ps+']motnprm.tool_step'
+    path_val_arr[27] = '['+ps+']motnprm.link_step'
+    path_val_arr[28] = '['+ps+']motnprm.use_arc'
   END frm_pthList
 
 ROUTINE init_pthList
@@ -84,6 +85,7 @@ ROUTINE init_pthList
     --motion params
     IF UNINIT(motionTree) THEN motionTree = TRUE ; ENDIF
     IF UNINIT(motnprm.inDegrees) THEN motnprm.inDegrees = TRUE ; ENDIF
+    IF UNINIT(motnprm.useSetSpeed) THEN motnprm.useSetSpeed = TRUE; ENDIF
     IF UNINIT(motnprm.tool_speed) THEN motnprm.tool_speed = 100; ENDIF
     IF UNINIT(motnprm.link_speed) THEN motnprm.link_speed = 130; ENDIF
     IF UNINIT(motnprm.tool_step) THEN motnprm.tool_step = 45; ENDIF

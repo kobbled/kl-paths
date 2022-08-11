@@ -230,9 +230,9 @@ ROUTINE move
 
     --move though path
     IF (motnprm.use_arc) THEN
-      movePolyArc((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist.z) )
+      movePolyArc((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist.z), (motnprm.useSetSpeed) )
     ELSE
-      movePoly((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist.z) )
+      movePoly((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist.z), (motnprm.useSetSpeed) )
     ENDIF
 
     --retract path
@@ -410,7 +410,7 @@ ROUTINE movePoly
     ENDIF
 
     REPEAT
-      `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght, interpolate)
+      `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, interpolate)
 
       FOR i=1 TO PATH_LEN(pth) DO
         --set code and type for tp
@@ -452,7 +452,7 @@ ROUTINE movePolyArc
     ENDIF
 
     REPEAT
-      `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght, interpolate)
+      `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, interpolate)
 
       --** start point of the circle **
       --linear move to start of path
@@ -552,7 +552,7 @@ ROUTINE movePolyFull
     --set tool orientation
     set_posereg(tool_offset, TOOL_OFFSET_REG)
 
-    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght, interpolate)
+    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, interpolate)
 
     IF (motion_prog[1] = '') THEN
       karelError(VAR_UNINIT,'linear motion program in class_name needs to be set', ER_ABORT)
@@ -594,7 +594,7 @@ ROUTINE movePolyArcFull
     --set tool orientation
     set_posereg(tool_offset, TOOL_OFFSET_REG)
 
-    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, link_speed, link_step, retract_hght, interpolate)
+    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, interpolate)
 
     startCode = pth[1].code
     endCode = paths__opposite_code(startCode)
