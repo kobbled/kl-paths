@@ -33,6 +33,11 @@ declare_function(prog_name,new_layer_params,prog_name_alias,nlprm)
 ROUTINE paths__new_layer_params(start_pass : INTEGER; start_layer : INTEGER) : t_PATH_LAYER FROM paths
 
 %ifdef toolpath_structs_t
+declare_function(prog_name,new_motion_params,prog_name_alias,nmtpr)
+ROUTINE paths__new_motion_params(program_type : INTEGER; interpolate : BOOLEAN; tool_speed : REAL; link_speed : REAL; useSetSpeed : BOOLEAN; tool_step : REAL; link_step : REAL; inDegrees : BOOLEAN) : t_MOTION_PRM FROM paths
+declare_function(prog_name,new_tool_params,prog_name_alias,ntlpr)
+ROUTINE paths__new_tool_params(retractDist : VECTOR; orient : VECTOR; pitch : REAL; pitchLead : REAL; idod : INTEGER; coord_system : t_COORD_SYS) : t_TOOL_VARS FROM paths
+
 declare_function(prog_name,toolvec_to_vec,prog_name_alias,tv2v)
 ROUTINE paths__toolvec_to_vec(tv : t_TOOL_VEC) : VECTOR FROM paths
 declare_function(prog_name,vec_to_toolvec,prog_name_alias,v2tv)

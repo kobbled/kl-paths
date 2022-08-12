@@ -436,6 +436,38 @@ ROUTINE paths__new_layer_params
     RETURN(prm)
   END paths__new_layer_params
 
+ROUTINE paths__new_motion_params
+  VAR
+    prm : t_MOTION_PRM
+  BEGIN
+    prm.program_type = program_type
+    prm.interpolate = interpolate
+    --set increments
+    prm.inDegrees = inDegrees
+    prm.tool_step = tool_step
+    prm.link_step = link_step
+    --set speeds
+    prm.useSetSpeed = useSetSpeed
+    prm.tool_speed = tool_speed
+    prm.link_speed = link_speed
+
+    RETURN(prm)
+  END paths__new_motion_params
+
+ROUTINE paths__new_tool_params
+  VAR
+    prm : t_TOOL_VARS
+  BEGIN
+    prm.retractDist.x = retractDist.x ; prm.retractDist.y = retractDist.y ; prm.retractDist.z = retractDist.z ;
+    prm.orient.x = orient.x ; prm.orient.y = orient.y ; prm.orient.z = orient.z ;
+    prm.pitch = pitch
+    prm.pitchLead = pitchLead
+    prm.idod = idod
+    prm.coordSys = paths__new_coord_sys((coord_system.system), (coord_system.z_axis))
+
+    RETURN(prm)
+  END paths__new_tool_params
+
 ROUTINE paths__toolvec_to_vec
   VAR
     v : VECTOR
