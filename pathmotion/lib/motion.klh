@@ -56,7 +56,11 @@ declare_member(class_name,run_retract_path,class_name,rtpth)
 ROUTINE run_retract_path(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : INTEGER; origin : XYZWPR; offset : XYZWPR) FROM class_name
 --movements
 declare_member(class_name,move,class_name,move)
-ROUTINE move(toolprm : t_TOOL_VARS ; motnprm : t_MOTION_PRM ) FROM class_name
+ROUTINE move(use_arc : BOOLEAN ) FROM class_name
+declare_member(class_name,moveApproach,class_name,mvapp)
+ROUTINE moveApproach FROM class_name
+declare_member(class_name,moveRetract,class_name,mvrtc)
+ROUTINE moveRetract FROM class_name
 declare_member(class_name,movePos,class_name,mvps)
 ROUTINE movePos(pos : XYZWPR; speed : REAL ; line_typ : INTEGER; tangent : VECTOR) FROM class_name
 declare_member(class_name,moveLine,class_name,mvln)

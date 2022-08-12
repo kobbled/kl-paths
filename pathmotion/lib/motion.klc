@@ -308,20 +308,29 @@ ROUTINE release_groups
 
 ROUTINE move
   BEGIN
-    --approach path
-    approachPath((motnprm.link_speed), (motnprm.link_step), (toolprm.coordSys), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS((toolprm.retractDist.x),(toolprm.retractDist.y),-1*(toolprm.retractDist.z),0,0,0, (ZEROPOS(1).config_data)))
-
+    --..warning:: toolprm needs to be initialize with init2, or set_retract_dist
+    
     --move though path
-    IF (motnprm.use_arc) THEN
-      movePolyArc((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist.z), (motnprm.useSetSpeed) )
+    IF (use_arc) THEN
+      movePolyArc((this.tool_speed), (this.tool_step), (this.link_speed), (this.link_step), -1*(toolprm.retractDist.z), (this.useSetSpeed) )
     ELSE
-      movePoly((motnprm.tool_speed), (motnprm.tool_step), (motnprm.link_speed), (motnprm.link_step), -1*(toolprm.retractDist.z), (motnprm.useSetSpeed) )
+      movePoly((this.tool_speed), (this.tool_step), (this.link_speed), (this.link_step), -1*(toolprm.retractDist.z), (this.useSetSpeed) )
     ENDIF
-
-    --retract path
-    retractPath((motnprm.link_speed), (motnprm.link_step), (toolprm.coordSys), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS((toolprm.retractDist.x),(toolprm.retractDist.y),-1*(toolprm.retractDist.z),0,0,0, (ZEROPOS(1).config_data)))
-
   END move
+
+ROUTINE moveApproach
+  BEGIN
+    --..warning:: toolprm needs to be initialize with init2, or set_retract_dist/set_coordinate_system/set_idod
+
+    --approach path
+    approachPath((this.link_speed), (this.link_step), (toolprm.coordSys.system), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS((toolprm.retractDist.x),(toolprm.retractDist.y),-1*(toolprm.retractDist.z),0,0,0, (ZEROPOS(1).config_data)))
+  END moveApproach
+
+ROUTINE moveRetract
+  BEGIN
+    --retract path
+    retractPath((this.link_speed), (this.link_step), (toolprm.coordSys.system), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS((toolprm.retractDist.x),(toolprm.retractDist.y),-1*(toolprm.retractDist.z),0,0,0, (ZEROPOS(1).config_data)))
+  END moveRetract
 
 ROUTINE movePos
   VAR
