@@ -11,9 +11,11 @@ header_def -- define class
 declare_member(class_name,new,class_name,new)
 ROUTINE new FROM class_name
 declare_member(class_name,init,class_name,init)
-ROUTINE init(toolOffst : XYZWPR; interp_ : BOOLEAN; prog_typ : INTEGER) FROM class_name
+ROUTINE init(toolOffst : XYZWPR; interp_ : BOOLEAN; prog_typ : INTEGER; &
+             tool_speed : REAL; link_speed : REAL; useSetSpeed : BOOLEAN; & 
+             tool_step : REAL; link_step : REAL; inDegrees : BOOLEAN) FROM class_name
 declare_member(class_name,init2,class_name,init2)
-ROUTINE init2(toolprm : t_TOOL_VARS; interp_ : BOOLEAN; prog_typ : INTEGER; rastprm : t_PATH_RAST) FROM class_name
+ROUTINE init2(mtnprm: t_MOTION_PRM; toolprm_ : t_TOOL_VARS) FROM class_name
 declare_member(class_name,delete,class_name,dstr)
 ROUTINE delete FROM class_name
 --setters
@@ -27,8 +29,19 @@ declare_member(class_name,set_program_type,class_name,stpgr)
 ROUTINE set_program_type(typ : INTEGER) FROM class_name
 declare_member(class_name,set_prog_names,class_name,stprg)
 ROUTINE set_prog_names(prog_typ : INTEGER) FROM class_name
-declare_member(class_name,set_rast_param,class_name,strsp)
-ROUTINE set_rast_param(rastprm : t_PATH_RAST) FROM class_name
+declare_member(class_name,set_speeds,class_name,stspd)
+ROUTINE set_speeds(tool_speed : REAL; link_speed : REAL; useSetSpeed : BOOLEAN) FROM class_name
+declare_member(class_name,set_increments,class_name,stinc)
+ROUTINE set_increments(tool_step : REAL; link_step : REAL; inDegrees : BOOLEAN) FROM class_name
+declare_member(class_name,set_coordinate_system,class_name,stcrd)
+ROUTINE set_coordinate_system(system : INTEGER ; z_axis : INTEGER) FROM class_name
+declare_member(class_name,set_retract_dist,class_name,strtd)
+ROUTINE set_retract_dist(retractDist : VECTOR) FROM class_name
+declare_member(class_name,set_orient,class_name,storn)
+ROUTINE set_orient(orient : VECTOR) FROM class_name
+declare_member(class_name,set_idod,class_name,stido)
+ROUTINE set_idod(i : INTEGER) FROM class_name
+
 --set groups
 declare_member(class_name,aquire_groups,class_name,aqgrp)
 ROUTINE aquire_groups FROM class_name

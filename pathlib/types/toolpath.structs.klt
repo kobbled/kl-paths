@@ -43,9 +43,10 @@ TYPE
     link_speed : REAL
     tool_step : REAL
     link_step : REAL
-    use_arc   : BOOLEAN
-    inDegrees : BOOLEAN
+    program_type : INTEGER
     useSetSpeed : BOOLEAN
+    inDegrees : BOOLEAN
+    interpolate : BOOLEAN
   ENDSTRUCTURE
 
   t_PAD_VARS FROM t_paths = STRUCTURE

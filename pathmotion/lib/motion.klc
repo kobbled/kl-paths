@@ -41,14 +41,13 @@ motion_type(MOTION_DATA_FILE)
 pathmake_friends(PATH_OBJECT_NAME)
 
 VAR
+  this : t_MOTION_PRM
+  toolprm : t_TOOL_VARS
   tool_offset : MOTION_DATA_TYPE
   frame_offset : MOTION_DATA_TYPE
   --index 1 is for linear motion. index 2 is for circular motion.
   motion_prog : ARRAY[2] OF STRING[12]
   --used for setting the motion programs in 'set_prog_names'
-  program_type : INTEGER
-  interpolate : BOOLEAN
-  rast : t_PATH_RAST
 
 %from systemlib.klh %import VEC, VEC2D
 %include errors.klh
@@ -74,42 +73,94 @@ ROUTINE new
   BEGIN
     tool_offset = DEFAULT_POSE
     frame_offset = DEFAULT_POSE
-    interpolate = TRUE
-    program_type = 1
-    set_prog_names(program_type)
+
+    this.interpolate = TRUE
+    this.program_type = 1
+    set_prog_names(this.program_type)
+
+    --default speeds
+    this.useSetSpeed = TRUE
+    this.tool_speed = TOOLING_SPEED
+    this.link_speed = LINKING_SPEED
+
+    --default increments
+    this.inDegrees = FALSE
+    this.tool_step = TOOLING_STEP
+    this.link_step = LINKING_STEP
+
+    --initialize toolprm
+    set_retract_dist(VEC(0, 50, 50))
+    set_orient(VEC(0, 0, 0))
+    set_coordinate_system(PTH_CARTESAN, 3)
+    set_idod(1)
+  
   END new
 
 ROUTINE init
   BEGIN
     tool_offset = make_tool_offset(toolOffst)
     frame_offset = make_user_offset
-    interpolate = interp_
-    program_type = prog_typ
-    set_prog_names(program_type)
+
+    this.interpolate = interp_
+    this.program_type = prog_typ
+    set_prog_names(this.program_type)
+
+    --default speeds
+    this.useSetSpeed = useSetSpeed
+    this.tool_speed = tool_speed
+    this.link_speed = link_speed
+
+    --default increments
+    this.inDegrees = inDegrees
+    this.tool_step = tool_step
+    this.link_step = link_step
+
   END init
 
 ROUTINE init2
-  BEGIN
+  BEGIN 
+    --toolparam
+    toolprm.retractDist.x = toolprm_.retractDist.x ; toolprm.retractDist.y = toolprm_.retractDist.y ; toolprm.retractDist.z = toolprm_.retractDist.z ;
+    toolprm.orient.x = toolprm_.orient.x ; toolprm.orient.y = toolprm_.orient.y ; toolprm.orient.z = toolprm_.orient.z ;
+    toolprm.pitch = toolprm_.pitch
+    toolprm.pitchLead = toolprm_.pitchLead
+    toolprm.idod = toolprm_.idod
+    toolprm.coordSys = paths__new_coord_sys((toolprm_.coordSys.system), (toolprm_.coordSys.z_axis))
+
     -- sets tool_offset
-    define_tool_offset(toolprm)
-    interpolate = interp_
-    program_type = prog_typ
-    set_prog_names(program_type)
+    define_tool_offset(toolprm_)
+    this.interpolate = mtnprm.interpolate
+    this.program_type = mtnprm.program_type
+    set_prog_names(this.program_type)
+
+    --default speeds
+    this.useSetSpeed = mtnprm.useSetSpeed
+    this.tool_speed = mtnprm.tool_speed
+    this.link_speed = mtnprm.link_speed
+
+    --default increments
+    this.inDegrees = mtnprm.inDegrees
+    this.tool_step = mtnprm.tool_step
+    this.link_step = mtnprm.link_step
     
-    rast = rastprm
   END init2
 
 ROUTINE delete
+  VAR
+    uninit_mtn : t_MOTION_PRM
+    uninit_tool : t_TOOL_VARS
   BEGIN
-
     --unitialize offset pose
     tool_offset = DEFAULT_POSE
     frame_offset = DEFAULT_POSE
-    --unitialize boolean
-    SET_UNINIT_B('class_name', 'interpolate')
+
+    --uninit types
+    this = uninit_mtn
+    toolprm = uninit_tool
+
     --uninit motion programs
     motion_prog[1] = '' ; motion_prog[2] = ''
-    program_type = 0
+    this.program_type = 0
   END delete
 
 
@@ -117,7 +168,7 @@ ROUTINE delete
 
 ROUTINE set_interpolation
   BEGIN
-    interpolate = interp_
+    this.interpolate = interp_
   END set_interpolation
 
 ROUTINE set_tool_offset
@@ -135,7 +186,7 @@ ROUTINE add_tool_offset
 
 ROUTINE set_program_type
   BEGIN
-    program_type = typ
+    this.program_type = typ
   END set_program_type
 
 ROUTINE set_prog_names
@@ -170,15 +221,47 @@ ROUTINE set_prog_names
     
   END set_prog_names
 
-ROUTINE set_rast_param
+ROUTINE set_speeds
   BEGIN
-    rast = rastprm
-  END set_rast_param
+    this.useSetSpeed = useSetSpeed
+    this.tool_speed = tool_speed
+    this.link_speed = link_speed
+  END set_speeds
+
+ROUTINE set_increments
+  BEGIN
+    this.inDegrees = inDegrees
+    this.tool_step = tool_step
+    this.link_step = link_step
+  END set_increments
+
+ROUTINE set_coordinate_system
+  BEGIN
+    toolprm.coordSys.system = system
+    toolprm.coordSys.z_axis = z_axis
+  END set_coordinate_system
 
 ROUTINE createPath
+ROUTINE set_retract_dist
   BEGIN
     `PATH_OBJECT_NAME`__planPath(lines, contours, (rastprm.startCorner), (rastprm.rastType), (rastprm.constrain))
   END createPath
+    toolprm.retractDist.x = retractDist.x ; 
+    toolprm.retractDist.y = retractDist.y ; 
+    toolprm.retractDist.z = retractDist.z ;
+  END set_retract_dist
+
+ROUTINE set_orient
+  BEGIN
+    toolprm.orient.x = orient.x ; 
+    toolprm.orient.y = orient.y ; 
+    toolprm.orient.z = orient.z ;
+  END set_orient
+
+ROUTINE set_idod
+  BEGIN
+    toolprm.idod = i
+  END set_idod
 
 ROUTINE run_approach_path
   BEGIN
@@ -410,7 +493,7 @@ ROUTINE movePoly
     ENDIF
 
     REPEAT
-      `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, interpolate)
+      `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, this.interpolate)
 
       FOR i=1 TO PATH_LEN(pth) DO
         --set code and type for tp
@@ -452,7 +535,7 @@ ROUTINE movePolyArc
     ENDIF
 
     REPEAT
-      `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, interpolate)
+      `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, this.interpolate)
 
       --** start point of the circle **
       --linear move to start of path
@@ -552,7 +635,7 @@ ROUTINE movePolyFull
     --set tool orientation
     set_posereg(tool_offset, TOOL_OFFSET_REG)
 
-    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, interpolate)
+    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, this.interpolate)
 
     IF (motion_prog[1] = '') THEN
       karelError(VAR_UNINIT,'linear motion program in class_name needs to be set', ER_ABORT)
@@ -594,7 +677,7 @@ ROUTINE movePolyArcFull
     --set tool orientation
     set_posereg(tool_offset, TOOL_OFFSET_REG)
 
-    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, interpolate)
+    `PATH_OBJECT_NAME`__get_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, this.interpolate)
 
     startCode = pth[1].code
     endCode = paths__opposite_code(startCode)
