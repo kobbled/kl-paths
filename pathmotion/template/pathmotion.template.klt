@@ -26,6 +26,9 @@
 --default parameter list
 %define TOOLING_SPEED 12
 %define LINKING_SPEED 50
+%define TOOLING_STEP 6
+%define LINKING_STEP 10
+
 %define PAD_IDOD 1
 
 --tool orientation
