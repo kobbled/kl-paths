@@ -7,9 +7,6 @@
 ------------------
 %define CSV_OBJECT_NAME tstcsv
 
-%define PIPE_NAME 'PIP:CSVLAYER.DAT'
-%define PIP_OBJECT_NAME tstpip
-
 ------------------
 --attributes
 -------------------------
