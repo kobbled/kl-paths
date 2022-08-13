@@ -20,7 +20,6 @@
   ],
   "tests-depends" : [
     "KUnit",
-    "pathplan",
     "pathmake"
   ],
   "depends" : [
@@ -31,6 +30,7 @@
     "math",
     "display",
     "draw",
-    "pose"
+    "pose",
+    "pathplan"
   ]
 }
