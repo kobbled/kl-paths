@@ -16,8 +16,9 @@ layout_type
 
 --
 VAR
-  this   : t_LAYER
+  this   : t_PATH_LAYER
   params : t_PATH_PARAM
+  toolprm : t_TOOL_VARS
   passes : PATH nodedata = t_INTEGER
   layers : INTEGER
 
@@ -96,7 +97,7 @@ ROUTINE new
     cds : t_COORD_SYS
   BEGIN
     --initialize lam
-    `LAM_NAME`__new
+    `LAM_NAME`__init(lsrprm, powprm)
 
     --set params
     --make copy
@@ -115,6 +116,11 @@ ROUTINE new
     --set linking coordinate system. Set as PTH_CYLINDER, or PTH_POLAR to transform linking
     `PATH_OBJECT_NAME`__set_linking_coordinate_system((make_prm.coord_system.system), (make_prm.coord_system.z_axis))
 
+    --initialize pathmotion
+    `MOTION_OBJECT_NAME`__init2(mtnprm, toolprm)
+     --needed for using LAM
+    program_type = (mtnprm.program_type)
+
     clear_passes
     layers = 0
     this = layer_prm
@@ -125,11 +131,17 @@ ROUTINE delete
     uninit_lay : t_PATH_LAYER
     uninit_prm : t_PATH_PARAM
   BEGIN
+    --pathmake delete
+    `PATH_OBJECT_NAME`__delete
+
     --layout delete
     `LAYOUT_OBJECT_NAME`__delete
 
-    --pathmake delete
-    `PATH_OBJECT_NAME`__delete
+    --motion delete
+    `MOTION_OBJECT_NAME`__delete
+
+    --lam delete
+    `LAM_NAME`__delete
 
     clear_passes
 

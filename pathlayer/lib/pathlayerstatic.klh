@@ -8,7 +8,9 @@ header_if -- ifndef class
 header_def -- define class
 
 declare_member(class_name,new,class_name,new)
-ROUTINE new(layer_prm : t_PATH_LAYER ; make_prm : t_PATH_PARAM) FROM class_name
+ROUTINE new(layer_prm : t_PATH_LAYER ; make_prm : t_PATH_PARAM; &
+            mtnprm : t_MOTION_PRM; toolprm : t_TOOL_VARS; &
+            lsrprm : t_LASER; powprm : t_POWDER) FROM class_name
 declare_member(class_name,delete,class_name,del)
 ROUTINE delete FROM class_name
 
