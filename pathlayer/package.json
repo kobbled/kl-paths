@@ -8,6 +8,11 @@
   "includes" : [
     "lib"
   ],
+  "tests-depends" : [
+    "display",
+    "pose",
+    "KUnit"
+  ],
   "depends" : [
     "ktransw-macros",
     "errors",
@@ -16,6 +21,8 @@
     "pathlib",
     "pathmake",
     "pathdraw",
-    "pathlayout"
+    "pathmotion",
+    "pathlayout",
+    "lam"
   ]
 }
