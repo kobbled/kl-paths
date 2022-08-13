@@ -1,0 +1,106 @@
+--convert between buffer and t_TOOLPATH
+%mode push
+%mode string QQQ "$" "$" "\\"
+%define impl_buffer_conversion $
+  ROUTINE layout_to_toolpath
+    VAR
+      status : INTEGER
+    BEGIN
+      APPEND_NODE(out_pth,status)
+      out_pth[PATH_LEN(out_pth)].v = POS((buffer[idx].pose.x), (buffer[idx].pose.y), (buffer[idx].pose.z), & 
+                      (buffer[idx].orient.x), (buffer[idx].orient.y), (buffer[idx].orient.z), & 
+                      (params.frm.config_data) )
+      
+      -- must set powprm.powder in lam before this 
+      out_pth[PATH_LEN(pth)].speed   = `LAM_NAME`__getSpeedFromDepth(0, buffer[idx].depth)
+      out_pth[PATH_LEN(pth)].code    = buffer[idx].code
+      out_pth[PATH_LEN(pth)].typ     = PTH_TOOLING
+      
+      -- ..warning:: tangent is not calculated for cartesian points
+
+    END layout_to_toolpath
+
+  ROUTINE layout_to_vecpath
+    BEGIN
+      APPEND_NODE(out_pth,status)
+      out_pth[PATH_LEN(out_pth)].v = VEC((buffer[idx].pose.x), (buffer[idx].pose.y), (buffer[idx].pose.z))
+      out_pth[PATH_LEN(out_pth)].code  = buffer[idx].code
+      out_pth[PATH_LEN(out_pth)].polygon = 1
+
+      --ijk vector of tool normal
+      --..warning:: NEED TO CONVERT FIRST FROM NORMAL VECTOR TO TANGENT VECTOR
+      --            THEN FROM TANGENT VECTOR TO WPR
+      out_pth[PATH_LEN(out_pth)].tangent = VEC((buffer[idx].orient.x), (buffer[idx].orient.y), (buffer[idx].orient.z))
+
+    END layout_to_vecpath
+$
+%mode pop
+
+%mode push
+%mode string QQQ "$" "$" "\\"
+%define impl_inter_logic $
+  ROUTINE interlayer
+    BEGIN
+      --do after first layer as first layer will
+      --already be enabled
+      IF this.curr_pass > 0 THEN
+
+        --stop extruder and disable laser
+        lam_stop
+        --pause for inspection
+        pause
+        --start extruder and enable laser
+        lam_start
+        
+      ENDIF
+    END interlayer
+
+  ROUTINE interpass
+    VAR
+      n : REAL
+      status : INTEGER
+    BEGIN
+      --store endpoints
+      paths__clear_toolpath(line_endpnts)
+
+      -- Do not do on last pass of layer
+      IF this.last_idx < PATH_LEN(buffer) THEN
+        --create a line inbetween the stop pass and the start of
+        --the next pass
+        APPEND_NODE(line_endpnts,status)
+        line_endpnts[1] = layout_to_toolpath((this.last_idx), pth)
+        APPEND_NODE(line_endpnts,status)
+        line_endpnts[2] = layout_to_toolpath((this.last_idx+1), pth)
+        
+        SELECT params.coord_system.system OF
+          CASE(PTH_CYLINDER):
+            --convert to cylindrical
+            line_endpnts[1].v = pose__cartesian_to_cylindrical((ZEROPOS(1)), (line_endpnts[1].v), VERT_AXES)
+            line_endpnts[2].v = pose__cartesian_to_cylindrical((ZEROPOS(1)), (line_endpnts[2].v), VERT_AXES)
+          CASE(PTH_POLAR):
+            karelError(INVALID_TYPE_CODE, 'class_name: interpass doesnt support spherical systems yet.', ER_ABORT)
+          ELSE:
+        ENDSELECT
+
+        --update type
+        line_endpnts[1].typ = PTH_LINKING
+        line_endpnts[2].typ = PTH_LINKING
+        --update code
+        line_endpnts[1].code = PTH_MOVETO
+        line_endpnts[2].code = PTH_CLOSE
+        
+        --update tangent
+        n = math__norm((line_endpnts[2].v-line_endpnts[1].v))
+        IF n > 0 THEN
+          line_endpnts[1].tangent = (line_endpnts[2].v-line_endpnts[1].v)/n
+        ELSE
+          line_endpnts[1].tangent = pth[1].tangent
+        ENDIF
+        line_endpnts[2].tangent = line_endpnts[1].tangent
+
+      ENDIF
+
+      --use line_endpnts in next_toolpath to create pth
+    END interpass
+$
+%mode pop

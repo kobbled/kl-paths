@@ -1,0 +1,22 @@
+
+
+
+--layout
+------------------
+%define LAYOUT_OBJECT_NAME tstlay
+%define LAYOUT_CONFIG_FILENAME defaultpathlayout.klt
+
+--pathclass object
+------------------
+%define PATH_OBJECT_NAME tstpth
+
+-- pathdraw object
+------------------
+%define PATHDRAW_NAME tspdrw
+%define DRAW_OBJECT_NAME tstpoly
+
+-- lam object
+-----------------
+%define LAM_NAME tstlam
+%define LAM_CNFG default_lam.klt
+
