@@ -1,0 +1,35 @@
+PROGRAM lamlib
+%NOBUSYLAMP
+%COMMENT = 'lam lib'
+%NOLOCKGROUP
+%NOPAUSE = COMMAND + TPENABLE + ERROR
+
+%include lam.klt
+
+%include lamlib.klh
+
+ROUTINE lamlib__new_laser_params
+  VAR
+    prm : t_LASER
+  BEGIN
+    prm.power = power
+
+    RETURN(prm)
+  END lamlib__new_laser_params
+
+ROUTINE lamlib__new_powder_params
+  VAR
+    prm : t_POWDER
+  BEGIN
+    prm.hopper = hopper ; 
+    prm.powder = powder ; 
+    prm.rpm = rpm ; 
+    prm.lpm = lpm ; 
+    prm.flow_rate = flow_rate ;
+    prm.height = height ;
+
+    RETURN(prm)
+  END lamlib__new_powder_params
+
+BEGIN
+END lamlib

@@ -11,6 +11,9 @@
   "includes" : [
     "lib"
   ],
+  "source" : [
+    "lib/lamlib.kl"
+  ],
   "tests" : [
     "test/test_lam.kl"
   ],

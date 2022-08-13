@@ -7,8 +7,8 @@ PROGRAM class_name
 %include lam.klt
 
 VAR
-  lsrprm IN CMOS : t_LASER
-  powprm IN CMOS : t_POWDER
+  lsrprm : t_LASER
+  powprm : t_POWDER
   powder_names : ARRAY[NUMBER_OF_POWDERS] OF STRING[20]
   depth_maps   : ARRAY[NUMBER_OF_POWDERS] OF t_DEPTHREGR
 
@@ -30,8 +30,28 @@ ROUTINE new
     initDepthMap
   END new
 
-ROUTINE delete
+ROUTINE init
   BEGIN
+    powderNames
+    initDepthMap
+
+    --laser parameters copy
+    lsrprm.power = laserprm_.power
+
+    --powder parameters copy
+    powprm.hopper = powderprm_.hopper ; powprm.powder = powderprm_.powder ; 
+    powprm.rpm = powderprm_.rpm ; powprm.lpm = powderprm_.lpm ; powprm.flow_rate = powderprm_.flow_rate ;
+    powprm.height = powderprm_.height ;
+
+  END init
+
+ROUTINE delete
+  VAR
+    uninit_las : t_LASER
+    uninit_pow : t_POWDER
+  BEGIN
+    lsrprm = uninit_las
+    powprm = uninit_pow
   END delete
 
 ROUTINE getSpeedFromDepth

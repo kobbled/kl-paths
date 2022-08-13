@@ -5,10 +5,13 @@ PROGRAM test_lam
 
 %include default_lam.klt
 
-%include lam.friends.klt
-lam_friends(tstlam)
+VAR
+  --work parameters
+  lsrprm : t_LASER
+  powprm : t_POWDER
 
 %include display.klh
+%include lamlib.klh
 
 --lam object
 %class tstlam('lam.klc','lam.klh','default_lam.klt')
@@ -19,10 +22,15 @@ BEGIN
   --show display
   display__show
 
-  tstlam__new
+  -- --initialize
+  -- tstlam__new
+  -- tstlam__set_laser_power(3000)
+  -- tstlam__set_powder_params(2, POWDER_INCONEL, 2.6, 4, 0.95, 1.27)
 
-  tstlam__set_laser_power(3000)
-  tstlam__set_powder_params(2, POWDER_INCONEL, 2.6, 4, 0.95, 1.27)
+  --alternative initalize
+  lsrprm = lamlib__new_laser_params(3000)
+  powprm = lamlib__new_powder_params(2, POWDER_INCONEL, 2.6, 4, 0.95, 1.27)
+  tstlam__init(lsrprm, powprm)
 
   tstlam__set_registers
 
@@ -30,4 +38,6 @@ BEGIN
   WRITE TPDISPLAY('depth: 1; speed: ', tstlam__getSpeedFromDepth((powprm.powder), 1)::5::2, CR)
   WRITE TPDISPLAY('depth: 1.4; speed: ', tstlam__getSpeedFromDepth((powprm.powder), 1.4)::5::2, CR)
 
+  tstlam__delete
+  
 END test_lam

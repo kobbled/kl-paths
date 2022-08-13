@@ -1,0 +1,14 @@
+%ifndef lamlib_h
+%define lamlib_h
+
+%include namespace.m
+
+%define prog_name lamlib
+%define prog_name_alias lamlib
+
+declare_function(prog_name,new_laser_params,prog_name_alias,nlspm)
+ROUTINE lamlib__new_laser_params(power : INTEGER) : t_LASER FROM lamlib
+declare_function(prog_name,new_powder_params,prog_name_alias,npwpm)
+ROUTINE lamlib__new_powder_params(hopper : INTEGER; powder : INTEGER; rpm : REAL; lpm : REAL; flow_rate : REAL; height : REAL) : t_POWDER FROM lamlib
+
+%endif --lamlib_h

@@ -3,11 +3,11 @@
 
 --motion types
 TYPE
-  t_LASER FROM lam = STRUCTURE
+  t_LASER FROM lamlib = STRUCTURE
     power : INTEGER
   ENDSTRUCTURE
 
-  t_POWDER FROM lam = STRUCTURE
+  t_POWDER FROM lamlib = STRUCTURE
     hopper : INTEGER
     powder : INTEGER
     rpm : REAL
@@ -16,7 +16,7 @@ TYPE
     height : REAL
   ENDSTRUCTURE
 
-  t_DEPTHREGR FROM lam = STRUCTURE
+  t_DEPTHREGR FROM lamlib = STRUCTURE
     slope : REAL
     intercept : REAL
   ENDSTRUCTURE
