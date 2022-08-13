@@ -104,25 +104,27 @@ $
 $
 
 --destructors for station objects
-%define delete_stations $
+%define delete_station(MOTION_NAME,MAKE_NAME) $
+  `MOTION_NAME`__delete
+  `MAKE_NAME`__delete
+  `LAM_NAME`__delete
+$
+
+%define delete_station_select $
     SELECT station OF
       CASE(1):
-        `STATION1_PATH`__delete
-        `STATION1_MOTION`__delete
+        delete_station(STATION1_MOTION,STATION1_PATH)
 %ifdef STATION2_CNFG
       CASE(2):
-        `STATION2_PATH`__delete
-        `STATION2_MOTION`__delete
+        delete_station(STATION2_MOTION,STATION2_PATH)
 %endif
 %ifdef STATION3_CNFG
       CASE(3):
-        `STATION3_PATH`__delete
-        `STATION3_MOTION`__delete
+        delete_station(STATION3_MOTION,STATION3_PATH)
 %endif
 %ifdef STATION4_CNFG
       CASE(4):
-        `STATION4_PATH`__delete
-        `STATION4_MOTION`__delete
+        delete_station(STATION4_MOTION,STATION4_PATH)
 %endif
       ELSE:
         ABORT

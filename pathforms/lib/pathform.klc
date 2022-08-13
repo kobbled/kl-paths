@@ -302,7 +302,7 @@ forms__show(stat_str, stat_val_arr)
 
         --clean up stations
         --** MACRO **
-        delete_stations
+        delete_station_select
         --**
 
 %ifdef DEBUG_BUILD
