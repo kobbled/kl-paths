@@ -74,6 +74,7 @@ VAR
   filename IN CMOS : STRING[12]
   idod_ IN CMOS : INTEGER
   default_wpr IN CMOS : BOOLEAN
+  use_arc IN CMOS : BOOLEAN
   -- poses
   origin : XYZWPR
   frm : XYZWPR
@@ -85,17 +86,15 @@ VAR
   motnprm IN CMOS  : t_MOTION_PRM
   padprm  IN CMOS  : t_PAD_VARS
   hexprm IN CMOS   : t_HEX_VARS
+  --work structs
+  lsrprm IN CMOS : t_LASER
+  powprm IN CMOS : t_POWDER
 
   makeparams : t_PATH_PARAM
   layerparams : t_PATH_LAYER
 
   b : BOOLEAN
   term_char FROM forms : INTEGER
-
--- include reference to lam object "buffer".
---  store form inputs for LAM here
-%include lam.friends.klt
-lam_friends(LAM_NAME)
 
 --helper functions
 %from display.klh %import clear, show
@@ -104,6 +103,7 @@ lam_friends(LAM_NAME)
 %from systemlib.klh %import VEC
 %include forms.klh
 %include errors.klh
+%include lamlib.klh
 
 %ifeq ENABLE_SCANNING TRUE
 %include multitask.klh
@@ -145,7 +145,7 @@ define_scan_object(SCANNING_OBJECT_NAME,SCANNING_CNFG)
 make_stat_indicies('class_name')
 make_path_indicies('class_name')
 make_pad_indicies('class_name')
-make_work_indicies('LAM_NAME')
+make_work_indicies('class_name')
 -- USER DEFINED ROUTINE
 define_station_names(station_name)
 

@@ -59,7 +59,7 @@ ROUTINE init_statLst
     path_val_arr[25] = '['+ps+']motnprm.link_speed'
     path_val_arr[26] = '['+ps+']motnprm.tool_step'
     path_val_arr[27] = '['+ps+']motnprm.link_step'
-    path_val_arr[28] = '['+ps+']motnprm.use_arc'
+    path_val_arr[28] = '['+ps+']use_arc'
   END frm_pthList
 
 ROUTINE init_pthList
@@ -90,7 +90,7 @@ ROUTINE init_pthList
     IF UNINIT(motnprm.link_speed) THEN motnprm.link_speed = 130; ENDIF
     IF UNINIT(motnprm.tool_step) THEN motnprm.tool_step = 45; ENDIF
     IF UNINIT(motnprm.link_step) THEN motnprm.link_step = 45; ENDIF
-    IF UNINIT(motnprm.use_arc) THEN motnprm.use_arc = TRUE; ENDIF
+    IF UNINIT(use_arc) THEN use_arc = TRUE; ENDIF
 
     IF UNINIT(polyprm.inDegrees) THEN polyprm.inDegrees = TRUE ; ENDIF
     IF UNINIT(polyprm.xStart) THEN polyprm.xStart = 0 ; ENDIF

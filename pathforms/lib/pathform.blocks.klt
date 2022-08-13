@@ -22,30 +22,31 @@ path_motion_define(STATION4_MOTION,STATION4_CNFG)
 %endif
 $
 
-%define initialize_stations(MOTION_NAME,LAYER_NAME) $
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
-    `STATION1_PATH`__init(frm, toolprm.coordSys, origin, (toolprm.idod), TRUE)
+    `PATH_NAME`__init(frm, toolprm.coordSys, origin, (toolprm.idod), TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type
-    `MOTION_NAME`__init2(toolprm, TRUE, program_type, rastprm)
+    `MOTION_NAME`__init2(motnprm, toolprm)
+    --intialize LAM object
+    `LAM_NAME`__init(lsrprm, powprm)
 $
 --constructors for station objects
 %define initialize_select_stations $
     SELECT station OF
       CASE(1):
-        initialize_stations(STATION1_MOTION,STATION1_LAYER)
+        initialize_stations(STATION1_MOTION,STATION1_PATH)
 %ifdef STATION2_CNFG
       CASE(2):
-        initialize_stations(STATION2_MOTION,STATION2_LAYER)
+        initialize_stations(STATION2_MOTION,STATION2_PATH)
 %endif
 %ifdef STATION3_CNFG
       CASE(3):
-        initialize_stations(STATION3_MOTION,STATION3_LAYER)
+        initialize_stations(STATION3_MOTION,STATION3_PATH)
 %endif
 %ifdef STATION4_CNFG
       CASE(4):
-        initialize_stations(STATION4_MOTION,STATION4_LAYER)
+        initialize_stations(STATION4_MOTION,STATION4_PATH)
 %endif
       ELSE:
         WRITE TPDISPLAY(CR, 'Workstation not selected properly')
@@ -56,7 +57,7 @@ $
 
 %define station_move(MOTION_NAME,MAKE_NAME) $
     `MOTION_NAME`__aquire_groups
-    `MOTION_NAME`__move(toolprm, motnprm)
+    `MOTION_NAME`__move(use_arc)
     `MOTION_NAME`__release_groups
 $
 
