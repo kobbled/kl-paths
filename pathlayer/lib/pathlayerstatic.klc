@@ -10,6 +10,8 @@ PROGRAM class_name
 %include systemlib.types.klt
 %include systemlib.datatypes.klt
 %include pathlib.klt
+%include lam.klt
+%include toolpath.structs.klt
 
 --define layout struct
 layout_type
@@ -21,6 +23,7 @@ VAR
   toolprm : t_TOOL_VARS
   passes : PATH nodedata = t_INTEGER
   layers : INTEGER
+  program_type : INTEGER
 
 -- include reference to pathmake "pth".
 %include pathmake.friend.members.klt
@@ -242,6 +245,58 @@ ROUTINE next_pass
 
 -- user macro
 impl_inter_logic
+
+ROUTINE run
+  BEGIN
+    --lock groups
+    `MOTION_OBJECT_NAME`__aquire_groups
+
+    --start extruder and enable laser
+    lam_start
+
+    --loop layers
+    WHILE(next_layer) DO
+
+      --interlayer logic
+      --(i.e. pause, cool, rotate part)
+      interlayer
+
+      --approach point
+      `MOTION_OBJECT_NAME`__moveApproach
+
+      --loop passes
+      WHILE(`LAYER_NAME`__next_pass) DO
+        --move through pass/layer
+        `MOTION_OBJECT_NAME`__move(use_arc)
+        interpass
+      ENDWHILE
+
+      --retract point
+      `MOTION_OBJECT_NAME`__moveRetract
+
+    ENDWHILE
+
+    --stop extruder and disable laser
+    lam_stop
+
+    --unlock groups
+    `MOTION_OBJECT_NAME`__release_groups
+  END run
+
+ROUTINE lam_start
+  BEGIN
+    IF program_type = MOVE_WORKING THEN
+      `LAM_NAME`__set_registers
+      `LAM_NAME`__start
+    ENDIF
+  END lam_start
+
+ROUTINE lam_stop
+  BEGIN
+    IF program_type = MOVE_WORKING THEN
+      `LAM_NAME`__stop
+    ENDIF
+  END lam_stop
 
 BEGIN
 END class_name

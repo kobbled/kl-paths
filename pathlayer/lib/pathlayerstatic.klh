@@ -29,6 +29,13 @@ declare_member(class_name,interlayer,class_name,intly)
 ROUTINE interlayer FROM class_name
 declare_member(class_name,interpass,class_name,intps)
 ROUTINE interpass FROM class_name
+declare_member(class_name,run,class_name,run)
+ROUTINE run FROM class_name
 
+--lam members
+declare_member(class_name,lam_start,class_name,lmsrt)
+ROUTINE lam_start FROM class_name
+declare_member(class_name,lam_stop,class_name,lmstp)
+ROUTINE lam_stop FROM class_name
 
 %endif --end header
