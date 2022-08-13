@@ -245,6 +245,8 @@ $
     SELECT shapeType OF
       CASE(SHP_PAD):
         frm_padList
+        --set unused parameters
+        def_padList
         b = forms__load(pad_file, pad_str)
         forms__show(pad_str, draw_val_arr)
       CASE(SHP_HEX):
@@ -256,6 +258,8 @@ $
         b = forms__load(cus_file, cus_str)
         forms__show(cus_str, draw_val_arr)
       CASE(SHP_REBUILD):
+        --set unused parameters
+        def_rbdList
         frm_rbdList
         b = forms__load(rebuild_file, rebuild_str)
         forms__show(rebuild_str, draw_val_arr)

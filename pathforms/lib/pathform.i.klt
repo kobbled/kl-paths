@@ -123,6 +123,12 @@ ROUTINE init_padList
     IF UNINIT(padprm.separation) THEN padprm.separation = 0 ; ENDIF
   END init_padList
 
+ROUTINE def_padList
+  BEGIN
+    --unused
+    polyprm.polyRotation = 0
+  END def_padList
+
 ROUTINE frm_hexList
   BEGIN
     --pad parameters
@@ -160,14 +166,20 @@ ROUTINE frm_cusList
     draw_val_arr[10] = ''
   END frm_cusList
 
+ROUTINE def_rbdList
+  BEGIN
+    --unused
+    polyprm.polyRotation = 0
+  END def_rbdList
+
 ROUTINE frm_rbdList
   BEGIN
     --pad parameters
     draw_val_arr[1] = '['+ps+']filename'
-    draw_val_arr[2] = ''
-    draw_val_arr[3] = ''
-    draw_val_arr[4] = ''
-    draw_val_arr[5] = ''
+    draw_val_arr[2] = '['+ps+']polyprm.height'
+    draw_val_arr[3] = '['+ps+']polyprm.xStart'
+    draw_val_arr[4] = '['+ps+']polyprm.yStart'
+    draw_val_arr[5] = '['+ps+']polyprm.polyAngle'
     draw_val_arr[6] = ''
     draw_val_arr[7] = ''
     draw_val_arr[8] = ''

@@ -9,6 +9,10 @@ $-,prbd
   &home &reverse "Rebuild/G-code Parameters" &standard &new_line
   &new_line
   " Filename:           " "-%12k" &new_line
+  " Offset Height:      " "-%6.2f" &new_line
+  " Offset X:           " "-%6.2f" &new_line
+  " Offset Y:           " "-%6.2f" &new_line
+  " Offset Tilt:        " "-%6.2f" &new_line
   ^prbd_fkey
 .endform
 $-,prbd_fkey     *function key labels
