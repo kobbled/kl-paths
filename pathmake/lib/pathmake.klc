@@ -78,7 +78,7 @@ ROUTINE next_toolpath
           IF interp_tool THEN
             -- ..note:: Speed is blended during toolpath_interpolate. in `path_blending` implementation
             --          calling speed_blending
-            `PATH_PLAN_NAME`__get_toolpath_interpolate((tool_step), PTH_LINETO, FALSE, pth)
+            interpolate_toolpath(tool_segment, (tool_step), 1, PTH_LINETO, (this.frm:this.origin), FALSE, pth)
           ELSE
             `PATH_PLAN_NAME`__get_toolpath(pth)
           ENDIF
@@ -92,7 +92,7 @@ ROUTINE next_toolpath
         CASE(PTH_LINKING):
 
           --get toolpath from linkingTransition user defined member
-          linkingTransition(tool_segment, (this.frm), (link_step), (this.idod), FALSE, pth)
+          linkingTransition(tool_segment, (this.frm:this.origin), (link_step), (this.idod), FALSE, pth)
           
           --set speed
           paths__set_speed(pth, link_speed)
@@ -111,7 +111,7 @@ ROUTINE next_toolpath
        --else it is a tooling path
       IF (PATH_LEN(line_endpnts) > 0) THEN
         --add linking path
-        linkingTransition(line_endpnts, (this.frm), (link_step), (this.idod), FALSE, pth)
+        linkingTransition(line_endpnts, (this.frm:this.origin), (link_step), (this.idod), FALSE, pth)
           --clear line_endpnts after use, as it is used to select between a linking and tooling path
         paths__clear_toolpath(line_endpnts)
         --set linking speed
@@ -138,12 +138,13 @@ ROUTINE next_toolpath
       --raise if linking
       -- ..note:: passes are fed in line by line, so we can assume `pth`
       --          all has the same path code
-      IF (pth[1].code = PTH_LINKING) THEN
+      IF (pth[1].typ = PTH_LINKING) THEN
         paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
       ENDIF
 
       --convert to cartesian
       -- ..note:: this function will not do anything if the coord system is cartesian
+        -- pth,  frame, radius, coord_system.system, coord_system.z_axis, drawing flip
       convertOrientation(pth, (this.frm), (this.origin.z), (cds.system), (cds.z_axis), FALSE)
     ENDIF
   END next_toolpath
@@ -171,7 +172,7 @@ ROUTINE get_toolpath
 
             --get toolpath from pathplan
             IF interp_tool THEN
-              `PATH_PLAN_NAME`__get_toolpath_interpolate((tool_step), PTH_LINETO, TRUE, pth)
+              interpolate_toolpath(tool_segment, (tool_step), 1, PTH_LINETO, (this.origin), TRUE, pth)
             ELSE
               `PATH_PLAN_NAME`__get_toolpath(pth)
             ENDIF
@@ -180,7 +181,7 @@ ROUTINE get_toolpath
             paths__set_speed(tool_segment, link_speed)
 
             --get toolpath from linkingTransition user defined member
-            linkingTransition(tool_segment, (this.frm), (link_step), (this.idod), TRUE, pth)
+            linkingTransition(tool_segment, (this.origin), (link_step), (this.idod), TRUE, pth)
         ENDSELECT
       UNTIL( is_path_end )
 
@@ -194,6 +195,7 @@ ROUTINE get_toolpath
     paths__offset_toolpath(pth, POS(0,0,retract_hght,0,0,0,(ZEROPOS(1).config_data)), PTH_NULL, PTH_LINKING)
 
     --convert to cartesian
+      -- pth,  frame, radius, coord_system.system, coord_system.z_axis, drawing flip
     convertOrientation(pth, (this.frm), (this.origin.z), (cds.system), (cds.z_axis), FALSE)
   END get_toolpath
 
@@ -499,8 +501,8 @@ ROUTINE get_line
     IF NOT append THEN
       paths__clear_toolpath(pth)
     ENDIF
-
-    `PATH_PLAN_NAME`__get_toolpath_interpolate((spacing), PTH_LINETO, append, pth)
+    
+    interpolate_toolpath(tool_segment, (spacing), 1, PTH_LINETO, (this.origin), append, pth)
 
     IF doOffset THEN
       paths__offset_toolpath(pth, offset, PTH_NULL, line_typ)
