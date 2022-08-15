@@ -17,10 +17,15 @@
 %define impl_attrs `
 ROUTINE createAttr
   BEGIN
+    --layer
     attribPntrs[1] = new_attr_pntr(1, 1, '', '', ',', C_INT)
+    --path code
     attribPntrs[2] = new_attr_pntr(2, 1, '', '', ',', C_INT)
+    --depth to surface
     attribPntrs[3] = new_attr_pntr(3, 1, '', '', ',', C_REAL)
+    --coordinate
     attribPntrs[4] = new_attr_pntr(4, 1, '', '', ',', C_VEC)
+    --orientation
     attribPntrs[5] = new_attr_pntr(7, 1, '', '', ',', C_VEC)
   END createAttr
 `
@@ -127,13 +132,20 @@ ROUTINE countInstances
     --check that file is open
     isFileOpen
 
+    --get first line and determine index base
+    b = readfile
+    detIndexBase  --should either be 0 or 1
+    
     counter = 0
     APPEND_NODE(out_pth,status)
 
     i = 1
     REPEAT
       --read from file
-      b = readfile
+      IF i > 1 THEN  --first line is already read
+        b = readfile
+      ENDIF
+
       IF b THEN
         
         b2 = buffer_cond
@@ -171,5 +183,10 @@ ROUTINE countInstances
     DELETE_NODE(buffer,i,status)
     
   END countInstances
+ROUTINE detIndexBase
+  BEGIN
+    fileAttr(attribPntrs[1])
+    indexBase = data.int
+  END detIndexBase
 `
 %mode pop

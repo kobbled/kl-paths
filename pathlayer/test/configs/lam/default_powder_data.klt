@@ -1,0 +1,44 @@
+
+-- ..warning :: needs to be +1 higher than enum list
+--              for form usage
+%define NUMBER_OF_POWDERS 4
+
+ -- enum list
+%define POWDER_INCONEL  1
+%define POWDER_431L     2
+%define POWDER_1535_30  3
+
+ -- needed for form display
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define define_powder_names `ROUTINE powderNames
+  BEGIN
+    --first entry must be blank
+    powder_names[1] = ''
+    powder_names[2] = 'Inconcel 625'
+    powder_names[3] = '431L HC'
+    powder_names[4] = '1535-30'
+  END powderNames`
+
+-- --------
+-- depth to speed conversion
+
+%define SPEED_LIMIT_HIGH 15
+%define SPEED_LIMIT_LOW 6
+
+%define define_depth_maps `ROUTINE initDepthMap
+  BEGIN
+    -- Inconel 625
+    depth_maps[POWDER_INCONEL].slope = -12.114
+    depth_maps[POWDER_INCONEL].intercept = 20.308
+    -- 431L HC
+    depth_maps[POWDER_431L].slope = -10.124
+    depth_maps[POWDER_431L].intercept = 13.571
+    -- 1535-30
+    depth_maps[POWDER_1535_30].slope = -13.485
+    depth_maps[POWDER_1535_30].intercept = 19.095
+
+  END initDepthMap`
+
+%mode pop

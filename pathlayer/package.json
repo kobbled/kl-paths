@@ -8,6 +8,22 @@
   "includes" : [
     "lib"
   ],
+  "tests" : [
+    "test/test_layers.kl",
+    "test/data/test103599.csv"
+  ],
+  "tests-includes" : [
+    "test/configs",
+    "test/static/rotary",
+    "test/configs/lam"
+  ],
+  "tests-tp" : [    
+    "test/configs/rotary_tp/mov_line_rot.tpp",
+    "test/configs/rotary_tp/mov_circ_rot.tpp",
+    "test/configs/rotary_tp/mov_scn_rot.tpp",
+    "test/configs/rotary_tp/mov_am_lrot.tpp",
+    "test/configs/rotary_tp/mov_am_crot.tpp"
+  ],
   "tests-depends" : [
     "display",
     "pose",

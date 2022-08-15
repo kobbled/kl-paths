@@ -1,0 +1,145 @@
+--include default interface
+%include pathmake.interface.klt
+
+-- ***********
+-- Define interface header
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define define_pmake_headers(parent) `declare_member(parent,speed_blending,parent,spdbl)
+ROUTINE speed_blending(start_speed : REAL ; end_speed : REAL; blendRatio : REAL; outNode : t_TOOLPATH) FROM parent
+declare_member(parent,path_blending,parent,pthbl)
+ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm : XYZWPR; blendRatio : REAL; outNode : t_TOOLPATH) FROM parent
+declare_member(parent,convertOrientation,parent,cnvor)
+ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius : REAL; system : INTEGER; z_axis : INTEGER; flip : BOOLEAN) FROM parent
+declare_member(parent,linkingTransition,parent,lktrs)
+ROUTINE linkingTransition(endpnts: PATH nodedata = t_TOOLPATH; frm: XYZWPR; spacing: REAL; idod: INTEGER; append : BOOLEAN; outpth: PATH nodedata = t_TOOLPATH) FROM parent
+`
+%mode pop
+
+-- ***********
+-- Define interface
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define define_pmake_members(parent) `declare_member(parent,speed_blending,parent,spdbl)
+ROUTINE speed_blending(start_speed : REAL ; end_speed : REAL; blendRatio : REAL; outNode : t_TOOLPATH)
+  BEGIN
+    outNode.speed = blendRatio*start_speed + (1-blendRatio)*end_speed
+  END speed_blending
+declare_member(parent,path_blending,parent,pthbl)
+ROUTINE path_blending(p : PATH nodedata = t_TOOLPATH ; i : INTEGER; parent_frm : XYZWPR; blendRatio : REAL; outNode : t_TOOLPATH)
+  VAR
+    v1, v2 : VECTOR
+    --o1, o2 : VECTOR
+    vs, os : VECTOR
+  BEGIN
+    v1 = pose__pose_to_vector(p[i].v)
+    v2 = pose__pose_to_vector(p[i+1].v)
+
+    --o1 = pose__get_orientation(p[i].v)
+    --o2 = pose__get_orientation(p[i+1].v)
+
+    vs = blendRatio*v2 + (1-blendRatio)*v1
+    os = pose__get_orientation(p[i].v)
+
+    outNode.v = parent_frm:POS(vs.x, vs.y, vs.z, os.x, os.y, os.z, parent_frm.config_data)
+    outNode.tangent = p[i].tangent
+
+    speed_blending((p[i].speed), (p[i+1].speed), blendRatio, outNode)
+
+  END path_blending
+declare_member(parent,convertOrientation,parent,cnvor)
+ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius : REAL; system : INTEGER; z_axis : INTEGER; flip : BOOLEAN)
+  VAR
+    i : INTEGER
+    surfpos : XYZWPR
+  BEGIN
+    --convert to cartesian
+    SELECT (system) OF
+      CASE(PTH_CYLINDER):
+        FOR i=1 TO PATH_LEN(p) DO
+          --convert surface arc into degrees
+          surfpos = p[i].v
+          surfpos.x = surfpos.x/radius*180/M_PI
+          --convert coordinates
+          p[i].v = pose__cylindrical_to_cartesian(frm, (surfpos), (z_axis))
+
+          p[i].v.w = p[i].v.w + surfpos.w ; p[i].v.p = p[i].v.p + surfpos.p ; p[i].v.r = p[i].v.r + surfpos.r ;
+          --rotation for VERT_AXES
+          IF (z_axis = VERT_AXES) THEN
+            p[i].v.w = p[i].v.w - 90
+          ENDIF
+
+          IF flip THEN
+            p[i].v.w = p[i].v.w + 180 ;
+          ENDIF
+        ENDFOR
+      CASE(PTH_POLAR):
+        FOR i=1 TO PATH_LEN(p) DO
+          --convert surface uv into theta and phi angles
+          surfpos = p[i].v
+          surfpos.x = surfpos.x/radius*180/M_PI
+          surfpos.y = surfpos.y/radius*180/M_PI
+          --convert coordinates
+          p[i].v = pose__polar_to_cartesian(frm, (surfpos), (z_axis))
+
+          p[i].v.w = p[i].v.w + surfpos.w ; p[i].v.p = p[i].v.p + surfpos.p ; p[i].v.r = p[i].v.r + surfpos.r ;
+
+          IF flip THEN
+            p[i].v.w = p[i].v.w + 180 ;
+          ENDIF
+        ENDFOR
+      CASE(PTH_CARTESAN):
+      ELSE:
+    ENDSELECT
+  END convertOrientation
+declare_member(parent,linkingTransition,parent,lktrs)
+ROUTINE linkingTransition(endpnts: PATH nodedata = t_TOOLPATH; frm: XYZWPR; spacing: REAL; idod: INTEGER; append : BOOLEAN; outpth: PATH nodedata = t_TOOLPATH)
+  VAR
+%define LINKING_FULL_WRAP 180
+    startPnt : XYZWPR
+    endPnt : XYZWPR
+    status : INTEGER
+  BEGIN
+    --If rotary group (ROT_GRP) and line is < 90 deg
+    --only include endpoints in line. If path is 0->360
+    --it will not rotate all the way back around
+    IF PATH_LEN(endpnts) <= 0 THEN
+      IF (NOT append) THEN
+        --return empty to ignore linking path
+        paths__clear_toolpath(outpth)
+      ENDIF
+    ELSE
+      --get start point
+      startPnt = endpnts[1].v
+      --get end point
+      endPnt = endpnts[PATH_LEN(endpnts)].v
+      
+      --need to evaluate how close the endpoints (in theta axis) are in degree to eachother.
+      --if > than epsilon run an arc
+      IF(ABS((endPnt.x/frm.z*180/M_PI)-(startPnt.x/frm.z*180/M_PI)) < LINKING_FULL_WRAP) THEN
+        --if < 180 move between the two point in circular arc
+        interpolate_toolpath(endpnts, (spacing), 1, PTH_LINETO, (frm), append, outpth)
+      ELSE
+        --add 360 to endpnt 2 so that it is always rotating forward
+        endPnt.x = (endPnt.x/frm.z*180/M_PI) - idod*360
+        --put back into mm
+        endPnt.x = (endPnt.x*frm.z*M_PI/180)
+        --put back into tool segment to interpolate
+        endpnts[PATH_LEN(endpnts)].v = endPnt
+
+        --move in opposite direction
+        paths__reverse_toolpath(endpnts)
+
+        --interpolate path
+        interpolate_toolpath(endpnts, (spacing), 1, PTH_LINETO, (frm), append, outpth)
+      ENDIF
+    ENDIF
+  END linkingTransition
+`
+%mode pop
