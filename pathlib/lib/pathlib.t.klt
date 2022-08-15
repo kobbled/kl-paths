@@ -59,10 +59,10 @@ TYPE
   ENDSTRUCTURE
 
   t_PATH_LAYER FROM paths = STRUCTURE
-    start_pass : INTEGER
-    start_layer : INTEGER
-    curr_pass : INTEGER
-    curr_layer : INTEGER
+    start_pass : SHORT
+    start_layer : SHORT
+    curr_pass : SHORT
+    curr_layer : SHORT
     last_idx : INTEGER
   ENDSTRUCTURE
 
