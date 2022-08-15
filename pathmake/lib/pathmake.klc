@@ -449,12 +449,20 @@ ROUTINE planImportPath
 
 ROUTINE get_start_node
   BEGIN
-    RETURN(this.frm:`PATH_PLAN_NAME`__get_start_node)
+    IF this.usePathPlan THEN
+      RETURN(this.frm:`PATH_PLAN_NAME`__get_start_node)
+    ELSE
+      RETURN(this.frm:pth[1].v)
+    ENDIF
   END get_start_node
 
 ROUTINE get_end_node
   BEGIN
-    RETURN(this.frm:`PATH_PLAN_NAME`__get_end_node)
+    IF this.usePathPlan THEN
+      RETURN(this.frm:`PATH_PLAN_NAME`__get_end_node)
+    ELSE
+      RETURN(this.frm:pth[PATH_LEN(pth)].v)
+    ENDIF
   END get_end_node
 
 ROUTINE makeline
