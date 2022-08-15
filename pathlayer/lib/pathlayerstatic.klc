@@ -201,14 +201,19 @@ ROUTINE next_layer
 
     --get current layer
     IF (NOT eof) THEN
-      this.curr_layer = buffer[1].layer
+      -- remap to 0 index (i.e. 0 = Layer 1, 1 = Layer 2)
+        -- get_index_base is either 0 or 1, subtract off so layer 1 = 0
+      this.curr_layer = buffer[1].layer - `LAYOUT_OBJECT_NAME`__get_index_base
 
       --reset passes
-      this.curr_pass = this.start_pass
-      this.last_idx = 0
-
-      --index buffer pointer to start pass
-      move_to_start_pass
+      IF (this.curr_layer <= this.start_layer) THEN
+        this.curr_pass = this.start_pass
+        --index buffer pointer to start pass
+        move_to_start_pass
+      ELSE
+        this.curr_pass = 0
+        this.last_idx = 0
+      ENDIF
 
     ENDIF
 
@@ -248,6 +253,16 @@ ROUTINE next_pass
 
   END next_pass
 
+ROUTINE start_layer
+  BEGIN
+    this.start_layer = start_layer
+  END start_layer
+
+ROUTINE start_pass
+  BEGIN
+    this.start_pass = start_pass
+  END start_pass
+
 -- user macro
 impl_inter_logic
 
@@ -258,6 +273,9 @@ ROUTINE run
 
     --start extruder and enable laser
     lam_start
+
+    --open layout file & load starting layer
+    open_layout
 
     --loop layers
     WHILE(next_layer) DO
@@ -282,6 +300,9 @@ ROUTINE run
       `MOTION_OBJECT_NAME`__moveRetract
 
     ENDWHILE
+
+    --close layout file
+    close_layout
 
     --stop extruder and disable laser
     lam_stop
