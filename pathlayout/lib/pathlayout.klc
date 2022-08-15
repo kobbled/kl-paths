@@ -25,6 +25,7 @@ VAR
   buffer : PATH nodedata = LAYOUT_STRUCT
   prev_data : t_DATA_TYPE
   buffernum : INTEGER -- keep track of how many buffer cycles have been completed
+  indexBase : INTEGER --specify the base of the array index (i.e. 0 or 1)
 
 -- reference to 'data' attribute in CSV_OBJECT_NAME
 %include csvclass.friends.klt
@@ -90,6 +91,7 @@ ROUTINE new
     createAttr
 
     buffernum = 0
+    indexBase = 0
   END new
 
 ROUTINE delete
@@ -102,6 +104,7 @@ ROUTINE delete
     deletefile
 
     buffernum = 0
+    indexBase = 0
   END delete
 
 ROUTINE new_attr_pntr
@@ -118,6 +121,11 @@ ROUTINE get_coord_sys
   BEGIN
     RETURN(coord_system)
   END get_coord_sys
+
+ROUTINE get_index_base
+  BEGIN
+    RETURN(indexBase)
+  END get_index_base
 
 -- user macro
 impl_deserialize
@@ -148,7 +156,7 @@ ROUTINE loadBuffer
       --read from file
       IF (buffernum > 0) THEN
         IF (i > 1) THEN
-          --Dont first line of next buffer as it has already
+          --Dont read first line of next buffer as it has already
           --been read by the previous buffer
           success = readfile
         ELSE
