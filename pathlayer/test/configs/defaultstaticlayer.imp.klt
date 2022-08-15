@@ -43,7 +43,7 @@ $
     BEGIN
       --do after first layer as first layer will
       --already be enabled
-      IF this.curr_pass > 0 THEN
+      IF this.curr_layer > this.start_layer THEN
 
         --stop extruder and disable laser
         lam_stop
@@ -61,6 +61,8 @@ $
       status : INTEGER
     BEGIN
       --store endpoints
+        --if line_endpnts in empty in pathmake->next_toolpath
+        -- no "pth" will be created, and nothing will run
       paths__clear_toolpath(line_endpnts)
 
       -- Do not do on last pass of layer
@@ -89,7 +91,7 @@ $
         line_endpnts[1].code = PTH_MOVETO
         line_endpnts[2].code = PTH_CLOSE
         
-        --update tangent
+        --compute tangent vector between two points
         n = math__norm((line_endpnts[2].v-line_endpnts[1].v))
         IF n > 0 THEN
           line_endpnts[1].tangent = (line_endpnts[2].v-line_endpnts[1].v)/n

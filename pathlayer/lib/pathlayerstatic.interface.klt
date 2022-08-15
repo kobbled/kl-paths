@@ -36,13 +36,23 @@
 $
 %mode pop
 
---User programs for how to treat interpasses and interlayers
 %mode push
 %mode string QQQ "$" "$" "\\"
 %define impl_inter_logic $
   ROUTINE interlayer
     BEGIN
-      pause
+      --do after first layer as first layer will
+      --already be enabled
+      IF this.curr_pass > 0 THEN
+
+        --stop extruder and disable laser
+        lam_stop
+        --pause for inspection
+        pause
+        --start extruder and enable laser
+        lam_start
+        
+      ENDIF
     END interlayer
 
   ROUTINE interpass
