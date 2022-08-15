@@ -164,19 +164,21 @@ ROUTINE t_rot_delta
     tool = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
 
     --initialize pathclass
-      -- coord frm, coordinate system, part origin, idod
+      -- coord frm, coordinate system, part origin, idod, doPathPlan
     tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
     tstrmn__init(tool, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
 
     --generate path
+     -- lines, contours, start_corner, raster_type, poly_depend
     tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
 
     -- approach path
     tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
     
     --move through raster path
+      --tool_speed, tool_step, link_speed, link_step, retract_hght, use_tool_spd
     tstrmn__movePoly(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT), TRUE)
     
     -- retract path
@@ -256,19 +258,21 @@ ROUTINE t_rot_OD
     tool = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
     
     --initialize pathclass
-      -- coord frm, coordinate system, part origin, idod
+      -- coord frm, coordinate system, part origin, idod, doPathPlan
     tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
     tstrmn__init(tool, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
 
     --generate path
+     -- lines, contours, start_corner, raster_type, poly_depend
     tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
 
     -- approach path
     tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,PAD_START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
     
     --move through path
+      --tool_speed, tool_step, link_speed, link_step, retract_hght, use_tool_spd
     tstrmn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT), TRUE)
 
     -- retract path
@@ -346,11 +350,13 @@ ROUTINE t_rot_ID
     tool = POS(0,0,0,TOOL_ORIENT_UP, pose__set_config(DEFAULT_CONFIG))
     
     --initialize pathclass
+      -- coord frm, coordinate system, part origin, idod, doPathPlan
     tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
       --tool offset, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
     tstrmn__init(tool, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
 
     --generate path
+     -- lines, contours, start_corner, raster_type, poly_depend
     tstrot__planPath(lines, contours, ID_CORNER, ONEWAY, FALSE)
     
     --set path type
@@ -360,6 +366,7 @@ ROUTINE t_rot_ID
     tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100+PAD_START_DIST,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
     
     --move through path
+      --tool_speed, tool_step, link_speed, link_step, retract_hght, use_tool_spd
     tstrmn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT), TRUE)
 
     -- retract path
@@ -437,19 +444,21 @@ ROUTINE t_rot_pad
     tool = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
     
     --initialize pathclass
-      -- coord frm, coordinate system, part origin, idod
+      -- coord frm, coordinate system, part origin, idod, doPathPlan
     tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
     tstrmn__init(tool, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
 
     --generate path
+      -- lines, contours, start_corner, raster_type, poly_depend
     tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
 
     -- approach path
     tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,PAD_START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
     
     --move through path
+      --tool_speed, tool_step, link_speed, link_step, retract_hght, use_tool_spd
     tstrmn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT), TRUE)
 
     -- retract path
@@ -526,6 +535,7 @@ ROUTINE t_rot_pid
     tool = POS(0,0,0,TOOL_ORIENT_UP, pose__set_config(DEFAULT_CONFIG))
     
     --initialize pathclass
+      -- coord frm, coordinate system, part origin, idod, doPathPlan
     tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
@@ -541,6 +551,7 @@ ROUTINE t_rot_pid
     tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,100+PAD_START_DIST,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
     
     --move through path
+      --tool_speed, tool_step, link_speed, link_step, retract_hght, use_tool_spd
     tstrmn__movePolyArc(TOOLING_SPEED, TOOLING_STEP, LINKING_SPEED, LINKING_STEP, -1*(RETRACT_HEIGHT), TRUE)
 
     -- retract path
