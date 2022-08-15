@@ -7,8 +7,13 @@ PROGRAM class_name
 
 %define BASE_CLASSNAME class_name
 
+%include pathlayer.deps.klt
+
+%include errors.klt
+%include systemvars.klt
 %include systemlib.types.klt
 %include systemlib.datatypes.klt
+%include pose.const.klt
 %include pathlib.klt
 %include lam.klt
 %include toolpath.structs.klt
@@ -31,12 +36,14 @@ VAR
 pathmake_friends(PATH_OBJECT_NAME)
 
 -- include reference to pathlayout "buffer".
-%include pathlayout.friend.members.klt
-pathlayout_friends(LAYOUT_OBJECT_NAME)
+%include pathlayout.friends.klt
+pathlayout_friends(LAYOUT_OBJECT_NAME,LAYOUT_STRUCT)
 
 %include errors.klh
+%from systemlib.klh %import VEC, VEC2D
 %from math.klh %import norm
-%from pathlib.klh %import clear_toolpath
+%from pose.klh %import cartesian_to_cylindrical
+%from pathlib.klh %import clear_toolpath, new_coord_sys
 
 
 --define layout object
@@ -53,7 +60,8 @@ lam_define(LAM_NAME,LAM_CNFG)
 
 %defeval class_name BASE_CLASSNAME
 
-%include pathlayer.klh
+%include pathlayerstatic.klh
+%include pathlayerstatic.private.klh
 
 --private
 
@@ -171,6 +179,7 @@ ROUTINE import_layout
 
 ROUTINE open_layout
   VAR
+    i : INTEGER
     eof : BOOLEAN
   BEGIN
     `LAYOUT_OBJECT_NAME`__openfile
@@ -258,15 +267,15 @@ ROUTINE next_pass
 
   END next_pass
 
-ROUTINE start_layer
+ROUTINE set_start_layer
   BEGIN
-    this.start_layer = start_layer
-  END start_layer
+    this.start_layer = startlay
+  END set_start_layer
 
-ROUTINE start_pass
+ROUTINE set_start_pass
   BEGIN
-    this.start_pass = start_pass
-  END start_pass
+    this.start_pass = startpass
+  END set_start_pass
 
 -- user macro
 impl_inter_logic
@@ -293,12 +302,13 @@ ROUTINE run
       `MOTION_OBJECT_NAME`__moveApproach
 
       --loop passes
-      WHILE(`LAYER_NAME`__next_pass) DO
+      WHILE(next_pass) DO
         --move through pass/layer
-        `MOTION_OBJECT_NAME`__move(use_arc)
+          --use linear moves for tool path
+        `MOTION_OBJECT_NAME`__move(FALSE)
         interpass
         --run linking pass
-        `MOTION_OBJECT_NAME`__move(use_arc)
+        `MOTION_OBJECT_NAME`__move(FALSE)
       ENDWHILE
 
       --retract point

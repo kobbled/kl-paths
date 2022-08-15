@@ -21,10 +21,12 @@ declare_member(class_name,open_layout,class_name,oplay)
 ROUTINE open_layout FROM class_name
 declare_member(class_name,close_layout,class_name,cllay)
 ROUTINE close_layout FROM class_name
+
+
 declare_member(class_name,set_start_layer,class_name,stlay)
-ROUTINE set_start_layer(start_layer : INTEGER) FROM class_name
+ROUTINE set_start_layer(startlay : INTEGER) FROM class_name
 declare_member(class_name,set_start_pass,class_name,stpas)
-ROUTINE set_start_pass(start_pass : INTEGER) FROM class_name
+ROUTINE set_start_pass(startpass : INTEGER) FROM class_name
 declare_member(class_name,next_layer,class_name,nxtly)
 ROUTINE next_layer : BOOLEAN FROM class_name
 declare_member(class_name,next_pass,class_name,nxtps)

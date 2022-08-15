@@ -14,7 +14,8 @@
   ],
   "tests-includes" : [
     "test/configs",
-    "test/static/rotary",
+    "test/configs/pathplan",
+    "test/configs/static/rotary",
     "test/configs/lam"
   ],
   "tests-tp" : [    
@@ -26,7 +27,6 @@
   ],
   "tests-depends" : [
     "display",
-    "pose",
     "KUnit"
   ],
   "depends" : [
@@ -34,7 +34,9 @@
     "errors",
     "systemlib",
     "math",
+    "pose",
     "pathlib",
+    "pathplan",
     "pathmake",
     "pathdraw",
     "pathmotion",

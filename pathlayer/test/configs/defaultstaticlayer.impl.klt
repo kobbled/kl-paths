@@ -21,6 +21,8 @@
     END layout_to_toolpath
 
   ROUTINE layout_to_vecpath
+    VAR
+      status : INTEGER
     BEGIN
       APPEND_NODE(out_pth,status)
       out_pth[PATH_LEN(out_pth)].v = VEC((buffer[idx].pose.x), (buffer[idx].pose.y), (buffer[idx].pose.z))
@@ -58,7 +60,7 @@ $
   ROUTINE interpass
     VAR
       n : REAL
-      status : INTEGER
+      startv, endv : VECTOR
     BEGIN
       --store endpoints
         --if line_endpnts in empty in pathmake->next_toolpath
@@ -69,10 +71,8 @@ $
       IF this.last_idx < PATH_LEN(buffer) THEN
         --create a line inbetween the stop pass and the start of
         --the next pass
-        APPEND_NODE(line_endpnts,status)
-        line_endpnts[1] = layout_to_toolpath((this.last_idx), pth)
-        APPEND_NODE(line_endpnts,status)
-        line_endpnts[2] = layout_to_toolpath((this.last_idx+1), pth)
+        layout_to_toolpath((this.last_idx), line_endpnts)
+        layout_to_toolpath((this.last_idx+1), line_endpnts)
         
         SELECT params.coord_system.system OF
           CASE(PTH_CYLINDER):
@@ -92,9 +92,12 @@ $
         line_endpnts[2].code = PTH_CLOSE
         
         --compute tangent vector between two points
-        n = math__norm((line_endpnts[2].v-line_endpnts[1].v))
+          --convert into vectors
+        startv = VEC((line_endpnts[1].v.x), (line_endpnts[1].v.y), (line_endpnts[1].v.z))
+        endv = VEC((line_endpnts[2].v.x), (line_endpnts[2].v.y), (line_endpnts[2].v.z))
+        n = math__norm((endv-startv))
         IF n > 0 THEN
-          line_endpnts[1].tangent = (line_endpnts[2].v-line_endpnts[1].v)/n
+          line_endpnts[1].tangent = (endv-startv)/n
         ELSE
           line_endpnts[1].tangent = pth[1].tangent
         ENDIF

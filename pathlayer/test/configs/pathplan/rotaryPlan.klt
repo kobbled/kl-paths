@@ -1,0 +1,28 @@
+--minimum cost for an edge in the path graph
+%define PATH_MIN_COST 1
+--weighting for linking segments
+%define PATH_LINK_SIDE_COST 2
+%define PATH_LINK_VERT_COST 3
+%define PATH_LINK_DIAG_COST 4
+%define PATH_LINK_POLY_COST 5
+
+%define DEFAULT_SPEED 12
+
+--used in dependencies
+%define PATHPLAN_CONFIG_FILENAME rotaryPlan.klt
+
+--kd tree
+------------------
+%defeval KD_CLASS_NAME tstkd
+%include kd_vec_raster.klt
+
+--graph
+------------------
+%defeval GRAPH_CLASS_NAME tstgh
+%include default_graph_weight2.klt
+
+--maximum number of adjacencies per node
+%define MAX_NEIGHBORS 7
+
+--pathplan implementation
+%include rotaryPlan.impl.klt

@@ -123,6 +123,11 @@ ROUTINE deserialize
 %mode push
 %mode string QQQ "`" "`" "\\"
 %define impl_instance `
+ROUTINE detIndexBase
+  BEGIN
+    fileAttr(attribPntrs[1])
+    indexBase = data.int
+  END detIndexBase
 ROUTINE countInstances
   VAR
     i, status : INTEGER
@@ -183,10 +188,5 @@ ROUTINE countInstances
     DELETE_NODE(buffer,i,status)
     
   END countInstances
-ROUTINE detIndexBase
-  BEGIN
-    fileAttr(attribPntrs[1])
-    indexBase = data.int
-  END detIndexBase
 `
 %mode pop

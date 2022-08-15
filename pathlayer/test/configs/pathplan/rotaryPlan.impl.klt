@@ -1,0 +1,37 @@
+--include default interface
+%include pathplan.interface.klt
+
+-- ***********
+-- Define interface header
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define define_pplan_headers(parent) `declare_member(parent,dist_to_weight,parent,d2wt)
+ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE FROM parent
+declare_member(parent,convert2pos,parent,cn2ps)
+ROUTINE convert2pos(n : t_VEC_PATH ; ofst_orient : VECTOR; parent_frm : XYZWPR) : XYZWPR FROM parent
+`
+%mode pop
+
+-- ***********
+-- Define interface
+-- ***********
+
+%mode push
+%mode string QQQ "`" "`" "\\"
+
+%define define_pplan_members(parent) `declare_member(parent,dist_to_weight,parent,d2wt)
+ROUTINE dist_to_weight(dist : KDTREE_COMPARE_TYPE) : GRAPH_EDGE_VTYPE
+  BEGIN
+    RETURN(TRUNC(dist))
+  END dist_to_weight
+declare_member(parent,convert2pos,parent,cn2ps)
+ROUTINE convert2pos(n : t_VEC_PATH ; ofst_orient : VECTOR; parent_frm : XYZWPR) : XYZWPR
+  BEGIN
+    -- ( pose__vector_to_pose(frm:v.v, pose__get_orientation(frm), frm.config_data) )
+    RETURN( pose__vector_to_pose(n.v, ofst_orient, parent_frm.config_data) )
+  END convert2pos
+`
+%mode pop

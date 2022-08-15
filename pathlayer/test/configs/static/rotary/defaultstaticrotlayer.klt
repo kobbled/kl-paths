@@ -1,4 +1,4 @@
-%define CONFIG_FILENAME defaultstaticlayer.klt
+%define CONFIG_FILENAME defaultstaticrotlayer.klt
 
 --robot group
 %define RBT_GRP 1
@@ -57,6 +57,9 @@
 --implementations
 ------------------
 
+--layer implementation
+%include defaultstaticlayer.impl.klt
+
 --motion implementation
 %include rotary.motion.impl.klt
 
@@ -69,6 +72,8 @@
 --layout
 %define LAYOUT_OBJECT_NAME tstlay
 %define LAYOUT_CONFIG_FILENAME defaultpathlayout.klt
+  --include in layer template for defining layout struct
+%include defaultpathlayout.klt
 
 -- lam object
 %define LAM_NAME tstlam
@@ -79,4 +84,8 @@
 
 --pathclass object
 %define PATH_OBJECT_NAME tstrot
+
+--pathplan
+%defeval PATH_PLAN_NAME tsplrt
+%define PATHPLAN_CONFIG_FILENAME rotaryPlan.klt
 
