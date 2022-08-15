@@ -21,6 +21,7 @@ VAR
   this   : t_PATH_LAYER
   params : t_PATH_PARAM
   toolprm : t_TOOL_VARS
+  layoutCDS : t_COORD_SYS
   passes : PATH nodedata = t_INTEGER
   layers : INTEGER
   program_type : INTEGER
@@ -100,7 +101,6 @@ impl_buffer_conversion
 ROUTINE new
   VAR
     prm : t_PATH_PARAM
-    cds : t_COORD_SYS
   BEGIN
     --initialize lam
     `LAM_NAME`__init(lsrprm, powprm)
@@ -115,10 +115,10 @@ ROUTINE new
 
     --with static input assume it is always in cartesean
     --save PTH_CYLINDER, or PTH_POLAR in layer object to differentiate
-    cds = paths__new_coord_sys(PTH_CARTESAN, (make_prm.coord_system.z_axis))
+    layoutCDS = paths__new_coord_sys(PTH_CARTESAN, (make_prm.coord_system.z_axis))
 
     --initialize pathmake
-    `PATH_OBJECT_NAME`__init((params.frm), cds, (params.origin), (params.idod), (params.usePathPlan))
+    `PATH_OBJECT_NAME`__init((params.frm), layoutCDS, (params.origin), (params.idod), (params.usePathPlan))
     --set linking coordinate system. Set as PTH_CYLINDER, or PTH_POLAR to transform linking
     `PATH_OBJECT_NAME`__set_linking_coordinate_system((make_prm.coord_system.system), (make_prm.coord_system.z_axis))
 
@@ -136,6 +136,7 @@ ROUTINE delete
   VAR
     uninit_lay : t_PATH_LAYER
     uninit_prm : t_PATH_PARAM
+    uninit_cds : t_COORD_SYS
   BEGIN
     --pathmake delete
     `PATH_OBJECT_NAME`__delete
@@ -153,13 +154,14 @@ ROUTINE delete
 
     this = uninit_lay
     params = uninit_prm
+    layoutCDS = uninit_cds
   END delete
 
 -- From layout
 
 ROUTINE import_layout
   BEGIN
-    `LAYOUT_OBJECT_NAME`__new(filename, system, z_axis)
+    `LAYOUT_OBJECT_NAME`__new(filename, (layoutCDS.system), (layoutCDS.z_axis) )
     --calculate passes per layer
     `LAYOUT_OBJECT_NAME`__openfile
     `LAYOUT_OBJECT_NAME`__countInstances(passes)

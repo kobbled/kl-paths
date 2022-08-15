@@ -16,7 +16,7 @@ ROUTINE delete FROM class_name
 
 --layout members
 declare_member(class_name,import_layout,class_name,imptl)
-ROUTINE import_layout(filename : STRING; system : INTEGER ; z_axis : INTEGER) FROM class_name
+ROUTINE import_layout(filename : STRING) FROM class_name
 declare_member(class_name,open_layout,class_name,oplay)
 ROUTINE open_layout FROM class_name
 declare_member(class_name,close_layout,class_name,cllay)
