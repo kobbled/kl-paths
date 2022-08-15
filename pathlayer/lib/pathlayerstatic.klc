@@ -244,6 +244,11 @@ ROUTINE next_pass
       --repeat until at the end of a toolpath segment
     UNTIL(pth[PATH_LEN(pth)].code = PTH_CLOSE)
 
+    --pathmake->`pth_end` should always be true as passes
+    --is set externally by `next_pass`, and the `pth` member
+    --should only be a single path. Pass through motion->move.
+    `PATH_OBJECT_NAME`__set_path_end(TRUE)
+
     IF this.last_idx >= PATH_LEN(buffer) THEN
       --at the end of the layer buffer
       RETURN(TRUE)
