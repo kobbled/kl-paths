@@ -25,7 +25,7 @@ VAR
   layers : INTEGER
   program_type : INTEGER
 
--- include reference to pathmake "pth".
+-- include reference to pathmake "pth", and "line_endpnts".
 %include pathmake.friend.members.klt
 pathmake_friends(PATH_OBJECT_NAME)
 
@@ -42,7 +42,10 @@ pathlayout_friends(LAYOUT_OBJECT_NAME)
 define_pathlayout(LAYOUT_OBJECT_NAME,LAYOUT_CONFIG_FILENAME)
 
 --define path object
-path_make_define(PATH_OBJECT_NAME,PATH_CONFIG_FILENAME)
+path_make_define(PATH_OBJECT_NAME,CONFIG_FILENAME)
+
+--motion object
+path_motion_define(MOTION_OBJECT_NAME,CONFIG_FILENAME)
 
 --lam object
 lam_define(LAM_NAME,LAM_CNFG)
@@ -269,6 +272,8 @@ ROUTINE run
         --move through pass/layer
         `MOTION_OBJECT_NAME`__move(use_arc)
         interpass
+        --run linking pass
+        `MOTION_OBJECT_NAME`__move(use_arc)
       ENDWHILE
 
       --retract point
