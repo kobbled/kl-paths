@@ -226,19 +226,33 @@ ROUTINE next_layer
 
     ENDIF
 
-    RETURN(eof)
+%ifdef DEBUG_BUILD
+      usrdis__print(INFO, 'current layer: ' + i_to_s((this.curr_layer)))
+      usrdis__print(INFO, 'laystrtPnt: ' + p_to_s(pth_endpnts[1].v))
+      usrdis__print(INFO, 'layendPnt: ' + p_to_s(pth_endpnts[2].v))
+%endif
+
+    RETURN(NOT eof)
   END next_layer
 
 ROUTINE next_pass
   --returns true if at the end of the layer buffer
   VAR
     layer_len : INTEGER
+%ifdef DEBUG_BUILD
+    i : INTEGER
+%endif
   BEGIN
+
+%ifdef DEBUG_BUILD
+    usrdis__print(INFO, 'loading pass ' + i_to_s((this.curr_pass)) + ' into PATH_OBJECT_NAME->pth')
+    i = 0
+%endif
 
     -- if buffer is empty, exit
     IF PATH_LEN(buffer) = 0 THEN
       karelError(PATH_INDEX_OUT_OF_RANGE,'Nothing is in the path buffer.', ER_WARN)
-      RETURN(TRUE)
+      RETURN(FALSE)
     ENDIF
 
     --clear previous path_make pth
@@ -249,21 +263,36 @@ ROUTINE next_pass
     REPEAT
       this.last_idx = this.last_idx + 1
       --make t_TOOLPATH node (convert from buffer to t_TOOLPATH)
-      layout_to_toolpath((this.last_idx), pth)
-      --repeat until at the end of a toolpath segment
-    UNTIL(pth[PATH_LEN(pth)].code = PTH_CLOSE)
+      layout_to_toolpath((this.last_idx), layoutCDS, pth)
+
+%ifdef DEBUG_BUILD
+      usrdis__print(DEBUG, 'load ' + i_to_s(this.last_idx) + '/' + i_to_s(PATH_LEN(buffer)) + ' nodes')
+      i = i + 1
+%endif
+
+    UNTIL(pth[PATH_LEN(pth)].code = PTH_CLOSE) --repeat until at the end of a toolpath segment
 
     --pathmake->`pth_end` should always be true as passes
     --is set externally by `next_pass`, and the `pth` member
     --should only be a single path. Pass through motion->move.
     `PATH_OBJECT_NAME`__set_path_end(TRUE)
 
+    this.curr_pass = this.curr_pass + 1
+
     IF this.last_idx >= PATH_LEN(buffer) THEN
       --at the end of the layer buffer
-      RETURN(TRUE)
+%ifdef DEBUG_BUILD
+      usrdis__print(INFO, '^^reached end of pass buffer^^')
+%endif
+      
+      RETURN(FALSE)
     ENDIF
 
-    RETURN(FALSE)
+%ifdef DEBUG_BUILD
+    usrdis__print(INFO, 'loaded ' + i_to_s(i) + ' nodes into pth')
+%endif
+
+    RETURN(TRUE)
 
   END next_pass
 
@@ -281,6 +310,9 @@ ROUTINE set_start_pass
 impl_inter_logic
 
 ROUTINE run
+  VAR
+    bLayer : BOOLEAN
+    bPass : BOOLEAN
   BEGIN
     --lock groups
     `MOTION_OBJECT_NAME`__aquire_groups
@@ -292,7 +324,12 @@ ROUTINE run
     open_layout
 
     --loop layers
-    WHILE(next_layer) DO
+    REPEAT
+      --set next layer
+      bLayer = next_layer
+%ifdef DEBUG_BUILD
+      usrdis__print(DEBUG, 'next layer = ' + b_to_s(bLayer) )
+%endif
 
       --interlayer start logic
       --(i.e. pause, cool, rotate part)
@@ -302,20 +339,30 @@ ROUTINE run
       `MOTION_OBJECT_NAME`__moveApproach
 
       --loop passes
-      WHILE(next_pass) DO
+      REPEAT
+        --set next pass
+        bPass = next_pass
+%ifdef DEBUG_BUILD
+        usrdis__print(DEBUG, 'next pass = ' + b_to_s(bPass) )
+%endif
+
         --move through pass/layer
           --use linear moves for tool path
         `MOTION_OBJECT_NAME`__move(FALSE)
         interPass
 
         --run linking pass
-        `MOTION_OBJECT_NAME`__move(FALSE)
-      ENDWHILE
+        IF bPass THEN
+          `MOTION_OBJECT_NAME`__move(FALSE)
+        ENDIF
+      UNTIL (NOT bPass) -- check if there are more passes to read
+
+      --interlayer stop logic
+      interStopLayer
 
       --retract point
       `MOTION_OBJECT_NAME`__moveRetract
-
-    ENDWHILE
+    UNTIL (NOT bLayer) -- check if there are more layers to read
 
     --close layout file
     close_layout
