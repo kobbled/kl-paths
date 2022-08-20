@@ -294,9 +294,9 @@ ROUTINE run
     --loop layers
     WHILE(next_layer) DO
 
-      --interlayer logic
+      --interlayer start logic
       --(i.e. pause, cool, rotate part)
-      interlayer
+      interStartLayer
 
       --approach point
       `MOTION_OBJECT_NAME`__moveApproach
@@ -306,7 +306,8 @@ ROUTINE run
         --move through pass/layer
           --use linear moves for tool path
         `MOTION_OBJECT_NAME`__move(FALSE)
-        interpass
+        interPass
+
         --run linking pass
         `MOTION_OBJECT_NAME`__move(FALSE)
       ENDWHILE

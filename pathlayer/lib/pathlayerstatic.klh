@@ -31,8 +31,10 @@ declare_member(class_name,next_layer,class_name,nxtly)
 ROUTINE next_layer : BOOLEAN FROM class_name
 declare_member(class_name,next_pass,class_name,nxtps)
 ROUTINE next_pass : BOOLEAN FROM class_name
-declare_member(class_name,interlayer,class_name,intly)
-ROUTINE interlayer FROM class_name
+declare_member(class_name,interStartlayer,class_name,insly)
+ROUTINE interStartlayer FROM class_name
+declare_member(class_name,interStoplayer,class_name,intly)
+ROUTINE interStoplayer FROM class_name
 declare_member(class_name,interpass,class_name,intps)
 ROUTINE interpass FROM class_name
 declare_member(class_name,run,class_name,run)

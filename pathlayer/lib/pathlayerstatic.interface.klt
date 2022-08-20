@@ -41,21 +41,28 @@ $
 %mode push
 %mode string QQQ "$" "$" "\\"
 %define impl_inter_logic $
-  ROUTINE interlayer
+  ROUTINE interStartlayer
     BEGIN
       --do after first layer as first layer will
       --already be enabled
       IF this.curr_layer > this.start_layer THEN
-
-        --stop extruder and disable laser
-        lam_stop
         --pause for inspection
-        pause
+        --PAUSE
+        DELAY 2000
         --start extruder and enable laser
         lam_start
-        
+%ifdef DEBUG_BUILD
+        usrdis__print(INFO, 'hit layer interrupt!')
+%endif        
       ENDIF
-    END interlayer
+
+    END interStartlayer
+
+  ROUTINE interStopLayer
+    BEGIN
+      --stop extruder and disable laser
+      lam_stop
+    END interStopLayer
 
   ROUTINE interpass
     VAR
