@@ -11,12 +11,28 @@
                       (buffer[idx].orient.x), (buffer[idx].orient.y), (buffer[idx].orient.z), & 
                       (params.frm.config_data) )
       
-      -- must set powprm.powder in lam before this 
-      out_pth[PATH_LEN(pth)].speed   = `LAM_NAME`__getSpeedFromDepth(0, buffer[idx].depth)
-      out_pth[PATH_LEN(pth)].code    = buffer[idx].code
-      out_pth[PATH_LEN(pth)].typ     = PTH_TOOLING
+      -- must set powprm.powder in lam before this
+      out_pth[PATH_LEN(out_pth)].speed   = `LAM_NAME`__getSpeedFromDepth(0, buffer[idx].depth)
+      out_pth[PATH_LEN(out_pth)].code    = buffer[idx].code
+      out_pth[PATH_LEN(out_pth)].typ     = PTH_TOOLING
+
+%ifdef DEBUG_BUILD
+      usrdis__print(DEBUG, 'running at ' + r_to_s(out_pth[PATH_LEN(out_pth)].speed) +' mm/s')
+%endif
       
       -- ..warning:: tangent is not calculated for cartesian points
+
+      --convert to coordinate system
+      SELECT cds.system OF
+        CASE(PTH_CYLINDER):
+          --convert start point to cylindrical
+          out_pth[PATH_LEN(out_pth)].v = pose__cartesian_to_cylindrical((params.origin), (out_pth[PATH_LEN(out_pth)].v), (cds.z_axis), params.origin.z, TRUE)
+            --insert tool orientation
+          out_pth[PATH_LEN(out_pth)].v = pose__replace_orient(out_pth[PATH_LEN(out_pth)].v, `PATH_OBJECT_NAME`__get_orient)
+        CASE(PTH_POLAR):
+          karelError(INVALID_TYPE_CODE, 'class_name: interpass doesnt support spherical systems yet.', ER_ABORT)
+        ELSE:
+      ENDSELECT
 
     END layout_to_toolpath
 
@@ -78,18 +94,8 @@ $
       IF this.last_idx < PATH_LEN(buffer) THEN
         --create a line inbetween the stop pass and the start of
         --the next pass
-        layout_to_toolpath((this.last_idx), line_endpnts)
-        layout_to_toolpath((this.last_idx+1), line_endpnts)
-        
-        SELECT params.coord_system.system OF
-          CASE(PTH_CYLINDER):
-            --convert to cylindrical
-            line_endpnts[1].v = pose__cartesian_to_cylindrical((ZEROPOS(1)), (line_endpnts[1].v), VERT_AXES)
-            line_endpnts[2].v = pose__cartesian_to_cylindrical((ZEROPOS(1)), (line_endpnts[2].v), VERT_AXES)
-          CASE(PTH_POLAR):
-            karelError(INVALID_TYPE_CODE, 'class_name: interpass doesnt support spherical systems yet.', ER_ABORT)
-          ELSE:
-        ENDSELECT
+        layout_to_toolpath((this.last_idx), params.coord_system, line_endpnts)
+        layout_to_toolpath((this.last_idx+1), params.coord_system, line_endpnts)
 
         --update type
         line_endpnts[1].typ = PTH_LINKING
