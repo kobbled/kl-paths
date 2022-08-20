@@ -329,13 +329,23 @@ ROUTINE define_origin
     this.origin = POS((polyprm.xStart), (polyprm.yStart), (polyprm.height), (polyprm.polyAngle*toolprm.idod),0,0, pose__set_config(DEFAULT_CONFIG))
   END define_origin
 
-ROUTINE get_orient
+ROUTINE get_tool_orient
   BEGIN
     IF idod = -1 THEN
       RETURN(VEC(TOOL_ORIENT_UP))
     ELSE
       RETURN(VEC(TOOL_ORIENT_DOWN))
     ENDIF
+  END get_tool_orient
+
+ROUTINE get_orient
+  VAR
+    orient : VECTOR
+  BEGIN
+    orient = paths__set_orientation((this.coord_system.system), this.idod)
+    orient = orient - VEC(this.origin.w, this.origin.p, this.origin.r)
+
+    RETURN(orient)
   END get_orient
 
 ROUTINE get_corner

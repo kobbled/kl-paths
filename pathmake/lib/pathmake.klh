@@ -37,8 +37,10 @@ declare_member(class_name,define_origin,class_name,dforg)
 ROUTINE define_origin(polyprm : t_PATH_VARS ; toolprm : t_TOOL_VARS) FROM class_name
 
 --getters
-declare_member(class_name,get_orient,class_name,gtont)
-ROUTINE get_orient(idod : INTEGER) : VECTOR FROM class_name
+declare_member(class_name,get_tool_orient,class_name,gttor)
+ROUTINE get_tool_orient(idod : INTEGER) : VECTOR FROM class_name
+declare_member(class_name,get_orient,class_name,gtorn)
+ROUTINE get_orient : VECTOR FROM class_name
 declare_member(class_name,get_corner,class_name,gtcrn)
 ROUTINE get_corner(idod : INTEGER) : INTEGER FROM class_name
 declare_member(class_name,get_idod,class_name,gtido)
