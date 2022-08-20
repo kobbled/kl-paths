@@ -464,6 +464,9 @@ ROUTINE importPath
     ENDFOR
 
     --create tangents
+    -- ..warning:: Don't know if this is needed with ijk->wpr conversion
+    --             in layout_to_vecpath. Might need 2d tangent vector
+    --             for pathplanner to work.
     draw__calc_tangent(pth)
 
     --build kd tree, and start visited
@@ -569,7 +572,7 @@ ROUTINE next_toolpath
 
 %ifdef DEBUG_BUILD
     seg_start = seg_start + 1
-    usrdis__print(INFO, 'Seg_' + i_to_s(seg_start) + ' : ' + i_to_s(pth_typ))
+    usrdis__print(INFO, 'Plan Segment' + i_to_s(seg_start))
     pth_idx = 1
 %endif
 
@@ -713,6 +716,34 @@ ROUTINE get_node
   BEGIN
     RETURN(convert2pos(pth[(plan[i].v)], pnt_orient, frm))
   END get_node
+
+ROUTINE get_endnodes
+  VAR
+    status : INTEGER
+  BEGIN
+    clear_toolpath(out_path)
+    --start node
+    --****
+    APPEND_NODE(out_path, status)
+    out_path[PATH_LEN(out_path)].v = convert2pos(pth[(plan[1].v)], pnt_orient, frm)
+    out_path[PATH_LEN(out_path)].code = pth[(plan[1].v)].code
+    out_path[PATH_LEN(out_path)].typ = line_typ
+      --..note:: set to default during initialization. Use speed map or blending techniques
+      --         to set speed per node along path.
+    out_path[PATH_LEN(out_path)].speed = DEFAULT_SPEED
+    out_path[PATH_LEN(out_path)].tangent = pth[(plan[1].v)].tangent
+
+    --end node
+    --****
+    APPEND_NODE(out_path, status)
+    out_path[PATH_LEN(out_path)].v = convert2pos(pth[(plan[PATH_LEN(plan)].v)], pnt_orient, frm)
+    out_path[PATH_LEN(out_path)].code = pth[(plan[PATH_LEN(plan)].v)].code
+    out_path[PATH_LEN(out_path)].typ = line_typ
+      --..note:: set to default during initialization. Use speed map or blending techniques
+      --         to set speed per node along path.
+    out_path[PATH_LEN(out_path)].speed = DEFAULT_SPEED
+    out_path[PATH_LEN(out_path)].tangent = pth[(plan[PATH_LEN(plan)].v)].tangent
+  END get_endnodes
 
 ROUTINE get_path_interpolate
   BEGIN

@@ -46,6 +46,8 @@ declare_member(class_name,get_end_node,class_name,gendn)
 ROUTINE get_end_node : XYZWPR FROM class_name
 declare_member(class_name,get_node,class_name,gtnde)
 ROUTINE get_node(i : INTEGER) : XYZWPR FROM class_name
+declare_member(class_name,get_endnodes,class_name,gtend)
+ROUTINE get_endnodes(out_path : PATH nodedata = t_TOOLPATH; line_typ : INTEGER) FROM class_name
 declare_member(class_name,get_path_interpolate,class_name,gphi)
 ROUTINE get_path_interpolate(spacing : INTEGER ; line_type : INTEGER ; append : BOOLEAN ; out_path : PATH nodedata = t_VEC_PATH) FROM class_name
 declare_member(class_name,next_toolpath,class_name,ntph)
