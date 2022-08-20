@@ -483,33 +483,43 @@ ROUTINE get_end_node
 
 ROUTINE makeline
   VAR
+    cds : t_COORD_SYS
     status : INTEGER
   BEGIN
+    -- use linking coordiante system when it is
+    -- different from tooling coordinate system
+    -- and is not cartesian
+    IF (linking_cds.system <> this.coord_system.system) THEN
+      IF (linking_cds.system <> PTH_CARTESAN) THEN
+        cds = linking_cds
+      ELSE
+        cds = this.coord_system
+      ENDIF
+    ELSE
+      cds = this.coord_system
+    ENDIF
+
     --update config_data to default
     ref_frame = pose__replace_config(ref_frame, (this.frm.config_data))
 
     paths__clear_toolpath(line_endpnts)
     --add start point
     APPEND_NODE(line_endpnts,status)
-    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(start_point, paths__set_orientation((this.coord_system.system), this.idod), (this.frm.config_data)), PTH_MOVETO, line_typ, speed, tangent)
+    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(start_point, paths__set_orientation((cds.system), this.idod), (this.frm.config_data)), PTH_MOVETO, line_typ, speed, tangent)
     --add end point
     APPEND_NODE(line_endpnts,status)
-    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(end_point, paths__set_orientation((this.coord_system.system), this.idod), (this.frm.config_data)), PTH_CLOSE, line_typ, speed, tangent)
+    line_endpnts[PATH_LEN(line_endpnts)] = paths__new_tpath(pose__vector_to_pose(end_point, paths__set_orientation((cds.system), this.idod), (this.frm.config_data)), PTH_CLOSE, line_typ, speed, tangent)
     --`PATH_PLAN_NAME`__set_toolpath(line_endpnts)
 
     paths__clear_toolpath(pth)
     interpolate_toolpath(line_endpnts, (spacing), dir, line_code, ref_frame, FALSE, pth)
 
-    --clear endpoints after to cleanup
-      -- next_toolpath uses it to determine if a linking path or not
-    paths__clear_toolpath(line_endpnts)
-
-    IF UNINIT(this.coord_system.system) THEN
-      karelError(VAR_UNINIT,'coordinate system must be set in class_name', ER_ABORT)
+    IF UNINIT(cds.system) THEN
+      karelError(VAR_UNINIT,'coordinate system must be set for makeline', ER_ABORT)
     ENDIF
 
     --convert to cartesian
-    convertOrientation(pth, (this.frm), (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
+    convertOrientation(pth, (this.frm), (this.origin.z), (cds.system), (cds.z_axis), FALSE)
 
     --clear endpoints after to cleanup
       -- next_toolpath uses it to determine if a linking path or not
