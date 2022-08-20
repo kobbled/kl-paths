@@ -127,6 +127,11 @@ ROUTINE get_index_base
     RETURN(indexBase)
   END get_index_base
 
+ROUTINE get_buffer_cycles
+  BEGIN
+    RETURN(buffernum)
+  END get_buffer_cycles
+
 -- user macro
 impl_deserialize
 
