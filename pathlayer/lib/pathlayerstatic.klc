@@ -25,7 +25,6 @@ layout_type
 VAR
   this   : t_PATH_LAYER
   params : t_PATH_PARAM
-  toolprm : t_TOOL_VARS
   layoutCDS : t_COORD_SYS
   passes : PATH nodedata = t_INTEGER
   layers : INTEGER
@@ -111,33 +110,33 @@ ROUTINE new
     prm : t_PATH_PARAM
   BEGIN
     --initialize lam
-    `LAM_NAME`__init(lsrprm, powprm)
+    `LAM_NAME`__init(lsrprm_, powprm_)
 
     --set params
     --make copy
-    params.frm = (make_prm.frm)
-    params.idod = (make_prm.idod)
-    params.origin = (make_prm.origin)
-    params.coord_system = paths__new_coord_sys((make_prm.coord_system.system), (make_prm.coord_system.z_axis))
-    params.usePathPlan = (make_prm.usePathPlan)
+    params.frm = (make_prm_.frm)
+    params.idod = (make_prm_.idod)
+    params.origin = (make_prm_.origin)
+    params.coord_system = paths__new_coord_sys((make_prm_.coord_system.system), (make_prm_.coord_system.z_axis))
+    params.usePathPlan = (make_prm_.usePathPlan)
 
     --with static input assume it is always in cartesean
     --save PTH_CYLINDER, or PTH_POLAR in layer object to differentiate
-    layoutCDS = paths__new_coord_sys(PTH_CARTESAN, (make_prm.coord_system.z_axis))
+    layoutCDS = paths__new_coord_sys(PTH_CARTESAN, (make_prm_.coord_system.z_axis))
 
     --initialize pathmake
     `PATH_OBJECT_NAME`__init((params.frm), layoutCDS, (params.origin), (params.idod), (params.usePathPlan))
     --set linking coordinate system. Set as PTH_CYLINDER, or PTH_POLAR to transform linking
-    `PATH_OBJECT_NAME`__set_linking_coordinate_system((make_prm.coord_system.system), (make_prm.coord_system.z_axis))
+    `PATH_OBJECT_NAME`__set_linking_coordinate_system((make_prm_.coord_system.system), (make_prm_.coord_system.z_axis))
 
     --initialize pathmotion
-    `MOTION_OBJECT_NAME`__init2(mtnprm, toolprm)
+    `MOTION_OBJECT_NAME`__init2(mtnprm_, toolprm_)
      --needed for using LAM
-    program_type = (mtnprm.program_type)
+    program_type = (mtnprm_.program_type)
 
     clear_passes
     layers = 0
-    this = layer_prm
+    this = layer_prm_
   END new
 
 ROUTINE delete
@@ -145,6 +144,7 @@ ROUTINE delete
     uninit_lay : t_PATH_LAYER
     uninit_prm : t_PATH_PARAM
     uninit_cds : t_COORD_SYS
+    uninit_tool : t_TOOL_VARS
   BEGIN
     --pathmake delete
     `PATH_OBJECT_NAME`__delete
