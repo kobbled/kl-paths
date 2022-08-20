@@ -5,6 +5,8 @@ declare_member(class_name,layout_to_toolpath,class_name,ltpth)
 ROUTINE layout_to_toolpath(idx : INTEGER; cds : t_COORD_SYS; out_pth : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,layout_to_vecpath,class_name,lvpth)
 ROUTINE layout_to_vecpath(idx : INTEGER; out_pth : PATH nodedata = t_VEC_PATH) FROM class_name
+declare_member(class_name,get_buffer_index,class_name,gtbuf)
+ROUTINE get_buffer_index(idx : INTEGER) : t_TOOLPATH FROM class_name
 declare_member(class_name,move_to_start_pass,class_name,mtsp)
 ROUTINE move_to_start_pass FROM class_name
 

@@ -51,6 +51,20 @@
       out_pth[PATH_LEN(out_pth)].tangent = VEC((buffer[idx].orient.x), (buffer[idx].orient.y), (buffer[idx].orient.z))
 
     END layout_to_vecpath
+
+  ROUTINE get_buffer_index
+    VAR
+      nde : t_TOOLPATH
+    BEGIN
+      nde.v = POS((buffer[idx].pose.x), (buffer[idx].pose.y), (buffer[idx].pose.z), & 
+                  (buffer[idx].orient.x), (buffer[idx].orient.y), (buffer[idx].orient.z), & 
+                  (params.frm.config_data) )
+      nde.speed   = `LAM_NAME`__getSpeedFromDepth(0, buffer[idx].depth)
+      nde.code    = buffer[idx].code
+      nde.typ     = PTH_TOOLING
+
+      RETURN(nde)
+    END get_buffer_index
 $
 %mode pop
 
