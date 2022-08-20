@@ -213,6 +213,18 @@ ROUTINE next_layer
         -- get_index_base is either 0 or 1, subtract off so layer 1 = 0
       this.curr_layer = buffer[1].layer - `LAYOUT_OBJECT_NAME`__get_index_base
 
+      IF (this.curr_layer = this.start_layer) THEN
+        -- get first point. translate draw frame.
+        -- this is needed for the motion->`approachPath` interface
+        -- for `spos` and `spos2`
+        paths__clear_toolpath(pth_endpnts)
+        layout_to_toolpath(1, params.coord_system, pth_endpnts)
+        stnde = get_buffer_index(1)
+        --set drawing frame
+        `PATH_OBJECT_NAME`__set_origin((pth_endpnts[1].v.x),(stnde.v.z),(params.origin.z),0,0,0)
+        params.origin = POS((pth_endpnts[1].v.x),(stnde.v.z),(params.origin.z),0,0,0,(params.origin.config_data))
+      ENDIF
+
       --reset passes
       IF (this.curr_layer <= this.start_layer) THEN
         this.curr_pass = this.start_pass
@@ -223,6 +235,13 @@ ROUTINE next_layer
         this.last_idx = 0
       ENDIF
 
+      --retrieve start and end nodes
+        --start node
+      paths__clear_toolpath(pth_endpnts)
+      layout_to_toolpath(1, params.coord_system, pth_endpnts)
+
+        --end node
+      layout_to_toolpath(PATH_LEN(buffer), params.coord_system, pth_endpnts)
 
 %ifdef DEBUG_BUILD
       usrdis__print(INFO, 'current layer: ' + i_to_s((this.curr_layer)))
