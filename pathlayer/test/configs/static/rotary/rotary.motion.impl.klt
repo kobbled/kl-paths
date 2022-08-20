@@ -215,6 +215,34 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
 %ifdef DEBUG_BUILD
     usrdis__print(INFO, '* Approach Path*')
 %endif
+
+    spos2 = VEC(0,offset.y,-1*idod*offset.z)
+    lpos = pose__get_lpos(1)
+
+    --if cylindrical. Convert.
+    IF (coordSys=PTH_CYLINDER) THEN
+      lpos = pose__cartesian_to_cylindrical(origin, lpos, VERT_AXES, origin.z, TRUE)
+      spos = VEC(lpos.x, lpos.y, lpos.z)
+
+%ifdef DEBUG_BUILD
+    usrdis__print(DEBUG, 'lpos: ' + vec_to_s(spos, ','))
+    usrdis__print(DEBUG, 'appr: ' + vec_to_s(spos2, ','))
+%endif
+
+      --move between origin and start degree
+      IF (ABS(spos2.x - spos.x) > APPROACH_DEGREE_DIFF) THEN
+        -- ..note:: set travel direction in step size
+        `PATH_OBJECT_NAME`__makeline(spos, spos2, origin, PTH_LINKING, PTH_LINETO, stepSize, speed, 1, VEC(1,0,0))
+        moveArc
+      ENDIF
+    ENDIF
+    IF (coordSys=PTH_CARTESAN) THEN
+      spos = VEC(lpos.x, lpos.y, lpos.z)
+
+      `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, speed, 1, VEC(1,0,0))
+      moveLine
+    ENDIF
+
     spos = VEC(origin.x,origin.y+offset.y,origin.z-idod*offset.z)
     spos2 = VEC(origin.x,origin.y,origin.z-idod*offset.z)
 
