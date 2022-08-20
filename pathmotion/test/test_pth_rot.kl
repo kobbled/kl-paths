@@ -3,6 +3,15 @@ PROGRAM test_pth_rot
 %COMMENT = 'test motion paths'
 %NOPAUSE = COMMAND + TPENABLE + ERROR
 
+
+%ifeq DEBUG_BUILD FALSE
+%undef DEBUG_BUILD
+%endif
+
+%ifeq DEBUG_PLOT_POINTS FALSE
+%undef DEBUG_PLOT_POINTS
+%endif
+
 %define TOOLING_STEP 6
 %define LINKING_STEP 10
 %define TOOLING_SPEED 50
@@ -59,6 +68,10 @@ impl_motion_head(MOTION_DATA_FILE)
 %ifdef DEBUG_BUILD
 -- user display log
 %class usrdis('dispclass.klc','dispclass.klh')
+%endif
+%ifdef DEBUG_PLOT_POINTS
+-- plot debug
+%class usrplt('dispclass.klc','dispclass.klh')
 %endif
 
 ROUTINE clear_poly(p : PATH nodedata = t_VERTEX)
@@ -256,7 +269,12 @@ ROUTINE t_rot_OD
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
     origin = POS(PAD_START_DEG,PAD_START_DIST,PAD_RADIUS,PAD_ANGLE,0,0,pose__set_config(DEFAULT_CONFIG))
     tool = POS(0,0,0,TOOL_ORIENT_DOWN, pose__set_config(DEFAULT_CONFIG))
-    
+
+%ifdef DEBUG_BUILD
+    usrdis__print(DEBUG, 'draw origin: ' + p_to_s(origin))
+    usrdis__print(DEBUG, 'tool frame: ' + p_to_s(tool))
+%endif
+
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod, doPathPlan
     tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
@@ -573,6 +591,10 @@ BEGIN
   usrdis__new(LOG_NAME, FALSE, TRUE, TRUE)
   usrdis__clear_file
 %endif
+%ifdef DEBUG_PLOT_POINTS
+  usrplt__new(PLOT_NAME, FALSE, TRUE, TRUE)
+  usrplt__clear_file
+%endif
 
   --t_rot_delta
   --t_rot_OD
@@ -587,6 +609,10 @@ BEGIN
 %ifdef DEBUG_BUILD
   usrdis__write_pipe
   usrdis__delete
+%endif
+%ifdef DEBUG_PLOT_POINTS
+  usrplt__write_pipe
+  usrplt__delete
 %endif
 
 END test_pth_rot

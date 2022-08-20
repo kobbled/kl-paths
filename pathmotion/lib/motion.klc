@@ -16,6 +16,10 @@ PROGRAM class_name
 
 %include namespace.m
 
+%ifdef DEBUG_BUILD
+%include display.c.klt
+%endif
+
 %include errors.klt
 %include systemlib.types.klt
 %include systemvars.klt
@@ -54,10 +58,19 @@ VAR
 %include pose.klh
 %include pathlib.klh
 %from registers.klh %import set_real, set_int
-%from strings.klh %import pose_to_s, joint_to_s
+%from strings.klh %import pose_to_s, joint_to_s, i_to_s, vec_to_s, p_to_s
 
 --define path object
 path_make_define(PATH_OBJECT_NAME,CONFIG_FILENAME)
+
+%ifdef DEBUG_BUILD
+-- user display log
+%class usrdis('dispclass.klc','dispclass.klh')
+%endif
+%ifdef DEBUG_PLOT_POINTS
+-- plot debug
+%class usrplt('dispclass.klc','dispclass.klh')
+%endif
 
 %defeval class_name BASE_CLASSNAME
 
@@ -493,6 +506,7 @@ ROUTINE movePoly
   VAR
     i : INTEGER
     nde : MOTION_DATA_TYPE
+    pass : INTEGER
   BEGIN
     --set tool orientation
     set_posereg(tool_offset, TOOL_OFFSET_REG)
@@ -501,7 +515,15 @@ ROUTINE movePoly
       karelError(VAR_UNINIT,'linear motion program in class_name needs to be set', ER_ABORT)
     ENDIF
 
+    pass = 0
     REPEAT
+%ifdef DEBUG_BUILD
+    usrdis__print(INFO, '# Running Pass: ' + i_to_s(pass))
+%endif
+%ifdef DEBUG_PLOT_POINTS
+    usrplt__print(INFO, '# Running Pass: ' + i_to_s(pass))
+%endif
+
       `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, this.interpolate)
 
       FOR i=1 TO PATH_LEN(pth) DO
@@ -525,6 +547,8 @@ ROUTINE movePoly
         --move to pose
         CALL_PROG(motion_prog[1], 0)
       ENDFOR
+
+      pass = pass + 1
     UNTIL(`PATH_OBJECT_NAME`__is_path_end)
 
   END movePoly
@@ -533,6 +557,7 @@ ROUTINE movePolyArc
   VAR
     i, status : INTEGER
     nde, nde_tool : MOTION_DATA_TYPE
+    pass : INTEGER
   BEGIN
     --make tool offset pose to be multiplied in
     --as circular_move does not allow the use of
@@ -543,7 +568,15 @@ ROUTINE movePolyArc
       karelError(VAR_UNINIT,'motion programs in class_name needs to be set', ER_ABORT)
     ENDIF
 
+    pass = 0
     REPEAT
+%ifdef DEBUG_BUILD
+    usrdis__print(INFO, '# Running Pass: ' + i_to_s(pass))
+%endif
+%ifdef DEBUG_PLOT_POINTS
+    usrplt__print(INFO, '# Running Pass: ' + i_to_s(pass))
+%endif
+
       `PATH_OBJECT_NAME`__next_toolpath(tool_speed, tool_step, use_tool_spd, link_speed, link_step, retract_hght, this.interpolate)
 
       --** start point of the circle **
@@ -630,6 +663,7 @@ ROUTINE movePolyArc
         i = i + 2
       ENDWHILE
 
+      pass = pass + 1
     UNTIL(`PATH_OBJECT_NAME`__is_path_end)
 
   END movePolyArc
