@@ -2,5 +2,6 @@
 %mode string QQQ "`" "`" "\\"
 %define pathmake_friends(object_name) `VAR
   pth FROM object_name : PATH nodedata = t_TOOLPATH
-  line_endpnts FROM object_name : PATH nodedata = t_TOOLPATH`
+  line_endpnts FROM object_name : PATH nodedata = t_TOOLPATH
+  pth_endpnts FROM object_name : PATH nodedata = t_TOOLPATH`
 %mode pop

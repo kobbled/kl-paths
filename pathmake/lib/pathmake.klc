@@ -34,6 +34,7 @@ VAR
   this : t_PATH_PARAM
   linking_cds : t_COORD_SYS
   pth_end : BOOLEAN
+  pth_endpnts : PATH nodedata = t_TOOLPATH
   line_endpnts : PATH nodedata = t_TOOLPATH
   pth : PATH nodedata = t_TOOLPATH
 
@@ -219,6 +220,7 @@ ROUTINE get_midpoint
 ROUTINE new
   BEGIN
     paths__clear_toolpath(line_endpnts)
+    paths__clear_toolpath(pth_endpnts)
     paths__clear_toolpath(pth)
 
     this.frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
@@ -237,6 +239,7 @@ ROUTINE new
 ROUTINE init
   BEGIN
     paths__clear_toolpath(line_endpnts)
+    paths__clear_toolpath(pth_endpnts)
     paths__clear_toolpath(pth)
 
     this.frm = coord_frm
@@ -255,6 +258,7 @@ ROUTINE init
 ROUTINE init2
   BEGIN
     paths__clear_toolpath(line_endpnts)
+    paths__clear_toolpath(pth_endpnts)
     paths__clear_toolpath(pth)
 
     --make copy
@@ -275,6 +279,7 @@ ROUTINE delete
     unit_param : t_PATH_PARAM
   BEGIN
     paths__clear_toolpath(line_endpnts)
+    paths__clear_toolpath(pth_endpnts)
     paths__clear_toolpath(pth)
 
     this = unit_param
@@ -430,9 +435,10 @@ ROUTINE planPath
       `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
 
       --set point orientation
-      orient = paths__set_orientation((this.coord_system.system), this.idod)
-      orient = orient - VEC(this.origin.w, this.origin.p, this.origin.r)
-      `PATH_PLAN_NAME`__set_orientation( orient )
+      `PATH_PLAN_NAME`__set_orientation( get_orient )
+
+      --store endpoints
+      `PATH_PLAN_NAME`__get_endnodes(pth_endpnts, PTH_TOOLING)
     ENDIF
 
   END planPath
@@ -462,7 +468,7 @@ ROUTINE get_start_node
     IF this.usePathPlan THEN
       RETURN(this.frm:`PATH_PLAN_NAME`__get_start_node)
     ELSE
-      RETURN(this.frm:pth[1].v)
+      RETURN(this.frm:pth_endpnts[1].v)
     ENDIF
   END get_start_node
 
@@ -471,7 +477,7 @@ ROUTINE get_end_node
     IF this.usePathPlan THEN
       RETURN(this.frm:`PATH_PLAN_NAME`__get_end_node)
     ELSE
-      RETURN(this.frm:pth[PATH_LEN(pth)].v)
+      RETURN(this.frm:pth_endpnts[PATH_LEN(pth_endpnts)].v)
     ENDIF
   END get_end_node
 
@@ -505,6 +511,9 @@ ROUTINE makeline
     --convert to cartesian
     convertOrientation(pth, (this.frm), (this.origin.z), (this.coord_system.system), (this.coord_system.z_axis), FALSE)
 
+    --clear endpoints after to cleanup
+      -- next_toolpath uses it to determine if a linking path or not
+    paths__clear_toolpath(line_endpnts)
   END makeline
 
 ROUTINE get_line
