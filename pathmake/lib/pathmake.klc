@@ -18,6 +18,10 @@ PROGRAM class_name
 
 %include namespace.m
 
+%ifdef DEBUG_BUILD
+%include display.c.klt
+%endif
+
 %include errors.klt
 %include systemlib.types.klt
 %include systemvars.klt
@@ -42,6 +46,10 @@ VAR
 %include pathplan.friend.members.klt
 pathplan_friends(PATH_PLAN_NAME)
 
+%ifdef DEBUG_BUILD
+%include strings.klh
+%endif
+
 %include errors.klh
 %include pose.klh
 %include pathlib.klh
@@ -51,6 +59,15 @@ pathplan_friends(PATH_PLAN_NAME)
 --path plan
 define_pathplan(PATH_PLAN_NAME,PATHPLAN_CONFIG_FILENAME)
 define_pplan_headers(PATH_PLAN_NAME)
+
+%ifdef DEBUG_BUILD
+-- user display log
+%class usrdis('dispclass.klc','dispclass.klh')
+%endif
+%ifdef DEBUG_PLOT_POINTS
+-- plot debug
+%class usrplt('dispclass.klc','dispclass.klh')
+%endif
 
 %defeval class_name BASE_CLASSNAME
 
@@ -75,6 +92,13 @@ ROUTINE next_toolpath
       SELECT `PATH_PLAN_NAME`__next_toolpath OF
         CASE(PTH_TOOLING):
 
+%ifdef DEBUG_BUILD
+          usrdis__print(INFO, '<< class_name TOOLING PATH >>')
+%endif
+%ifdef DEBUG_PLOT_POINTS
+          usrplt__print(INFO, '<< TOOLING PATH >>')
+%endif
+
           --get toolpath from pathplan
           IF interp_tool THEN
             -- ..note:: Speed is blended during toolpath_interpolate. in `path_blending` implementation
@@ -91,6 +115,13 @@ ROUTINE next_toolpath
             paths__set_speed(pth, tool_speed)
           ENDIF
         CASE(PTH_LINKING):
+
+%ifdef DEBUG_BUILD
+          usrdis__print(INFO, '<< class_name LINKING PATH >>')
+%endif
+%ifdef DEBUG_PLOT_POINTS
+          usrplt__print(INFO, '<< LINKING PATH >>')
+%endif
 
           --get toolpath from linkingTransition user defined member
           linkingTransition(tool_segment, (this.frm:this.origin), (link_step), (this.idod), FALSE, pth)
@@ -111,6 +142,13 @@ ROUTINE next_toolpath
        --assume if line_endpnts is initialized it is a linking path
        --else it is a tooling path
       IF (PATH_LEN(line_endpnts) > 0) THEN
+
+%ifdef DEBUG_BUILD
+        usrdis__print(INFO, '<< class_name linking path >>')
+%endif
+%ifdef DEBUG_PLOT_POINTS
+        usrplt__print(INFO, '<< LINKING PATH >>')
+%endif
         --add linking path
         linkingTransition(line_endpnts, (this.frm:this.origin), (link_step), (this.idod), FALSE, pth)
           --clear line_endpnts after use, as it is used to select between a linking and tooling path
@@ -122,6 +160,13 @@ ROUTINE next_toolpath
         cds = paths__new_coord_sys((linking_cds.system), (linking_cds.z_axis))
 
       ELSE
+
+%ifdef DEBUG_BUILD
+        usrdis__print(INFO, '<< class_name running tooling path >>')
+%endif
+%ifdef DEBUG_PLOT_POINTS
+        usrplt__print(INFO, '<< TOOLING PATH >>')
+%endif
         -- tooling path
           -- ... pass through
         --set speed if use_tool_spd is selected
@@ -569,6 +614,11 @@ ROUTINE interpolate_toolpath
         
         inc = paths__get_increments(pose__pose_to_vector(endpnts[i].v), pose__pose_to_vector(endpnts[i+1].v), (spacing))
         
+%ifdef DEBUG_PLOT_POINTS
+        usrplt__print(DEBUG, 'EP' + i_to_s(i) + ': C' + i_to_s((endpnts[i].code)) + ': ' + p_to_s(endpnts[i].v))
+        usrplt__print(DEBUG, 'EP' + i_to_s(i+1) + ': C' + i_to_s((endpnts[i+1].code)) + ': ' + p_to_s(endpnts[i+1].v))
+%endif
+
         --add start point
         APPEND_NODE(out_path,status)
         out_path[PATH_LEN(out_path)] = endpnts[i]
@@ -595,6 +645,11 @@ ROUTINE interpolate_toolpath
 
           path_blending(endpnts, i, ref_frame, dir*1, out_path[PATH_LEN(out_path)])
         ENDIF
+
+%ifdef DEBUG_BUILD
+        usrdis__print(INFO, 'loaded ' + i_to_s(inc+2) + ' nodes into pth')
+%endif
+
       ENDFOR
     ENDIF
   END interpolate_toolpath

@@ -20,6 +20,7 @@
   ],
   "tests-depends" : [
     "display",
+    "Strings",
     "KUnit"
   ]
 }
