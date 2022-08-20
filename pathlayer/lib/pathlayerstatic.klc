@@ -209,7 +209,6 @@ ROUTINE next_layer
     eof = `LAYOUT_OBJECT_NAME`__loadBuffer
 
     --get current layer
-    IF (NOT eof) THEN
       -- remap to 0 index (i.e. 0 = Layer 1, 1 = Layer 2)
         -- get_index_base is either 0 or 1, subtract off so layer 1 = 0
       this.curr_layer = buffer[1].layer - `LAYOUT_OBJECT_NAME`__get_index_base
@@ -224,7 +223,6 @@ ROUTINE next_layer
         this.last_idx = 0
       ENDIF
 
-    ENDIF
 
 %ifdef DEBUG_BUILD
       usrdis__print(INFO, 'current layer: ' + i_to_s((this.curr_layer)))
