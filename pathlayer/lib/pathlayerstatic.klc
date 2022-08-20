@@ -79,18 +79,19 @@ ROUTINE clear_passes
 ROUTINE move_to_start_pass
   VAR
     i : INTEGER
-    passes : INTEGER
+    passes_ : INTEGER
   BEGIN
     -- get the start pass index
     IF (this.start_pass > 0) THEN
-      passes = 0
+      passes_ = 0
+
 
       FOR i=1 TO PATH_LEN(buffer) DO
         IF (buffer[i].code = PTH_CLOSE) THEN
-          passes = passes + 1
+          passes_ = passes_ + 1
         ENDIF
 
-        IF (passes = this.start_pass) THEN
+        IF (passes_ = this.start_pass) THEN
           this.last_idx = i
           RETURN
         ENDIF
@@ -187,9 +188,12 @@ ROUTINE open_layout
     IF (this.start_layer > 0) THEN
       --queue up for starting layer
       eof = FALSE
-      FOR i=1 TO this.start_layer DO
+      --buffer 1 layer before the start layer
+      -- as layout->loadBuffer is run again in `next_layer`
+      FOR i=1 TO (this.start_layer) DO
         IF (NOT eof) THEN
           eof = `LAYOUT_OBJECT_NAME`__loadBuffer
+          this.curr_layer = this.curr_layer + 1
         ENDIF
       ENDFOR
     ENDIF
@@ -204,6 +208,7 @@ ROUTINE next_layer
   --returns true if at the end of the file
   VAR
     eof : BOOLEAN
+    stnde : t_TOOLPATH
   BEGIN
     -- load next layer into `buffer` attribute
     eof = `LAYOUT_OBJECT_NAME`__loadBuffer
