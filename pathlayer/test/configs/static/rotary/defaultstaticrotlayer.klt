@@ -86,6 +86,7 @@
 %define PATH_OBJECT_NAME tstrot
 
 --pathplan
+  -- ..note:: only needed as placeholder for staticlayer
 %defeval PATH_PLAN_NAME tsplrt
 %define PATHPLAN_CONFIG_FILENAME rotaryPlan.klt
 

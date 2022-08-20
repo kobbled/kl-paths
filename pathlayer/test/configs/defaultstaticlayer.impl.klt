@@ -130,6 +130,13 @@ $
         ENDIF
         line_endpnts[2].tangent = line_endpnts[1].tangent
 
+%ifdef DEBUG_BUILD
+        usrdis__print(INFO, 'hit pass interrupt!')
+        usrdis__print(DEBUG, 'Linking startPoint: ' + p_to_s(line_endpnts[1].v))
+        usrdis__print(DEBUG, 'Linking endPoint: ' + p_to_s(line_endpnts[2].v))
+        usrdis__print(DEBUG, 'Linking tangent: ' + vec_to_s((line_endpnts[1].tangent), ','))
+%endif
+
       ENDIF
 
       --use line_endpnts in next_toolpath to create pth

@@ -27,6 +27,7 @@
   ],
   "tests-depends" : [
     "display",
+    "Strings",
     "KUnit"
   ],
   "depends" : [
@@ -42,5 +43,9 @@
     "pathmotion",
     "pathlayout",
     "lam"
+  ],
+  "macros" : [
+    "DEBUG_BUILD=TRUE",
+    "DEBUG_PLOT_POINTS=TRUE"
   ]
 }

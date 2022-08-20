@@ -9,6 +9,14 @@ PROGRAM class_name
 
 %include pathlayer.deps.klt
 
+%ifeq DEBUG_BUILD FALSE
+%undef DEBUG_BUILD
+%endif
+
+%ifdef DEBUG_BUILD
+%include display.c.klt
+%endif
+
 %include errors.klt
 %include systemvars.klt
 %include systemlib.types.klt
@@ -38,11 +46,15 @@ pathmake_friends(PATH_OBJECT_NAME)
 %include pathlayout.friends.klt
 pathlayout_friends(LAYOUT_OBJECT_NAME,LAYOUT_STRUCT)
 
+%ifdef DEBUG_BUILD
+%include strings.klh
+%endif
+
 %include errors.klh
 %from systemlib.klh %import VEC, VEC2D
 %from math.klh %import norm
-%from pose.klh %import cartesian_to_cylindrical
-%from pathlib.klh %import clear_toolpath, new_coord_sys
+%from pose.klh %import cartesian_to_cylindrical, replace_orient
+%from pathlib.klh %import clear_toolpath, new_coord_sys, new_tool_params
 
 
 --define layout object
@@ -56,6 +68,11 @@ path_motion_define(MOTION_OBJECT_NAME,CONFIG_FILENAME)
 
 --lam object
 lam_define(LAM_NAME,LAM_CNFG)
+
+%ifdef DEBUG_BUILD
+-- user display log
+%class usrdis('dispclass.klc','dispclass.klh')
+%endif
 
 %defeval class_name BASE_CLASSNAME
 
@@ -85,6 +102,9 @@ ROUTINE move_to_start_pass
     IF (this.start_pass > 0) THEN
       passes_ = 0
 
+%ifdef DEBUG_BUILD
+      usrdis__print(INFO, 'move buffer index to start at pass ' + i_to_s((this.start_pass)) )
+%endif
 
       FOR i=1 TO PATH_LEN(buffer) DO
         IF (buffer[i].code = PTH_CLOSE) THEN
@@ -93,6 +113,11 @@ ROUTINE move_to_start_pass
 
         IF (passes_ = this.start_pass) THEN
           this.last_idx = i
+
+%ifdef DEBUG_BUILD
+          usrdis__print(DEBUG, 'buffer pointer moved to index: ' + i_to_s((this.last_idx)) )
+%endif
+
           RETURN
         ENDIF
       ENDFOR
@@ -169,13 +194,32 @@ ROUTINE delete
 -- From layout
 
 ROUTINE import_layout
+%ifdef DEBUG_BUILD
+  VAR
+    i : INTEGER
+%endif
   BEGIN
+
+%ifdef DEBUG_BUILD
+    usrdis__print(DEBUG, '** importing file **')
+%endif
+
     `LAYOUT_OBJECT_NAME`__new(filename, (layoutCDS.system), (layoutCDS.z_axis) )
     --calculate passes per layer
     `LAYOUT_OBJECT_NAME`__openfile
     `LAYOUT_OBJECT_NAME`__countInstances(passes)
     layers = PATH_LEN(passes)
     `LAYOUT_OBJECT_NAME`__closefile
+
+%ifdef DEBUG_BUILD
+    usrdis__print(DEBUG, filename + ' loaded.')
+    usrdis__print(DEBUG, 'file contains: ' + i_to_s(layers) + ' layers')
+    FOR i=1 TO layers DO
+      usrdis__print(DEBUG, 'layer '  + i_to_s(i) + ' has ' + i_to_s(passes[i].v) + ' passes.')
+    ENDFOR
+    usrdis__print(DEBUG, '******')
+%endif
+
   END import_layout
 
 ROUTINE open_layout
@@ -184,6 +228,10 @@ ROUTINE open_layout
     eof : BOOLEAN
   BEGIN
     `LAYOUT_OBJECT_NAME`__openfile
+  
+%ifdef DEBUG_BUILD
+    usrdis__print(INFO, '-- class_name opened layout file --')
+%endif
 
     IF (this.start_layer > 0) THEN
       --queue up for starting layer
@@ -196,12 +244,21 @@ ROUTINE open_layout
           this.curr_layer = this.curr_layer + 1
         ENDIF
       ENDFOR
+
+%ifdef DEBUG_BUILD
+      usrdis__print(INFO, 'loading buffer to layer ' + i_to_s((this.start_layer)) )
+      usrdis__print(DEBUG, 'cycled buffer ' + i_to_s(`LAYOUT_OBJECT_NAME`__get_buffer_cycles) + ' times to reach layer ' + i_to_s((this.start_layer)))
+%endif
     ENDIF
   END open_layout
 
 ROUTINE close_layout
   BEGIN
     `LAYOUT_OBJECT_NAME`__closefile
+
+%ifdef DEBUG_BUILD
+    usrdis__print(INFO, '-- class_name closed layout file --')
+%endif
   END close_layout
 
 ROUTINE next_layer
@@ -212,6 +269,15 @@ ROUTINE next_layer
   BEGIN
     -- load next layer into `buffer` attribute
     eof = `LAYOUT_OBJECT_NAME`__loadBuffer
+
+%ifdef DEBUG_BUILD
+    usrdis__print(DEBUG, 'loading buffer cycle ' + i_to_s(`LAYOUT_OBJECT_NAME`__get_buffer_cycles))
+    IF eof THEN
+      usrdis__print(INFO, 'buffer HAS reached end of file')
+    ELSE
+      usrdis__print(INFO, 'buffer HAS NOT reached end of file')
+    ENDIF
+%endif
 
     --get current layer
       -- remap to 0 index (i.e. 0 = Layer 1, 1 = Layer 2)
