@@ -24,7 +24,7 @@
 -- initialization  
 -- ***********
 
-%defeval DEFAULT_POSE new_pose(0,0,0,0,0,0,0,pose__set_config(DEFAULT_CONFIG))
+%defeval DEFAULT_POSE new_pose(0,0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
 
 -- ***********
 -- Define interface header
@@ -187,7 +187,7 @@ ROUTINE poseMul(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) : MOTION_DATA_
     jpos2 = (nde2.rot)
     
     p.rot = pose__add_jpos(jpos1, jpos2)
-    
+
     RETURN(p)
   END poseMul
   
@@ -208,16 +208,19 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
     spos, spos2 : VECTOR
     vpos1, vpos2 : VECTOR
   BEGIN
+
+%ifdef DEBUG_PLOT_POINTS
+    usrplt__print(INFO, '* Approach Path *')
+%endif
+%ifdef DEBUG_BUILD
+    usrdis__print(INFO, '* Approach Path*')
+%endif
     spos = VEC(origin.x,origin.y+offset.y,origin.z-idod*offset.z)
     spos2 = VEC(origin.x,origin.y,origin.z-idod*offset.z)
 
 %ifdef DEBUG_BUILD
-    -- usrdis__print(DEBUG, '* Approach *')
-    -- usrdis__print(DEBUG, 'spos: ' + vec_to_s(spos, ','))
-    -- usrdis__print(DEBUG, 'spos2: ' + vec_to_s(spos2, ','))
-    WRITE TPDISPLAY('* Approach *', CR)
-    WRITE TPDISPLAY('spos: ', spos::6::2, CR)
-    WRITE TPDISPLAY('spos2: ', spos2::6::2, CR)
+    usrdis__print(DEBUG, 'spos: ' + vec_to_s(spos, ','))
+    usrdis__print(DEBUG, 'spos2: ' + vec_to_s(spos2, ','))
 %endif
 
     --move to offset -> to zero poisition
@@ -235,13 +238,14 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
     vpos2.z = vpos2.z-idod*offset.z
 
 %ifdef DEBUG_BUILD
-    -- usrdis__print(DEBUG, 'vpos1: ' + vec_to_s(vpos1, ','))
-    -- usrdis__print(DEBUG, 'vpos2: ' + vec_to_s(vpos2, ','))
-    WRITE TPDISPLAY('vpos1: ', vpos1::6::2, CR)
-    WRITE TPDISPLAY('vpos2: ', vpos2::6::2, CR)
+    usrdis__print(DEBUG, 'vpos1: ' + vec_to_s(vpos1, ','))
+    usrdis__print(DEBUG, 'vpos2: ' + vec_to_s(vpos2, ','))
 %endif
 
     IF (coordSys=PTH_CYLINDER) THEN
+%ifdef DEBUG_BUILD
+      usrdis__print(DEBUG, 'running cylindrical line...')
+%endif
       --move between origin and start degree
       IF (ABS(vpos2.x - vpos1.x) > APPROACH_DEGREE_DIFF) THEN
         -- ..note:: set travel direction in step size
@@ -251,6 +255,9 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
     ENDIF
 
     IF (coordSys=PTH_CARTESAN) THEN
+%ifdef DEBUG_BUILD
+      usrdis__print(DEBUG, 'running cartesian line...')
+%endif
       `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, speed, 1, VEC(1,0,0))
       moveLine
     ENDIF
@@ -267,15 +274,19 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
     fpos : VECTOR
   BEGIN
 
+%ifdef DEBUG_PLOT_POINTS
+    usrplt__print(INFO, '* Retract Path *')
+%endif
 %ifdef DEBUG_BUILD
-    -- usrdis__print(DEBUG, '* Retract *')
-    WRITE TPDISPLAY('* Retract *', CR)
+    usrdis__print(INFO, '* Retract Path*')
 %endif
 
     lpos = `PATH_OBJECT_NAME`__get_end_node
     --get into degress from 0-360
     lpos.x = lpos.x/origin.z*180/M_PI
+%ifdef DEBUG_BUILD
     WRITE TPDISPLAY('deg: ', lpos.x::6::2, CR)
+%endif
     lpos.x = lpos.x*origin.z*M_PI/180
 
     vpos1 = VEC(lpos.x, lpos.y, lpos.z)
@@ -285,10 +296,8 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
     vpos2.z = vpos1.z-idod*offset.z
 
 %ifdef DEBUG_BUILD
-    -- usrdis__print(DEBUG, 'vpos1: ' + vec_to_s(vpos1, ','))
-    -- usrdis__print(DEBUG, 'vpos2: ' + vec_to_s(vpos1, ','))
-    WRITE TPDISPLAY('vpos1: ', vpos1::6::2, CR)
-    WRITE TPDISPLAY('vpos2: ', vpos2::6::2, CR)
+    usrdis__print(DEBUG, 'vpos1: ' + vec_to_s(vpos1, ','))
+    usrdis__print(DEBUG, 'vpos2: ' + vec_to_s(vpos1, ','))
 %endif
 
     --move up from lpos to the retract height
@@ -302,8 +311,7 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
     fpos = VEC(vpos3.x,origin.y+offset.y,vpos3.z)
 
 %ifdef DEBUG_BUILD
-    -- usrdis__print(DEBUG, 'fpos: ' + vec_to_s(fpos, ','))
-    WRITE TPDISPLAY('fpos: ', fpos::6::2, CR)
+    usrdis__print(DEBUG, 'fpos: ' + vec_to_s(fpos, ','))
 %endif
 
     --move from the origin to the retract distance to the offset

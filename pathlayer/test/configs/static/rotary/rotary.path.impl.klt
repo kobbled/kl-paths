@@ -62,6 +62,12 @@ ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius
     --convert to cartesian
     SELECT (system) OF
       CASE(PTH_CYLINDER):
+%ifdef DEBUG_BUILD
+    usrdis__print(INFO, 'Converting cylind to cart...')
+%endif
+%ifdef DEBUG_PLOT_POINTS
+    usrplt__print(INFO, '@ Cartesian <from cylind> @')
+%endif
         FOR i=1 TO PATH_LEN(p) DO
           --convert surface arc into degrees
           surfpos = p[i].v
@@ -78,8 +84,19 @@ ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius
           IF flip THEN
             p[i].v.w = p[i].v.w + 180 ;
           ENDIF
+
+%ifdef DEBUG_PLOT_POINTS
+    usrplt__print(DEBUG, 'P' + i_to_s(i) + ': C' + i_to_s((p[i].code)) + ': ' + p_to_s(p[i].v))
+%endif
+
         ENDFOR
       CASE(PTH_POLAR):
+%ifdef DEBUG_BUILD
+    usrdis__print(INFO, 'Converting sphere to cart...')
+%endif
+%ifdef DEBUG_PLOT_POINTS
+    usrplt__print(INFO, '@ Cartesian <from sphere> @')
+%endif
         FOR i=1 TO PATH_LEN(p) DO
           --convert surface uv into theta and phi angles
           surfpos = p[i].v
@@ -93,6 +110,10 @@ ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius
           IF flip THEN
             p[i].v.w = p[i].v.w + 180 ;
           ENDIF
+%ifdef DEBUG_PLOT_POINTS
+    usrplt__print(DEBUG, 'P' + i_to_s(i) + ': C' + i_to_s((p[i].code)) + ': ' + p_to_s(p[i].v))
+%endif
+
         ENDFOR
       CASE(PTH_CARTESAN):
       ELSE:
@@ -106,6 +127,9 @@ ROUTINE linkingTransition(endpnts: PATH nodedata = t_TOOLPATH; frm: XYZWPR; spac
     endPnt : XYZWPR
     status : INTEGER
   BEGIN
+%ifdef DEBUG_BUILD
+    usrdis__print(INFO, '* Linking *')
+%endif
     --If rotary group (ROT_GRP) and line is < 90 deg
     --only include endpoints in line. If path is 0->360
     --it will not rotate all the way back around
@@ -123,9 +147,17 @@ ROUTINE linkingTransition(endpnts: PATH nodedata = t_TOOLPATH; frm: XYZWPR; spac
       --need to evaluate how close the endpoints (in theta axis) are in degree to eachother.
       --if > than epsilon run an arc
       IF(ABS((endPnt.x/frm.z*180/M_PI)-(startPnt.x/frm.z*180/M_PI)) < LINKING_FULL_WRAP) THEN
+%ifdef DEBUG_BUILD
+        usrdis__print(INFO, 'distance less than 180 degrees')
+        usrdis__print(DEBUG, 'startPnt: ' + p_to_s((endpnts[1].v)))
+        usrdis__print(DEBUG, 'endPnt: ' + p_to_s((endpnts[2].v)))
+%endif
         --if < 180 move between the two point in circular arc
         interpolate_toolpath(endpnts, (spacing), 1, PTH_LINETO, (frm), append, outpth)
       ELSE
+%ifdef DEBUG_BUILD
+        usrdis__print(INFO, 'distance greater 180 degrees')
+%endif
         --add 360 to endpnt 2 so that it is always rotating forward
         endPnt.x = (endPnt.x/frm.z*180/M_PI) - idod*360
         --put back into mm
@@ -135,6 +167,11 @@ ROUTINE linkingTransition(endpnts: PATH nodedata = t_TOOLPATH; frm: XYZWPR; spac
 
         --move in opposite direction
         paths__reverse_toolpath(endpnts)
+
+%ifdef DEBUG_BUILD
+        usrdis__print(DEBUG, 'startPnt: ' + p_to_s((endpnts[1].v)))
+        usrdis__print(DEBUG, 'endPnt: ' + p_to_s((endpnts[2].v)))
+%endif
 
         --interpolate path
         interpolate_toolpath(endpnts, (spacing), 1, PTH_LINETO, (frm), append, outpth)

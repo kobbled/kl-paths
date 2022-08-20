@@ -208,14 +208,15 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
     spos, spos2 : VECTOR
     vpos1, vpos2 : VECTOR
   BEGIN
-    spos = VEC(origin.x,origin.y+offset.y,origin.z-idod*offset.z)
-    spos2 = VEC(origin.x,origin.y,origin.z-idod*offset.z)
 
 %ifdef DEBUG_PLOT_POINTS
     usrplt__print(INFO, '* Approach Path *')
 %endif
 %ifdef DEBUG_BUILD
     usrdis__print(INFO, '* Approach Path*')
+%endif
+
+%ifdef DEBUG_BUILD
     usrdis__print(DEBUG, 'spos: ' + vec_to_s(spos, ','))
     usrdis__print(DEBUG, 'spos2: ' + vec_to_s(spos2, ','))
 %endif
@@ -240,6 +241,9 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
 %endif
 
     IF (coordSys=PTH_CYLINDER) THEN
+%ifdef DEBUG_BUILD
+      usrdis__print(DEBUG, 'running cylindrical line...')
+%endif
       --move between origin and start degree
       IF (ABS(vpos2.x - vpos1.x) > APPROACH_DEGREE_DIFF) THEN
         -- ..note:: set travel direction in step size
@@ -249,6 +253,9 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
     ENDIF
 
     IF (coordSys=PTH_CARTESAN) THEN
+%ifdef DEBUG_BUILD
+      usrdis__print(DEBUG, 'running cartesian line...')
+%endif
       `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, speed, 1, VEC(1,0,0))
       moveLine
     ENDIF
