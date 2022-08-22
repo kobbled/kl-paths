@@ -70,6 +70,7 @@ ROUTINE convertOrientation(p : PATH nodedata = t_TOOLPATH ; frm : XYZWPR; radius
           --convert tangent vector to Euler angles
           --replace orientation
           p[i].v = pose__replace_orient(p[i].v, pose__vector_to_euler_cylindrical(p[i].tangent, (-1*surfpos.x+180)))
+          p[i].v.w = p[i].v.w + 180 ;
 
           IF flip THEN
             p[i].v.w = p[i].v.w + 180 ;
