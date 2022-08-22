@@ -43,6 +43,8 @@ ROUTINE paths__toolvec_to_vec(tv : t_TOOL_VEC) : VECTOR FROM paths
 declare_function(prog_name,vec_to_toolvec,prog_name_alias,v2tv)
 ROUTINE paths__vec_to_toolvec(v : VECTOR) : t_TOOL_VEC FROM paths
 %endif
+declare_function(prog_name,vecpath_to_toolpath,prog_name_alias,vp2tp)
+ROUTINE paths__vecpath_to_toolpath(vp : t_VEC_PATH; ornt : VECTOR; speed : REAL; typ : INTEGER; ref_frame: XYZWPR) : t_TOOLPATH FROM paths
 
 --setters
 declare_member(prog_name,set_speed,prog_name,stspd)

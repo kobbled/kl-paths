@@ -484,6 +484,19 @@ ROUTINE paths__vec_to_toolvec
     RETURN(tv)
   END paths__vec_to_toolvec
 
+ROUTINE paths__vecpath_to_toolpath
+  VAR
+    tp : t_TOOLPATH
+  BEGIN
+    tp.v = pose__vector_to_pose(vp.v, ornt, ref_frame.config_data)
+    tp.speed = speed
+    tp.code = vp.code
+    tp.typ = typ
+    tp.tangent = vp.tangent
+
+    RETURN(tp)
+  END paths__vecpath_to_toolpath
+
 ROUTINE paths__set_speed
   VAR
     i : INTEGER
