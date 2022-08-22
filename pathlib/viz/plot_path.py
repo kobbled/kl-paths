@@ -34,10 +34,6 @@ ROBOT_PORT = 80
 USERNAME = ""
 PASSWORD = ""
 
-#If needing to visualize only a pathplanning
-#module
-ONPATHPLAN = True
-
 SAVE_DIRECTORY = 'plots'
 
 CONTOUR_VARNAME = 'CONTOURS'
@@ -60,6 +56,7 @@ PATH_DATA = 'LINES'
 PATH_DATA_SUFFIX = 'V'
 MOTION_DATA_TYPE = 'VECTOR'
 
+PATH_VARNAME = 'PPATH'
 TOOLPATH_VARNAME = 'PTH'
 TOOLPATH_SUFFIX = 'V'
 TOOLPATH_TYPE = 'TYP'
@@ -67,20 +64,8 @@ TOOLPATH_CODE = 'CODE'
 TOOLPATH_GROUP = '1'
 
 # ** robodk parameters **
-#dummy cell
-REF_FRAME = 'data_frame_sphere'
-TOOL_FRAME = 'Tool Sphere'
 PART_NAME = 'path'
 PROG_NAME = 'AutoProgram'
-
-#cell2
-# #REF_FRAME = 'cut_frame'
-# REF_FRAME = 'vert_frame'
-# #REF_FRAME = 'data_frame'
-# #TOOL_FRAME = '756mm_Tool'
-# TOOL_FRAME = 'Tool 2'
-# PART_NAME = 'path'
-# PROG_NAME = 'AutoProgram'
 
 #pattern1 = r"Field: {LINES_VARNAME}\.NODEDATA\[(\d{1,5})\]\.{LINE_START_SUFFIX} Access: RW: VECTOR =\s*(.*)"
 #pattern2 = r"Field: {LINES_VARNAME}\.NODEDATA\[(\d{1,5})\]\.{LINE_END_SUFFIX} Access: RW: VECTOR =\s*(.*)"
@@ -96,7 +81,11 @@ t_polygon = collections.namedtuple('t_polygon',
   'tangent'
 )
 
+# for plotting on drawing
 rpath = []
+# for robodk path
+tpath = []
+
 t_path = collections.namedtuple('t_path',
   'pose '
   'type '
@@ -399,12 +388,6 @@ def plot():
 
     # add tangent vectors
     ax.arrow(verts[i][0], verts[i][1], tang[i][0]*5, tang[i][1]*5, head_width=3, head_length=5, fc='r', ec='r')
-
-  #path
-  if len(path_plan) > 0:
-    idx, verts = zip(*path_plan)
-    xs, ys = zip(*verts)
-    ax.plot(xs, ys, 'o--', lw=2, color='red', ms=5)
   
   #lines
   if len(raster_lines) > 0:
@@ -442,6 +425,17 @@ def plot():
     # add tangent vectors
     ax.arrow((r0[i][0]+r1[i][0])/2, (r0[i][1]+r1[i][1])/2, r0[i][2]*5, r0[i][3]*5, head_width=3, head_length=5, fc='g', ec='g')
 
+  #path
+  if len(path_plan) > 0:
+    idx, verts = zip(*path_plan)
+    if len(verts[0]) > 2:
+      #position array
+      xs, ys, _, _, _, _ = zip(*verts) 
+    else:
+      #vec2d array
+      xs, ys = zip(*verts)
+    ax.plot(xs, ys, 'o--', lw=2, color='red', ms=5)
+  
   ax.grid()
   ax.axis('equal')
   plt.show()
@@ -454,7 +448,7 @@ def op_code(code):
   
   return(code)
 
-def plot3D():
+def plot3D(lst):
   RDK = Robolink()
 
   RDK.Render(False)
@@ -469,33 +463,38 @@ def plot3D():
   while obj_delete.Valid():
     obj_delete.Delete()
 
-  frame = RDK.Item(REF_FRAME, ITEM_TYPE_FRAME)
-  tool = RDK.Item(TOOL_FRAME, ITEM_TYPE_TOOL)
+  # Get the main/only robot in the station
+  robot = RDK.Item('', ITEM_TYPE_ROBOT)
+  if not robot.Valid():
+      raise Exception("Robot not valid or not available")
+
+  frame = robot.getLink(ITEM_TYPE_FRAME)
+  tool = robot.getLink(ITEM_TYPE_TOOL)
   
   prog = RDK.AddProgram(PROG_NAME)
   prog.ShowInstructions(True)
   prog.setPoseFrame(frame)
   prog.setPoseTool(tool)
 
-  if len(rpath) > 0:
+  if len(lst) > 0:
     #draw lines
     made_object = False
     crve = []
     code = -1
-    for i in range(len(rpath)):
+    for i in range(len(lst)):
       #reset curve
-      if (rpath[i].type == PTH_LINKING):
+      if (lst[i].type == PTH_LINKING):
         crve = []
         code = -1
       
-      if (rpath[i].type == PTH_TOOLING):
-        if ((rpath[i].code == mpath.Path.MOVETO) or (rpath[i].code == mpath.Path.STOP)) and (code == -1):
-          code = rpath[i].code
+      if (lst[i].type == PTH_TOOLING):
+        if ((lst[i].code == mpath.Path.MOVETO) or (lst[i].code == mpath.Path.STOP)) and (code == -1):
+          code = lst[i].code
 
-        if (rpath[i].code == code):
-          crve.append(rpath[i].pose)
-        elif (rpath[i].code == op_code(code)):
-          crve.append(rpath[i].pose)
+        if (lst[i].code == code):
+          crve.append(lst[i].pose)
+        elif (lst[i].code == op_code(code)):
+          crve.append(lst[i].pose)
           if made_object:
             RDK.AddCurve(crve, objct, True)
           else:
@@ -504,15 +503,15 @@ def plot3D():
             objct.setName(PART_NAME)
             made_object = True
         else:
-          crve.append(rpath[i].pose)
+          crve.append(lst[i].pose)
 
 
     #draw points
 
-    for i in range(len(rpath)):
+    for i in range(len(lst)):
       target = RDK.AddTarget('T%i' % (i), prog)
       target.setAsCartesianTarget()
-      target.setPose(xyzrpw_2_pose(rpath[i].pose))
+      target.setPose(xyzrpw_2_pose(lst[i].pose))
       prog.MoveL(target)
     
     prog.ShowTargets(False)
@@ -569,6 +568,8 @@ def main():
         help="Name of karel file")
   parser.add_argument('-r', '--robodk', action='store_true', dest='use_robodk',
         help='Plot path in robodk')
+  parser.add_argument('-p', '--pathplan', action='store_true', dest='onpathplan',
+        help='visualize only a pathplanning module')
 
   args = parser.parse_args()
 
@@ -585,14 +586,18 @@ def main():
   parseContour(CONTOUR_VARNAME, args, polygons)
 
   # get path
-  if ONPATHPLAN:
+  if args.onpathplan:
     # for pathplan test
     line2toolpath(raster_lines, rpath)
   else:
-    parsePath(TOOLPATH_VARNAME, args, rpath)
+    parsePath(PATH_VARNAME, args, rpath)
   
   # path plan
   parsePlan(args, rpath)
+
+  if args.use_robodk:
+    # for actual toolpath
+    parsePath(TOOLPATH_VARNAME, args, tpath)
 
   print('polygons')
   print_cont(polygons)
@@ -601,13 +606,13 @@ def main():
   print('path')
   print_plan(path_plan)
 
-  if (not ONPATHPLAN):
+  if (not args.onpathplan) and (args.use_robodk):
     print('toolpath')
-    print_path(rpath)
+    print_path(tpath)
 
   if args.use_robodk:
     #plot robodk path
-    plot3D()
+    plot3D(tpath)
 
   #plot drawing
   plot()
