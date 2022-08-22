@@ -36,6 +36,10 @@ declare_member(class_name,get_path_segement,class_name,gpts)
 ROUTINE get_path_segement(append : BOOLEAN ; out_path : PATH nodedata = t_VEC_PATH) FROM class_name
 declare_member(class_name,get_path,class_name,gpth)
 ROUTINE get_path(out_path : PATH nodedata = t_VEC_PATH) FROM class_name
+declare_member(class_name,get_toolpath_segment,class_name,getts)
+ROUTINE get_toolpath_segment(append : BOOLEAN; out_path : PATH nodedata = t_TOOLPATH) FROM class_name
+declare_member(class_name,get_toolpath,class_name,gettp)
+ROUTINE get_toolpath(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,get_neighbors,class_name,gtnh)
 ROUTINE get_neighbors(idx : INTEGER; poly_depend : BOOLEAN) : T_RASTQUERY FROM class_name
 declare_member(class_name,get_endpoints,class_name,gendp)
@@ -54,8 +58,6 @@ declare_member(class_name,next_toolpath,class_name,ntph)
 ROUTINE next_toolpath : INTEGER FROM class_name
 declare_member(class_name,set_line,class_name,stlin)
 ROUTINE set_line(line_no : INTEGER; revrs_ordr : BOOLEAN; line_typ : INTEGER) FROM class_name
-declare_member(class_name,get_toolpath,class_name,gettp)
-ROUTINE get_toolpath(out_path : PATH nodedata = t_TOOLPATH) FROM class_name
 declare_member(class_name,set_toolpath,class_name,settp)
 ROUTINE set_toolpath(inpth : PATH nodedata = t_TOOLPATH) FROM class_name
 --

@@ -670,11 +670,28 @@ ROUTINE get_neighbors
     RETURN(paths__raster_neighbors(pth[idx], poly_depend, pth))
   END get_neighbors
 
+ROUTINE get_toolpath_segment
+  VAR
+    i, status : INTEGER
+  BEGIN
+    IF append THEN
+      FOR i=1 TO PATH_LEN(tool_segment) DO
+        APPEND_NODE(out_path,status)
+        out_path[PATH_LEN(out_path)] = tool_segment[i]
+      ENDFOR
+    ELSE
+      COPY_PATH(tool_segment, 0, 0, out_path, status)
+    ENDIF
+  END get_toolpath_segment
+
 ROUTINE get_toolpath
   VAR
-    status : INTEGER
+    i, status : INTEGER
   BEGIN
-    COPY_PATH(tool_segment, 0, 0, out_path, status)
+    FOR i=1 TO PATH_LEN(pth) DO
+      APPEND_NODE(out_path,status)
+      out_path[PATH_LEN(out_path)] = paths__vecpath_to_toolpath(pth[i], pnt_orient, DEFAULT_SPEED, PTH_TOOLING, frm)
+    ENDFOR
   END get_toolpath
 
 ROUTINE set_toolpath
@@ -778,6 +795,7 @@ ROUTINE get_toolpath_interpolate
         --add start point
         APPEND_NODE(out_path,status)
         out_path[PATH_LEN(out_path)] = tool_segment[i]
+        out_path[PATH_LEN(out_path)].v = frm:tool_segment[i].v
 
         IF inc > 0 THEN
           FOR j=1 TO (inc-1) DO
@@ -800,6 +818,7 @@ ROUTINE get_toolpath_interpolate
         IF (tool_segment[i+1].code=PTH_MOVETO) OR (tool_segment[i+1].code=PTH_CLOSE) THEN
           APPEND_NODE(out_path,status)
           out_path[PATH_LEN(out_path)] = tool_segment[i+1]
+          out_path[PATH_LEN(out_path)].v = frm:tool_segment[i+1].v
         ENDIF
       ENDFOR
     ENDIF
