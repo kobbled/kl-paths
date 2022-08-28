@@ -420,6 +420,11 @@ ROUTINE init
     clear_bbox(bboxs)
     clear_visited
     clear_tracked
+    clear_plan
+
+    `KD_CLASS_NAME`__clear
+    `GRAPH_CLASS_NAME`__delete
+
     --initialize members
     frm = coord_frame
     COPY_PATH(p, 0, 0, pth, status)
@@ -450,6 +455,7 @@ ROUTINE delete
     `GRAPH_CLASS_NAME`__delete
   END delete
 
+-- *****
 ROUTINE importPath
   VAR
     i : INTEGER
