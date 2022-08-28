@@ -220,7 +220,7 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
 
     --if cylindrical. Convert.
     IF (coordSys=PTH_CYLINDER) THEN
-      lpos = pose__cartesian_to_cylindrical((ZEROPOS(1)), lpos, VERT_AXES)
+      lpos = pose__cartesian_to_cylindrical((ZEROPOS(1)), lpos, VERT_AXES, 0 FALSE)
 %ifdef DEBUG_BUILD
       usrdis__print(DEBUG, 'lpos: ' + vec_to_s(VEC(lpos.x, lpos.y, lpos.z), ','))
       -- WRITE TPDISPLAY('lpos: ', VEC(lpos.x, lpos.y, lpos.z)::6::2, CR)
