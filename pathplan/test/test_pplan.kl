@@ -26,6 +26,7 @@ VAR
 %include kunit.klh
 %from strings.klh %import s_to_iarr
 %from systemlib.klh %import VEC, VEC2D
+%from draw.klh %import hexagon
 %include pathlib.klh
 
 --tsp object
@@ -85,12 +86,12 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL)
 
     --initialize polygon object
     tstpln__delete
-    tstpoly__init((ZEROPOS(1)), TRUE)
+    tstpoly__new
     tstpoly__set_canvas((ZEROPOS(1)))
-    tstpoly__append_polygon(polygon)
-
-    --raster polygon
     tstpoly__set_params(rast_ang, 1, 1, 0, pitch)
+    --append polygon
+    tstpoly__append_polygon(polygon)
+    --raster polygon
     tstpoly__raster(PTH_LINETO)
 
   END draw_delta
@@ -101,7 +102,7 @@ ROUTINE draw_multi(rast_ang : REAL ; pitch : REAL)
     tstpoly__delete
 
     --create polygon
-    tstpoly__init((ZEROPOS(1)), FALSE)
+    tstpoly__init((ZEROPOS(1)), FALSE, rast_ang, 1, 1, 0, pitch)
 
     clear_poly(polygon)
     append_nodes(polygon, 4)
@@ -124,7 +125,6 @@ ROUTINE draw_multi(rast_ang : REAL ; pitch : REAL)
     tstpoly__append_polygon(polygon)
 
     --raster polygon
-    tstpoly__set_params(rast_ang, 1, 1, 0, pitch)
     tstpoly__raster(PTH_LINETO)
 
   END draw_multi
@@ -164,7 +164,7 @@ ROUTINE t_NN : BOOLEAN
     draw_delta(rast_ang, 10)
 
       --get bounding box
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
@@ -279,7 +279,7 @@ ROUTINE t_rast_path : BOOLEAN
     draw_delta(rast_ang, 10)
 
       --get bounding box
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
@@ -342,7 +342,7 @@ ROUTINE t_rast_multi : BOOLEAN
     draw_multi(rast_ang, 3)
 
       --get bounding box
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
@@ -370,7 +370,7 @@ ROUTINE t_rast_multi : BOOLEAN
     draw_multi(rast_ang, 3)
 
       --get bounding box
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
@@ -412,7 +412,7 @@ ROUTINE t_rast_mult2 : BOOLEAN
     draw_multi(rast_ang, 3)
 
       --get bounding box
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
@@ -457,13 +457,16 @@ ROUTINE t_hexagon : BOOLEAN
     wall_lines = 0
 
     --draw hexagon
-    tstpoly__init((ZEROPOS(1)), TRUE)
-    tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 0)
-    tstpoly__set_params(rast_ang, -1, wall_lines, 0, overlap)
+    clear_poly(polygon)
+    draw__hexagon(hex_radius, num_of_points, POS(hex_radius,hex_radius,0,0,0,0,(ZEROPOS(1).Config_data)), polygon)
+
+    tstpoly__init((ZEROPOS(1)), TRUE, rast_ang, -1, wall_lines, 0, overlap)
+     --append polygon into object
+    tstpoly__append_polygon(polygon)
     tstpoly__raster(PTH_LINETO)
 
       --get bounding box
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
     tstpoly__lines_to_vec_path(lines)
@@ -486,6 +489,9 @@ ROUTINE t_hexagon : BOOLEAN
 
   END t_hexagon
 
+-- **fix**
+-- ..warning:: This function needs to be updated to new csv/layout
+--             and polygon->import_shape syntax
 ROUTINE t_temp : BOOLEAN
   VAR 
     rast_ang : REAL
@@ -500,11 +506,10 @@ ROUTINE t_temp : BOOLEAN
     rast_ang = 90
     start_corner = 1
 
-    tstpoly__init((ZEROPOS(1)), TRUE)
-    tstpoly__set_canvas(POS(0,0,0,0,0,rast_ang, (ZEROPOS(1).config_data) ))
-    tstpoly__import_shape('FR:\rebel.csv')
-    --raster polygon
+    tstpoly__new
+    tstpoly__set_canvas(POS(0,0,0,0,0,rast_ang,(ZEROPOS(1).config_data)))
     tstpoly__set_params(rast_ang, 1, 1, 0, 5)
+    tstpoly__import_shape('FR:\rebel.csv')
     tstpoly__raster(PTH_LINETO)
 
       --get contours
@@ -559,7 +564,8 @@ BEGIN
   kunit_test('test raster multi polygon indep', t_rast_mult2)
   kunit_test('test raster hexagon poly', t_hexagon)
   kunit_test('test raster svg poly', t_temp)
-  -- need to fix before use :: kunit_test('test import raster path', t_import)
+  -- **fix** t_import using a csv layout
+  -- kunit_test('test import raster path', t_import)
 
   kunit_done
 

@@ -37,6 +37,7 @@ VAR
 %include pose.klh
 %from strings.klh %import i_to_s, p_to_s, pose_to_s
 %from registers.klh %import set_real, set_int
+%from draw.klh %import hexagon
 %include pathlib.klh
 
 --planning object
@@ -95,7 +96,7 @@ ROUTINE append_nodes(p : PATH nodedata = t_VERTEX; nodes : INTEGER)
   END append_nodes
 
 
-ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
+ROUTINE draw_delta
   BEGIN
     --create polygon
     clear_poly(polygon)
@@ -109,16 +110,26 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL; wall_lines : INTEGER)
     polygon[7].coords = VEC2D(0,120)
     polygon[8].coords = VEC2D(-20,60)
 
-    --initialize polygon object
-    tstpln__delete
-    tstpoly__init((ZEROPOS(1)), TRUE)
-    tstpoly__append_polygon(polygon)
-
-    --raster polygon
-    tstpoly__set_params((rast_ang), 1, (wall_lines), 0, (pitch))
-    tstpoly__raster(PTH_LINETO)
-
   END draw_delta
+
+
+ROUTINE draw_pad(width, length : REAL; seperation : REAL; no_of_pads : INTEGER; start : VECTOR)
+  VAR
+    i : INTEGER
+  BEGIN
+    --create polygon
+    clear_poly(polygon)
+    append_nodes(polygon, 4)
+
+    FOR i=0 TO no_of_pads-1 DO
+      polygon[1].coords = start + i*VEC2D(seperation, 0)
+      polygon[2].coords = start + i*VEC2D(seperation, 0) + VEC2D(width,0)
+      polygon[3].coords = start + i*VEC2D(seperation, 0) + VEC2D(width,length)
+      polygon[4].coords = start + i*VEC2D(seperation, 0) + VEC2D(0,length)
+      
+      tstpoly__append_polygon(polygon)
+    ENDFOR
+  END draw_pad
 
 -- ****** flat paths ********
 -- *******************************
@@ -146,12 +157,19 @@ ROUTINE t_flat_pnts : BOOLEAN
     origin = POS(XOFFSET,YOFFSET,ZOFFSET,0,0,0, (ZEROPOS(1).config_data))
 
     --draw polygon
-    -- (raster angle, pitch, wall_lines)
-    draw_delta(0, 10, 1)
-    
+    draw_delta
+
+    --initialize polygon object
+      --( frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch )
+    tstpoly__init((ZEROPOS(1)), TRUE, 0, 1, 1, 0, 10)
+     --append delta polygon into object
+    tstpoly__append_polygon(polygon)
+     --raster polygon
+    tstpoly__raster(PTH_LINETO)
       --get bounding box
-    bbox = tstpoly__get_bounding_box
-      --get contours
+    bbox = tstpoly__get_bounding_box_drawing
+    
+      --get lines and contours from polygon object
     paths__clear_vecpath(lines)
     paths__clear_vecpath(contours)
     tstpoly__lines_to_vec_path(lines)
@@ -250,11 +268,15 @@ ROUTINE t_hex_pnts : BOOLEAN
 
     --draw hexagon
     clear_poly(polygon)
+    draw__hexagon(hex_radius, num_of_points, POS(hex_radius,hex_radius,0,0,0,0,(ZEROPOS(1).Config_data)), polygon)
+
     tstpoly__new
-    tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 0)
     --get raster lines
     --     (start_angle, dir, wall_lines, line_width, line_pitch)
     tstpoly__set_params((rast_ang), 1, wall_lines, 0, overlap)
+    --append polygon into object
+    tstpoly__append_polygon(polygon)
+    --raster
     tstpoly__raster(PTH_LINETO)
     
     paths__clear_vecpath(lines)
@@ -269,7 +291,7 @@ ROUTINE t_hex_pnts : BOOLEAN
     -- (add to kd tree)
     tstpln__append_path(contours, FALSE)
      --get start node
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
     tstpln__MST(tstpln__closest_bounding_box(1))
     
     clear_list(path_plan)
@@ -347,13 +369,13 @@ ROUTINE t_pads : BOOLEAN
     -- ** drawing **
     --draw pads
     clear_poly(polygon)
-    tstpoly__init((ZEROPOS(1)), TRUE)
+
+      --( frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch )
+    tstpoly__init((ZEROPOS(1)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
-    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(50,0) )
+    draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(50,0) )
 
     --get raster lines
-    -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
     --get lines and contours
     paths__clear_vecpath(lines)
@@ -370,7 +392,7 @@ ROUTINE t_pads : BOOLEAN
     -- (add to kd tree)
     tstpln__append_path(contours, FALSE)
      --get start node
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
     tstpln__MST(tstpln__closest_bounding_box(1))
     --set point orientation
     tstpln__set_orientation(DOWN_NORMAL)
@@ -446,13 +468,13 @@ ROUTINE t_lpads : BOOLEAN
     -- ** drawing **
     --draw pads
     clear_poly(polygon)
-    tstpoly__init((ZEROPOS(1)), TRUE)
+
+    -- (start_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__init((ZEROPOS(1)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
-    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(50,0) )
+    draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(50,0) )
 
     --get raster lines
-    -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
     --get lines and contours
     paths__clear_vecpath(lines)
@@ -469,7 +491,7 @@ ROUTINE t_lpads : BOOLEAN
     -- (add to kd tree)
     tstpln__append_path(contours, FALSE)
      --get start node
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
     tstpln__MST(tstpln__closest_bounding_box(2))
     --set point orientation
     tstpln__set_orientation(VEC(90,0,0))
@@ -547,13 +569,21 @@ ROUTINE t_cyld_yaxe : BOOLEAN
 
     --draw polygon
     clear_poly(polygon)
-    tstpoly__init((ZEROPOS(1)), TRUE)
-    draw_delta(0, 10, 1)
-    
+    draw_delta
+
+    --initialize polygon object
+      --( frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch )
+    tstpoly__init((ZEROPOS(1)), TRUE, 0, 1, 1, 0, 10)
+     --append delta polygon into object
+    tstpoly__append_polygon(polygon)
+     --raster polygon
+    tstpoly__raster(PTH_LINETO)
       --get bounding box
-    bbox = tstpoly__get_bounding_box
-      --get contours
+    bbox = tstpoly__get_bounding_box_drawing
+    
+      --get lines and contours from polygon object
     paths__clear_vecpath(lines)
+    paths__clear_vecpath(contours)
     tstpoly__lines_to_vec_path(lines)
     tstpoly__contours_to_vec_path(contours)
 
@@ -646,13 +676,21 @@ ROUTINE t_cyld_xaxe : BOOLEAN
 
     --draw polygon
     clear_poly(polygon)
-    tstpoly__init((ZEROPOS(1)), TRUE)
-    draw_delta(0, 10, 1)
+    draw_delta
     
+    --initialize polygon object
+      --( frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch )
+    tstpoly__init((ZEROPOS(1)), TRUE, 0, 1, 1, 0, 10)
+     --append delta polygon into object
+    tstpoly__append_polygon(polygon)
+     --raster polygon
+    tstpoly__raster(PTH_LINETO)
       --get bounding box
-    bbox = tstpoly__get_bounding_box
-      --get contours
+    bbox = tstpoly__get_bounding_box_drawing
+    
+      --get lines and contours from polygon object
     paths__clear_vecpath(lines)
+    paths__clear_vecpath(contours)
     tstpoly__lines_to_vec_path(lines)
     tstpoly__contours_to_vec_path(contours)
 
@@ -745,12 +783,19 @@ ROUTINE t_cyld_zaxe : BOOLEAN
 
     --draw polygon
     clear_poly(polygon)
-    tstpoly__init((ZEROPOS(1)), TRUE)
-    draw_delta(0, 10, 1)
+    draw_delta
     
+    --initialize polygon object
+      --( frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch )
+    tstpoly__init((ZEROPOS(1)), TRUE, 0, 1, 1, 0, 10)
+     --append delta polygon into object
+    tstpoly__append_polygon(polygon)
+     --raster polygon
+    tstpoly__raster(PTH_LINETO)
       --get bounding box
-    bbox = tstpoly__get_bounding_box
-      --get contours
+    bbox = tstpoly__get_bounding_box_drawing
+    
+      --get lines and contours from polygon object
     paths__clear_vecpath(lines)
     paths__clear_vecpath(contours)
     tstpoly__lines_to_vec_path(lines)
@@ -851,12 +896,10 @@ ROUTINE t_pvert_OD : BOOLEAN
     -- ** drawing **
     --draw pads
     clear_poly(polygon)
-    tstpoly__init((ZEROPOS(1)), TRUE)
-    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0) )
-
+      --( frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch )
+    tstpoly__init((ZEROPOS(1)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0) )
     --get raster lines
-    -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
     --get lines and contours
     paths__clear_vecpath(lines)
@@ -872,7 +915,7 @@ ROUTINE t_pvert_OD : BOOLEAN
     -- (add to kd tree)
     tstpln__append_path(contours, FALSE)
      --get start node
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
     tstpln__MST(tstpln__closest_bounding_box(1))
     -- apprch_pnt = paths__new_vpath(bbox.verts[2], PTH_STOP, 0)
     -- tstpln__MST(tstpln__closest_point(apprch_pnt))
@@ -952,13 +995,12 @@ ROUTINE t_pvert_ID : BOOLEAN
     -- ** drawing **
     --draw pads
     clear_poly(polygon)
-    tstpoly__init((ZEROPOS(1)), TRUE)
+      --( frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch )
+    tstpoly__init((ZEROPOS(1)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
-    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0) )
+    draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0) )
 
     --get raster lines
-    -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
     --get lines and contours
     paths__clear_vecpath(lines)
@@ -974,7 +1016,7 @@ ROUTINE t_pvert_ID : BOOLEAN
     -- (add to kd tree)
     tstpln__append_path(contours, FALSE)
      --get start node
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
     tstpln__MST(tstpln__closest_bounding_box(1))
     --set point orientation
     tstpln__set_orientation(UP_NORMAL)
@@ -1054,13 +1096,12 @@ ROUTINE t_porient_OD : BOOLEAN
     -- ** drawing **
     --draw pads
     clear_poly(polygon)
-    tstpoly__init((ZEROPOS(1)), TRUE)
+      --( frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch )
+    tstpoly__init((ZEROPOS(1)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
-    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0) )
+    draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0) )
 
     --get raster lines
-    -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
     --get lines and contours
     paths__clear_vecpath(lines)
@@ -1076,7 +1117,7 @@ ROUTINE t_porient_OD : BOOLEAN
     -- (add to kd tree)
     tstpln__append_path(contours, FALSE)
      --get start node
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
     tstpln__MST(tstpln__closest_bounding_box(3))
     --set point orientation
     tstpln__set_orientation(DOWN_NORMAL_VERT)
@@ -1134,7 +1175,7 @@ ROUTINE t_delta_ornt : BOOLEAN
 
 %define RASTER_ANGLE 45
 %define PASS_OVERLAP 10
-%define CONTOUR_LINES 0
+%define CONTOUR_LINES 1
 %define TOOLING_STEP 10
 %define LINKING_STEP 15
 %define TOOLING_SPEED 20
@@ -1152,11 +1193,21 @@ ROUTINE t_delta_ornt : BOOLEAN
 
     -- ** drawing **
     clear_poly(polygon)
-    tstpoly__init((ZEROPOS(1)), TRUE)
-    tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
-    draw_delta(RASTER_ANGLE, PASS_OVERLAP, 1)
+    draw_delta
 
-    --get lines and contours
+    --initialize polygon object
+      --( frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch )
+    tstpoly__init((ZEROPOS(1)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+     --append delta polygon into object
+    tstpoly__append_polygon(polygon)
+    -- set draw frame
+    tstpoly__set_canvas( POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)) )
+     --raster polygon
+    tstpoly__raster(PTH_LINETO)
+      --get bounding box
+    bbox = tstpoly__get_bounding_box_drawing
+    
+      --get lines and contours from polygon object
     paths__clear_vecpath(lines)
     paths__clear_vecpath(contours)
     tstpoly__lines_to_vec_path(lines)
@@ -1170,7 +1221,7 @@ ROUTINE t_delta_ornt : BOOLEAN
     -- (add to kd tree)
     tstpln__append_path(contours, FALSE)
      --get start node
-     bbox = tstpoly__get_bounding_box
+     bbox = tstpoly__get_bounding_box_drawing
     --    -- Contour last
     apprch_pnt = paths__new_vpath(bbox.verts[1], PTH_STOP, 0, VEC(1,0,0))
     tstpln__MST(tstpln__closest_point(apprch_pnt))
@@ -1249,12 +1300,21 @@ ROUTINE t_pol_pnts : BOOLEAN
     origin = POS(0,0,0,0,0,0, (ZEROPOS(1).config_data))
 
     --draw polygon
-    draw_delta(0, 10, 1)
+    draw_delta
     
+    --initialize polygon object
+      --( frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch )
+    tstpoly__init((ZEROPOS(1)), TRUE, 0, 1, 1, 0, 10)
+     --append delta polygon into object
+    tstpoly__append_polygon(polygon)
+     --raster polygon
+    tstpoly__raster(PTH_LINETO)
       --get bounding box
-    bbox = tstpoly__get_bounding_box
-      --get contours
+    bbox = tstpoly__get_bounding_box_drawing
+    
+      --get lines and contours from polygon object
     paths__clear_vecpath(lines)
+    paths__clear_vecpath(contours)
     tstpoly__lines_to_vec_path(lines)
     tstpoly__contours_to_vec_path(contours)
 
@@ -1332,6 +1392,7 @@ BEGIN
   -- ..warning:: Unit tests may error out if run in a full batch
   --             break up into smaller batch sizes, or run one at
   --             a time
+
   -- flat paths
   kunit_test('draw delta path', t_flat_pnts)
   kunit_test('hexagon path', t_hex_pnts)
@@ -1344,7 +1405,7 @@ BEGIN
   kunit_test('pads vertical path OD', t_pvert_OD)
   kunit_test('pads vertical path ID', t_pvert_ID)
   kunit_test('pads vertical path OD orientation', t_porient_OD)
-  -- ** t_delta_ornt currently has issues with orientation along contour
+  -- **fix** t_delta_ornt currently has issues with orientation along contour
   -- ** need to check with actual workstation first.
   -- kunit_test('pads vertical path OD orientation', t_delta_ornt)
   -- polar paths

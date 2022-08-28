@@ -105,7 +105,7 @@ ROUTINE next_toolpath
             --          calling speed_blending
             interpolate_toolpath(tool_segment, (tool_step), 1, PTH_LINETO, (this.frm:this.origin), FALSE, pth)
           ELSE
-            `PATH_PLAN_NAME`__get_toolpath(pth)
+            `PATH_PLAN_NAME`__get_toolpath_segment(FALSE, pth)
           ENDIF
 
           --set speed
@@ -220,7 +220,7 @@ ROUTINE get_toolpath
             IF interp_tool THEN
               interpolate_toolpath(tool_segment, (tool_step), 1, PTH_LINETO, (this.origin), TRUE, pth)
             ELSE
-              `PATH_PLAN_NAME`__get_toolpath(pth)
+              `PATH_PLAN_NAME`__get_toolpath_segment(TRUE, pth)
             ENDIF
           CASE(PTH_LINKING):
             --set speed

@@ -46,6 +46,7 @@ VAR
 %from math.klh %import bitmask
 %from strings.klh %import i_to_s, p_to_s, pose_to_s
 %from registers.klh %import set_real, set_int
+%from draw.klh %import hexagon
 %include pathlib.klh
 
 --polygon object
@@ -104,10 +105,26 @@ ROUTINE draw_delta
     polygon[6].coords = VEC2D(20,60)  
     polygon[7].coords = VEC2D(0,120)
     polygon[8].coords = VEC2D(-20,60)
-    
-    tstpoly__append_polygon(polygon)
 
   END draw_delta
+
+ROUTINE draw_pad(width, length : REAL; seperation : REAL; no_of_pads : INTEGER; start : VECTOR)
+  VAR
+    i : INTEGER
+  BEGIN
+    --create polygon
+    clear_poly(polygon)
+    append_nodes(polygon, 4)
+
+    FOR i=0 TO no_of_pads-1 DO
+      polygon[1].coords = start + i*VEC2D(seperation, 0)
+      polygon[2].coords = start + i*VEC2D(seperation, 0) + VEC2D(width,0)
+      polygon[3].coords = start + i*VEC2D(seperation, 0) + VEC2D(width,length)
+      polygon[4].coords = start + i*VEC2D(seperation, 0) + VEC2D(0,length)
+      
+      tstpoly__append_polygon(polygon)
+    ENDFOR
+  END draw_pad
 
 ROUTINE t_hexagon
   VAR
@@ -139,11 +156,15 @@ ROUTINE t_hexagon
     overlap = 6
     wall_lines = 1
 
-    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE)
-    tstpoly__hexagon(hex_radius, num_of_points, VEC2D(hex_radius, hex_radius), 0)
+    clear_poly(polygon)
+    draw__hexagon(hex_radius, num_of_points, POS(hex_radius,hex_radius,0,0,0,0,(ZEROPOS(1).Config_data)), polygon)
+
+    --draw pads
+      -- (frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, (rast_ang), 1, wall_lines, 0, overlap)
+     --append polygon into object
+    tstpoly__append_polygon(polygon)
     --get raster lines
-    --     (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params((rast_ang), 1, wall_lines, 0, overlap)
     tstpoly__raster(PTH_LINETO)
     
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
@@ -214,12 +235,10 @@ ROUTINE t_pvert_ID
     pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
 
     --draw pads
-    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE)
-    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
-
+    -- (frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
     --get raster lines
-    -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
 
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
@@ -239,7 +258,7 @@ ROUTINE t_pvert_ID
     tstmtn__init(tool, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
 
     --generate path
-    bbox = tstpoly__get_bounding_box
+    bbox = tstpoly__get_bounding_box_drawing
     tstpth__planPath(lines, contours, ID_CORNER, ONEWAY, FALSE)
 
     -- approach path
@@ -291,12 +310,12 @@ ROUTINE t_pvert_OD
     pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
 
     --draw pads
-    tstpoly__init(POS((0*PAD_RADIUS*M_PI/180),0,PAD_LENGTH,0,180,0,(ZEROPOS(1).config_data)), TRUE)
-    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
-
+    -- (frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
+    --flip drawing for drawing on OD
+    tstpoly__flip_canvas
     --get raster lines
-    -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
 
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
@@ -367,12 +386,12 @@ ROUTINE t_pvert_pad
     pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
 
     --draw pads
-    tstpoly__init(POS((0*PAD_RADIUS*M_PI/180),0,PAD_LENGTH,0,180,0,(ZEROPOS(1).config_data)), TRUE)
-    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
-
+    -- (frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
+    --flip drawing for drawing on OD
+    tstpoly__flip_canvas
     --get raster lines
-    -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
 
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
@@ -443,12 +462,10 @@ ROUTINE t_pvert_pdid
     pose__set_toolframe(TOOL_FRAME_NO, RBT_GRP)
 
     --draw pads
-    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE)
-    tstpoly__pads(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
-
+    -- (frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch)
+    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
     --get raster lines
-    -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     tstpoly__raster(PTH_LINETO)
 
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
@@ -495,8 +512,8 @@ BEGIN
   -- t_hexagon
   -- t_pvert_ID
   -- t_pvert_OD
-  t_pvert_pad
-  -- t_pvert_pdid
+  -- t_pvert_pad
+  t_pvert_pdid
 
   --clean up
   -- tstpoly__delete
