@@ -12,7 +12,9 @@ ROUTINE init(frm : XYZWPR; rastprm_ : t_PATH_RAST; flipCanvas_ : BOOLEAN) FROM c
 declare_member(class_name,delete,class_name,dstr)
 ROUTINE delete FROM class_name
 declare_member(class_name,set_origin,class_name,stor)
-ROUTINE set_origin(idod : INTEGER; coordSys : INTEGER; length : REAL; rotation : REAL) FROM class_name
+ROUTINE set_origin(frm : XYZWPR) FROM class_name
+declare_member(class_name,flip_origin,class_name,fpor)
+ROUTINE flip_origin FROM class_name
 declare_member(class_name,get_length,class_name,gtlth)
 ROUTINE get_length : REAL FROM class_name
 declare_member(class_name,get_lines,class_name,gtlns)

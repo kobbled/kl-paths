@@ -123,13 +123,8 @@ ROUTINE delete
 
 ROUTINE set_origin
   BEGIN
-    -- for cylindrical systems the drawing will be mirrored
-    -- on the OD. Rotate drawing in order invert the mirroring
-    IF (idod = 1) AND (coordSys = PTH_CYLINDER) THEN
-      origin = POS(0,0,length,0,180,rotation,(ZEROPOS(1).config_data))
-    ELSE
-      origin = POS(0,0,0,0,0,rotation,(ZEROPOS(1).config_data))
-    ENDIF
+    origin = frm
+    `DRAW_OBJECT_NAME`__set_canvas(origin)
   END set_origin
 
 ROUTINE get_length
@@ -142,6 +137,16 @@ ROUTINE get_length
     RETURN(math__norm(bbox.verts[4]-bbox.verts[1]))
 
   END get_length
+
+ROUTINE flip_origin
+  VAR
+    len : REAL
+  BEGIN
+    --get length of the drawing, and translate by that length
+    len = get_length
+    origin = origin:POS(0,0,len,0,180,0,(ZEROPOS(1).config_data))
+    `DRAW_OBJECT_NAME`__set_canvas(origin)
+  END flip_origin
 
 ROUTINE get_lines
   VAR
