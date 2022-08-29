@@ -161,6 +161,50 @@ ROUTINE get_contours
     COPY_PATH(contours, 0, 0, out_contour, status)
   END get_contours
 
+ROUTINE translate_canvas
+  BEGIN
+    origin = origin:POS(vec.x,vec.y,vec.z,0,0,0,(ZEROPOS(1).config_data))
+    `DRAW_OBJECT_NAME`__set_canvas(origin)
+  END translate_canvas
+
+ROUTINE rotate_canvas
+  BEGIN
+    -- rotation of W,P angles must be in a canvas wide basis
+    -- for planar slicing.
+    origin = origin:POS(0,0,0,vec.x,vec.y,0,(ZEROPOS(1).config_data))
+    `DRAW_OBJECT_NAME`__set_canvas(origin)
+
+  END rotate_canvas
+
+ROUTINE copy
+  VAR
+    i, j, k : INTEGER
+    status : INTEGER
+  BEGIN
+    IF (instances1 < 1) THEN instances1 = 1 ; ENDIF
+    IF (instances2 < 1) THEN instances2 = 1 ; ENDIF
+    
+    FOR k=0 TO (instances2-1) DO
+      --copy instances1
+      FOR j=0 TO (instances1-1) DO
+        --do not instance for first cycle assume that has already
+        --been appended into the canvas
+        IF ((j > 0) OR (k > 0)) THEN
+          --clear copy container
+          clear_poly(copyPoly)
+
+          FOR i=1 TO PATH_LEN(polygon) DO
+            APPEND_NODE(copyPoly, status)
+            copyPoly[i].coords = polygon[i].coords + j*direction1 + k*direction2
+          ENDFOR
+
+          --append into polygon object to create drawing
+          `DRAW_OBJECT_NAME`__append_polygon(copyPoly)
+        ENDIF
+      ENDFOR
+    ENDFOR
+  END copy
+
 ROUTINE raster
   BEGIN
     --get raster lines

@@ -22,12 +22,19 @@ ROUTINE get_lines(out_lines : PATH nodedata = t_VEC_PATH) FROM class_name
 declare_member(class_name,get_contours,class_name,gtctr)
 ROUTINE get_contours(out_contour : PATH nodedata = t_VEC_PATH) FROM class_name
 declare_member(class_name,raster,class_name,rast)
-ROUTINE raster(rastprm : t_PATH_RAST) FROM class_name
 declare_member(class_name,drawPad,class_name,drpad)
 ROUTINE drawPad(padprm : t_PAD_VARS ; polyprm : t_PATH_VARS ; rastprm : t_PATH_RAST) FROM class_name
 declare_member(class_name,drawHex,class_name,drhex)
 ROUTINE drawHex(hexprm : t_HEX_VARS ; polyprm : t_PATH_VARS ; rastprm : t_PATH_RAST) FROM class_name
 declare_member(class_name,drawCustom,class_name,drcus)
 ROUTINE drawCustom(filename : STRING ; polyprm : t_PATH_VARS ; rastprm : t_PATH_RAST) FROM class_name
+ROUTINE raster FROM class_name
+--polygon manipulation
+declare_member(class_name,translate_canvas,class_name,trcv)
+ROUTINE translate_canvas(vec : VECTOR) FROM class_name
+declare_member(class_name,rotate_canvas,class_name,rtcv)
+ROUTINE rotate_canvas(vec : VECTOR) FROM class_name
+declare_member(class_name,copy,class_name,copy)
+ROUTINE copy(direction1 : VECTOR; instances1 : INTEGER; direction2 : VECTOR; instances2 : INTEGER) FROM class_name
 
 %endif --end header
