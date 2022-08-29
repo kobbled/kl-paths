@@ -1,0 +1,16 @@
+PROGRAM test_pthdraw
+%NOLOCKGROUP
+
+%include systemlib.types.klt
+%include systemvars.klt
+%include pose.const.klt
+%include draw.klt
+%include pathlib.klt
+%include toolpath.structs.klt
+%include pathdraw.deps.klt
+
+--lam object
+%class tstdrw('pathdraw.klc','pathdraw.klh','defaultpathdraw.klt')
+
+BEGIN
+END test_pthdraw

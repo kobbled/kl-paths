@@ -16,5 +16,11 @@
     "draw",
     "pose",
     "pathlib"
+  ],
+  "tests" :[
+    "test/test_pthdraw.kl"
+  ],
+  "tests-includes" :[
+    "test/config"
   ]
 }
