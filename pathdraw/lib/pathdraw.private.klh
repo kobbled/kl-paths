@@ -3,8 +3,10 @@
 
 --oop
 %include namespace.m
-declare_member(class_name,get_bounding_box,class_name,gtbb)
-ROUTINE get_bounding_box FROM class_name
+declare_member(class_name,clear_poly,class_name,clpy)
+ROUTINE clear_poly(p : PATH nodedata = t_VERTEX) FROM class_name
+declare_member(class_name,allocate_poly,class_name,alpy)
+ROUTINE allocate_poly(size : INTEGER) FROM class_name
 declare_member(class_name,set_raster_params,class_name,stpm)
 ROUTINE set_raster_params(rastprm : t_PATH_RAST) FROM class_name
 

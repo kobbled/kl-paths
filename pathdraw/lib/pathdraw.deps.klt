@@ -2,6 +2,6 @@
 %mode string QQQ "`" "`" "\\"
 
 --draw dependency
-%define draw_object_define(object_name,cnfg_file) `%class object_name('polygon.klc', 'polygon.klh')`
+%define draw_object_define(object_name) `%class object_name('polygon.klc', 'polygon.klh')`
 
 %mode pop

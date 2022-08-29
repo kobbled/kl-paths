@@ -8,7 +8,7 @@ header_if -- ifndef class
 header_def -- define class
 
 declare_member(class_name,init,class_name,init)
-ROUTINE init(idod : INTEGER; coordSys : INTEGER; length : REAL; rotation : REAL) FROM class_name
+ROUTINE init(frm : XYZWPR; rastprm_ : t_PATH_RAST; flipCanvas_ : BOOLEAN) FROM class_name
 declare_member(class_name,delete,class_name,dstr)
 ROUTINE delete FROM class_name
 declare_member(class_name,set_origin,class_name,stor)

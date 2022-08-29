@@ -18,6 +18,11 @@ PROGRAM class_name
 VAR
   bbox : t_RECT
   origin : XYZWPR
+  rastparam : t_RASTER
+  onBoundary : BOOLEAN
+  flipCanvas : BOOLEAN
+  polygon : PATH nodedata = t_VERTEX
+  copyPoly : PATH nodedata = t_VERTEX
   contours : PATH nodedata = t_VEC_PATH
   lines : PATH nodedata = t_VEC_PATH
 
@@ -29,7 +34,7 @@ VAR
 
 --define objects
   --polygon
-draw_object_define(DRAW_OBJECT_NAME,CONFIG_FILENAME)
+draw_object_define(DRAW_OBJECT_NAME)
 
 %defeval class_name BASE_CLASSNAME
 
@@ -38,11 +43,25 @@ draw_object_define(DRAW_OBJECT_NAME,CONFIG_FILENAME)
 
 --private
 
-ROUTINE get_bounding_box
+ROUTINE clear_poly
+  VAR
+    i, status : INTEGER
   BEGIN
-    --get bounding box
-    bbox = `DRAW_OBJECT_NAME`__get_bounding_box
-  END get_bounding_box
+    i = PATH_LEN(p)
+    WHILE PATH_LEN(p) > 0 DO
+		  DELETE_NODE(p,i,status)
+      i = i - 1
+	  ENDWHILE
+  END clear_poly
+
+ROUTINE allocate_poly
+  VAR
+    i, status : INTEGER
+  BEGIN
+    FOR i=1 TO size DO
+      APPEND_NODE(polygon, status)
+    ENDFOR
+  END allocate_poly
 
 ROUTINE set_raster_params
   BEGIN
@@ -55,22 +74,50 @@ ROUTINE set_raster_params
 
 ROUTINE init
   BEGIN
-    set_origin(idod, coordSys, length, rotation)
+    --clear polygon container
+    clear_poly(polygon)
+    clear_poly(copyPoly)
+
+    --set drawing frame
+    origin = frm
+
+    --copy raster parameters
+    onBoundary = rastprm_.onBoundary
+    rastparam.start_angle = rastprm_.angle
+    rastparam.dir = rastprm_.dir
+    rastparam.wall_lines = rastprm_.contours
+    rastparam.line_width = rastprm_.line_width
+    rastparam.line_pitch = rastprm_.overlap
+    
+    --mark if drawing needs to be flipped
+    flipCanvas = flipCanvas_
+
+    --initialize polygon object
+      --( frm, onboundary, start_angle, dir, wall_lines, line_width, line_pitch )
+    `DRAW_OBJECT_NAME`__init2(origin, onBoundary, rastparam)
+
   END init
 
 ROUTINE delete
   VAR
     uninitbb : t_RECT
+    uninitrast : t_RASTER
   BEGIN
     --clear wrapper members
     paths__clear_vecpath(contours)
     paths__clear_vecpath(lines)
+    --clear polygon containers
+    clear_poly(polygon)
+    clear_poly(copyPoly)
     
     --clear draw object
     `DRAW_OBJECT_NAME`__delete
 
     --uninitialize members
     bbox = uninitbb
+    rastparam = uninitrast
+    onBoundary = FALSE
+    flipCanvas = FALSE
     SET_UNINIT_F('class_name', 'origin')
   END delete
 
