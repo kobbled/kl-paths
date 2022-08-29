@@ -218,46 +218,50 @@ ROUTINE raster
 
   END raster
 
-ROUTINE drawPad
+
+ROUTINE makePad
+  BEGIN
+
+    clear_poly(polygon)
+    allocate_poly(4)
+
+    polygon[1].coords = start
+    polygon[2].coords = start + VEC2D(padprm.width,0)
+    polygon[3].coords = start + VEC2D(padprm.width,padprm.length)
+    polygon[4].coords = start + VEC2D(0,padprm.length)
+    `DRAW_OBJECT_NAME`__append_polygon(polygon)
+
+  END makePad
+
+ROUTINE makePads
+  BEGIN
+
+    clear_poly(polygon)
+    allocate_poly(4)
+
+    polygon[1].coords = start
+    polygon[2].coords = start + VEC2D(padprm.width,0)
+    polygon[3].coords = start + VEC2D(padprm.width,padprm.length)
+    polygon[4].coords = start + VEC2D(0,padprm.length)
+    `DRAW_OBJECT_NAME`__append_polygon(polygon)
+
+    copy(VEC2D(padprm.separation, 0), (padprm.no_of_pads), VEC2D(0, 0), 0)
+
+  END makePads
+
+ROUTINE makeHex
   BEGIN
     --draw pads
-    `DRAW_OBJECT_NAME`__init(origin, (rastprm.onBoundary))
-    `DRAW_OBJECT_NAME`__pads(padprm.width, padprm.length, padprm.separation, padprm.no_of_pads, VEC2D(0,0))
-    
-    --need to do before getting boudning box
-    set_raster_params(rastprm)
-
-    get_bounding_box
-
-  END drawPad
-
-ROUTINE drawHex
-  BEGIN
-    --draw pads
-    `DRAW_OBJECT_NAME`__init(origin, (rastprm.onBoundary))
     `DRAW_OBJECT_NAME`__hexagon((hexprm.radius), (hexprm.points), VEC2D(0, 0), (polyprm.polyRotation))
-    
-    --need to do before getting boudning box
-    set_raster_params(rastprm)
+  END makeHex
 
-    get_bounding_box
-
-  END drawHex
-
-ROUTINE drawCustom
   VAR
     p : XYZWPR
   BEGIN
-    --draw pads
-    `DRAW_OBJECT_NAME`__init(origin, (rastprm.onBoundary))
     `DRAW_OBJECT_NAME`__import_shape('FR:\' + filename + '.csv')
 
-    --need to do before getting boudning box
-    set_raster_params(rastprm)
     
-    get_bounding_box
 
-  END drawCustom
 
 BEGIN
 END class_name
