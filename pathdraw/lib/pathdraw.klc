@@ -129,9 +129,8 @@ ROUTINE set_origin
 
 ROUTINE get_length
   BEGIN
-    IF UNINIT(bbox.verts[1]) THEN
-      get_bounding_box
-    ENDIF
+    --get bounding box
+    bbox = `DRAW_OBJECT_NAME`__get_bounding_box_drawing
 
     -- get length of bounding box along its longitude
     RETURN(math__norm(bbox.verts[4]-bbox.verts[1]))
