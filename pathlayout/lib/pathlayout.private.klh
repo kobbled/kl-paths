@@ -1,8 +1,0 @@
-%ifndef pathlayout_private_h
-%define pathlayout_private_h
-
-
-declare_member(class_name,new_attr_pntr,class_name,naptr)
-ROUTINE new_attr_pntr(offset : INTEGER; size : INTEGER; prefix : STRING; postfix : STRING; sepChar : STRING ; typ : INTEGER) : t_ATTRPNTR FROM class_name
-
-%endif --pathlayout_private_h
