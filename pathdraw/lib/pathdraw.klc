@@ -260,8 +260,49 @@ ROUTINE makeHex
   BEGIN
     `DRAW_OBJECT_NAME`__import_shape('FR:\' + filename + '.csv')
 
-    
+ROUTINE draw
+  BEGIN
+    --flip drawing if needed
+    IF flipCanvas THEN
+      flip_origin
+      --only flip once
+      flipCanvas = FALSE
+    ENDIF
 
+    --get bounding box of drawing
+    -- to select start corner for pathplanning
+    bbox = `DRAW_OBJECT_NAME`__get_bounding_box_drawing
+  END draw
+
+ROUTINE sequence
+  VAR
+    i : INTEGER
+    starti, endi : INTEGER
+  BEGIN
+    --translate canvas (use for layer height offset, or layer profile)
+    translate_canvas(trans)
+
+    --rotate canvas (W, P angles)
+    rotate_canvas(rot)
+    
+    --rotate/scale selected polygons on 2d rotation
+    --rotate/scale all polygons on canvas
+    starti = 1
+    endi = `DRAW_OBJECT_NAME`__get_polygon_count
+
+    FOR i=starti TO endi DO
+      --rotate if specified
+      IF (rot.z) <> 0 THEN
+        `DRAW_OBJECT_NAME`__rotate_polygon(i, (rot.z))
+      ENDIF
+
+      --scale if specified
+      IF math__norm(scl) > 0 THEN
+        `DRAW_OBJECT_NAME`__scale_polygon_along_axes(i, scl)
+      ENDIF
+    ENDFOR
+
+  END sequence
 
 BEGIN
 END class_name

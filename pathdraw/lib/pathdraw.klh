@@ -39,5 +39,9 @@ declare_member(class_name,makeHex,class_name,mkhex)
 ROUTINE makeHex(hexprm : t_HEX_VARS ; polyprm : t_PATH_VARS; start : VECTOR) FROM class_name
 declare_member(class_name,makeCustom,class_name,mkcus)
 ROUTINE makeCustom(filename : STRING ; polyprm : t_PATH_VARS) FROM class_name
+declare_member(class_name,draw,class_name,draw)
+ROUTINE draw FROM class_name
+declare_member(class_name,sequence,class_name,sqnc)
+ROUTINE sequence(trans : VECTOR; rot : VECTOR; scl : VECTOR) FROM class_name
 
 %endif --end header
