@@ -1,4 +1,0 @@
-%define PATHDRAW_NAME tspdrw
-
---canvas object
-%define DRAW_OBJECT_NAME tstpoly
