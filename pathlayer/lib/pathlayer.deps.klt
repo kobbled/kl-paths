@@ -2,7 +2,7 @@
 %mode string QQQ "`" "`" "\\"
 
 --csv dependency
-%define define_pathlayout(object_name,cnfg_file) `%class object_name('pathlayout.klc','pathlayout.klh','cnfg_file')`
+%define define_layout(object_name,cnfg_file) `%class object_name('layout.klc','layout.klh','cnfg_file')`
 
 --pathmake dependency
 %define path_make_define(object_name,cnfg_file) `%class object_name('pathmake.klc','pathmake.klh','cnfg_file')`

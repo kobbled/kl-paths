@@ -42,9 +42,9 @@ VAR
 %include pathmake.friend.members.klt
 pathmake_friends(PATH_OBJECT_NAME)
 
--- include reference to pathlayout "buffer".
-%include pathlayout.friends.klt
-pathlayout_friends(LAYOUT_OBJECT_NAME,LAYOUT_STRUCT)
+-- include reference to layout "buffer".
+%include layout.friends.klt
+layout_friends(LAYOUT_OBJECT_NAME,LAYOUT_STRUCT)
 
 %ifdef DEBUG_BUILD
 %include strings.klh
@@ -58,7 +58,7 @@ pathlayout_friends(LAYOUT_OBJECT_NAME,LAYOUT_STRUCT)
 
 
 --define layout object
-define_pathlayout(LAYOUT_OBJECT_NAME,LAYOUT_CONFIG_FILENAME)
+define_layout(LAYOUT_OBJECT_NAME,LAYOUT_CONFIG_FILENAME)
 
 --define path object
 path_make_define(PATH_OBJECT_NAME,CONFIG_FILENAME)
@@ -204,7 +204,7 @@ ROUTINE import_layout
     usrdis__print(DEBUG, '** importing file **')
 %endif
 
-    `LAYOUT_OBJECT_NAME`__new(filename, (layoutCDS.system), (layoutCDS.z_axis) )
+    `LAYOUT_OBJECT_NAME`__new(filename)
     --calculate passes per layer
     `LAYOUT_OBJECT_NAME`__openfile
     `LAYOUT_OBJECT_NAME`__countInstances(passes)

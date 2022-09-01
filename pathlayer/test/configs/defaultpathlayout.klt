@@ -7,6 +7,19 @@
 ------------------
 %define CSV_OBJECT_NAME tstcsv
 
+--template dependencies
+---------------
+%mode push
+%mode string QQQ "$" "$" "\\"
+%define type_includes $
+%include pathlib.klt
+$
+
+%define header_includes $
+
+$
+%mode pop
+
 ------------------
 --attributes
 -------------------------
@@ -40,7 +53,7 @@ ROUTINE createAttr
 %mode push
 %mode string QQQ "`" "`" "\\"
 %define layout_type `TYPE
-  LAYOUT_STRUCT FROM pathlayout = STRUCTURE
+  LAYOUT_STRUCT FROM layout = STRUCTURE
     layer  : INTEGER
     code   : INTEGER
     depth  : REAL

@@ -41,7 +41,7 @@
     "pathmake",
     "pathdraw",
     "pathmotion",
-    "pathlayout",
+    "layout",
     "lam"
   ],
   "macros" : [
