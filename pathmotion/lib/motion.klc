@@ -457,6 +457,8 @@ ROUTINE movePos
     --set speed
     tpos.speed = speed
     registers__set_real(SPEED_REGISTER, speed)
+    --set inc
+    registers__set_int(REG_I, 1)
 
     nde = tpath2pos(tpos)
     --multiply in user offset
@@ -487,6 +489,8 @@ ROUTINE moveLine
 
       --set speed
       registers__set_real(SPEED_REGISTER, (pth[i].speed))
+      --set inc
+      registers__set_int(REG_I, i)
 
       --set termination for tp
       SELECT (pth[i].code) OF
@@ -530,6 +534,8 @@ ROUTINE moveArc
 
       --set speed
       registers__set_real(SPEED_REGISTER, (pth[1].speed))
+      --set inc
+      registers__set_int(REG_I, 1)
 
         --set pose
       nde = tpath2pos(pth[1])
@@ -555,6 +561,8 @@ ROUTINE moveArc
 
       --set speed
       registers__set_real(SPEED_REGISTER, (pth[i+1].speed))
+      --set inc
+      registers__set_int(REG_I, i+1)
 
       --Do not use cicular_move if less than 3 points
       IF PATH_LEN(pth) < 3 THEN
@@ -630,6 +638,8 @@ ROUTINE movePoly
         ENDSELECT
         --set speed
         registers__set_real(SPEED_REGISTER, pth[i].speed)
+        --set inc
+        registers__set_int(REG_I, i)
 
         --set pose
         nde = tpath2pos(pth[i])
@@ -682,6 +692,8 @@ ROUTINE movePolyArc
         registers__set_int(TERM_REGISTER, TERM_FINE)
           --set speed
         registers__set_real(SPEED_REGISTER, pth[1].speed)
+        --set inc
+        registers__set_int(REG_I, 1)
 
           --set pose
         nde = tpath2pos(pth[1])
@@ -713,6 +725,8 @@ ROUTINE movePolyArc
           ENDSELECT
             --set speed
           registers__set_real(SPEED_REGISTER, pth[i].speed)
+          --set inc
+          registers__set_int(REG_I, i)
 
           nde = tpath2pos(pth[i])
           --multiply in user offset
@@ -731,6 +745,8 @@ ROUTINE movePolyArc
           registers__set_int(TERM_REGISTER, TERM_CONT)
             --set speed
           registers__set_real(SPEED_REGISTER, pth[i+1].speed)
+          --set inc
+          registers__set_int(REG_I, i+1)
 
           --set midpoint
           nde = tpath2pos(pth[i])
