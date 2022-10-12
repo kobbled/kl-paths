@@ -21,7 +21,6 @@ PROGRAM paths
 %include systemvars.klt
 %include draw.rect.klt
 %include pose.const.klt
-%include pathplan.klt
 %include pathlib.klt
 %include toolpath.structs.klt
 
@@ -433,6 +432,8 @@ ROUTINE paths__new_layer_params
     prm.curr_layer = 0
     prm.last_idx = 0
 
+    prm.pause_layer = pause_layer
+
     RETURN(prm)
   END paths__new_layer_params
 
@@ -450,6 +451,10 @@ ROUTINE paths__new_motion_params
     prm.useSetSpeed = useSetSpeed
     prm.tool_speed = tool_speed
     prm.link_speed = link_speed
+    --set offsets
+    prm.start_offset = appr_ofst
+    prm.stop_offset = dprt_ofst
+
 
     RETURN(prm)
   END paths__new_motion_params
@@ -459,6 +464,7 @@ ROUTINE paths__new_tool_params
     prm : t_TOOL_VARS
   BEGIN
     prm.retractDist.x = retractDist.x ; prm.retractDist.y = retractDist.y ; prm.retractDist.z = retractDist.z ;
+    prm.perchDist.x = perchDist.x ; prm.perchDist.y = perchDist.y ; prm.perchDist.z = perchDist.z ;
     prm.orient.x = orient.x ; prm.orient.y = orient.y ; prm.orient.z = orient.z ;
     prm.pitch = pitch
     prm.pitchLead = pitchLead
@@ -467,6 +473,36 @@ ROUTINE paths__new_tool_params
 
     RETURN(prm)
   END paths__new_tool_params
+
+ROUTINE paths__new_raster_params
+  VAR
+    prm : t_PATH_RAST
+  BEGIN
+    prm.overlap = overlap
+    prm.line_width = line_width
+    prm.angle = angle
+    prm.contours = contours
+    prm.dir = dir
+    prm.rastType = rastType
+    prm.startCorner = startCorner
+    prm.constrain = constrain
+    prm.onBoundary = onBoundary
+
+    RETURN(prm)
+  END paths__new_raster_params
+
+ROUTINE paths__new_pad_params
+  VAR
+    prm : t_PAD_VARS
+  BEGIN
+    prm.width = width
+    prm.length = length
+    prm.separation = separation
+    prm.no_of_pads = no_of_pads
+    prm.inDegrees = inDegrees
+
+    RETURN(prm)
+  END paths__new_pad_params
 
 ROUTINE paths__toolvec_to_vec
   VAR

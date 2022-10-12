@@ -30,13 +30,17 @@ ROUTINE paths__new_coord_sys(system : INTEGER ; z_axis : INTEGER) : t_COORD_SYS 
 declare_function(prog_name,new_make_params,prog_name_alias,nmprm)
 ROUTINE paths__new_make_params(coord_frm : XYZWPR; coord_sys : t_COORD_SYS; origin : XYZWPR; idod : INTEGER; doPathPlan : BOOLEAN) : t_PATH_PARAM FROM paths
 declare_function(prog_name,new_layer_params,prog_name_alias,nlprm)
-ROUTINE paths__new_layer_params(start_pass : INTEGER; start_layer : INTEGER) : t_PATH_LAYER FROM paths
+ROUTINE paths__new_layer_params(start_pass : INTEGER; start_layer : INTEGER; pause_layer : BOOLEAN) : t_PATH_LAYER FROM paths
 
 %ifdef toolpath_structs_t
 declare_function(prog_name,new_motion_params,prog_name_alias,nmtpr)
-ROUTINE paths__new_motion_params(program_type : INTEGER; interpolate : BOOLEAN; tool_speed : REAL; link_speed : REAL; useSetSpeed : BOOLEAN; tool_step : REAL; link_step : REAL; inDegrees : BOOLEAN) : t_MOTION_PRM FROM paths
+ROUTINE paths__new_motion_params(program_type : INTEGER; interpolate : BOOLEAN; tool_speed : REAL; link_speed : REAL; useSetSpeed : BOOLEAN; tool_step : REAL; link_step : REAL; appr_ofst : REAL; dprt_ofst : REAL; inDegrees : BOOLEAN) : t_MOTION_PRM FROM paths
 declare_function(prog_name,new_tool_params,prog_name_alias,ntlpr)
-ROUTINE paths__new_tool_params(retractDist : VECTOR; orient : VECTOR; pitch : REAL; pitchLead : REAL; idod : INTEGER; coord_system : t_COORD_SYS) : t_TOOL_VARS FROM paths
+ROUTINE paths__new_tool_params(retractDist : VECTOR; perchDist : VECTOR; orient : VECTOR; pitch : REAL; pitchLead : REAL; idod : INTEGER; coord_system : t_COORD_SYS) : t_TOOL_VARS FROM paths
+declare_function(prog_name,new_raster_params,prog_name_alias,nrspr)
+ROUTINE paths__new_raster_params(overlap : REAL; line_width : REAL; angle : REAL; contours : INTEGER; dir : INTEGER; rastType : INTEGER; startCorner : INTEGER; constrain : BOOLEAN; onBoundary : BOOLEAN) : t_PATH_RAST FROM paths
+declare_function(prog_name,new_pad_params,prog_name_alias,npdpr)
+ROUTINE paths__new_pad_params(width : REAL; length : REAL; separation : REAL; no_of_pads : INTEGER; inDegrees : BOOLEAN) : t_PAD_VARS FROM paths
 
 declare_function(prog_name,toolvec_to_vec,prog_name_alias,tv2v)
 ROUTINE paths__toolvec_to_vec(tv : t_TOOL_VEC) : VECTOR FROM paths

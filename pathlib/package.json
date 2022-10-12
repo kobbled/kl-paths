@@ -30,7 +30,6 @@
     "math",
     "display",
     "draw",
-    "pose",
-    "pathplan"
+    "pose"
   ]
 }
