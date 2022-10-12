@@ -19,6 +19,7 @@ TYPE
 
   t_TOOL_VARS FROM t_paths = STRUCTURE
     retractDist : t_TOOL_VEC
+    perchDist : t_TOOL_VEC
     orient : t_TOOL_VEC
     pitch : REAL
     pitchLead : REAL
@@ -43,6 +44,9 @@ TYPE
     link_speed : REAL
     tool_step : REAL
     link_step : REAL
+    ref_radius : REAL
+    start_offset : REAL
+    stop_offset : REAL
     program_type : INTEGER
     useSetSpeed : BOOLEAN
     inDegrees : BOOLEAN

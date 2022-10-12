@@ -30,6 +30,10 @@
 %define LINKING_STEP 10
 %define PAD_IDOD 1
 
+--offsets
+%define APPROACH_OFFSET_MM -3
+%define DEPART_OFFSET_MM 3
+
 --tool orientation
 %define TOOL_ORIENT_UP 0,0,0
 %define TOOL_ORIENT_DOWN 0,0,180

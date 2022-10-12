@@ -38,6 +38,10 @@
 %define LINKING_STEP 10
 %define PAD_IDOD 1
 
+--offsets
+%define APPROACH_OFFSET_MM -3
+%define DEPART_OFFSET_MM 3
+
 --motion programs
 %define DRYRUN_LINE_PROG 'MOV_LINE_ROT'
 %define DRYRUN_CIRC_PROG 'MOV_CIRC_ROT'

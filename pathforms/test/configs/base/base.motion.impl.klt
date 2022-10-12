@@ -24,10 +24,12 @@
 
 %define impl_motion_head(parent) `declare_member(parent,new_pose,parent,npose)
 ROUTINE new_pose(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,new_cart,parent,ncart)
+ROUTINE new_cart(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,make_tool_offset,parent,mktof)
 ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE  FROM parent
 declare_member(parent,make_user_offset,parent,mkuof)
-ROUTINE make_user_offset : MOTION_DATA_TYPE FROM parent
+ROUTINE make_user_offset(deg_offset) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,define_tool_offset,parent,dftof)
 ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) FROM parent
 declare_member(parent,set_lpos,parent,stlps)
@@ -65,6 +67,12 @@ ROUTINE new_pose(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE
     RETURN( POS(x,y,z,w,p,r, cnfg) )
   END new_pose
 
+declare_member(parent,new_cart,parent,ncart)
+ROUTINE new_cart(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE
+  BEGIN
+    RETURN( POS(x,y,z,w,p,r, cnfg) )
+  END new_cart
+
 declare_member(parent,make_tool_offset,parent,mktof)
 ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE
   BEGIN
@@ -72,7 +80,7 @@ ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE
   END make_tool_offset
 
 declare_member(parent,make_user_offset,parent,mkuof)
-ROUTINE make_user_offset : MOTION_DATA_TYPE
+ROUTINE make_user_offset(deg_offset) : MOTION_DATA_TYPE
   BEGIN
     RETURN(new_pose(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG)))
   END make_user_offset
@@ -82,7 +90,7 @@ ROUTINE define_tool_offset(toolprm : t_TOOL_VARS)
   BEGIN
     --set tool offset
     tool_offset = new_pose(0,0,0,(toolprm.orient.x + toolprm.pitch), toolprm.orient.y, toolprm.orient.z, pose__set_config(DEFAULT_CONFIG))
-    frame_offset = new_pose(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
+    frame_offset = make_user_offset(0)
 
   END define_tool_offset
 
@@ -233,7 +241,7 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
     lpos = pose__replace_orient(lpos, paths__set_orientation(coordSys, idod))
 
     --convert into drawing frame
-    lpos = INV(origin):lpos
+    lpos = INV((origin)):lpos
     --lpos.x = -1*idod*lpos.x
     vpos1 = VEC(lpos.x, lpos.y, lpos.z)
 

@@ -11,11 +11,11 @@ header_def -- define class
 declare_member(class_name,new,class_name,new)
 ROUTINE new FROM class_name
 declare_member(class_name,init,class_name,init)
-ROUTINE init(toolOffst : XYZWPR; interp_ : BOOLEAN; prog_typ : INTEGER; &
+ROUTINE init(toolOffst : XYZWPR; ref_radius : REAL; interp_ : BOOLEAN; prog_typ : INTEGER; &
              tool_speed : REAL; link_speed : REAL; useSetSpeed : BOOLEAN; & 
              tool_step : REAL; link_step : REAL; inDegrees : BOOLEAN) FROM class_name
 declare_member(class_name,init2,class_name,init2)
-ROUTINE init2(mtnprm: t_MOTION_PRM; toolprm_ : t_TOOL_VARS) FROM class_name
+ROUTINE init2(mtnprm: t_MOTION_PRM; toolprm_ : t_TOOL_VARS; ref_radius : REAL) FROM class_name
 declare_member(class_name,delete,class_name,dstr)
 ROUTINE delete FROM class_name
 --setters
@@ -41,6 +41,14 @@ declare_member(class_name,set_orient,class_name,storn)
 ROUTINE set_orient(orient : VECTOR) FROM class_name
 declare_member(class_name,set_idod,class_name,stido)
 ROUTINE set_idod(i : INTEGER) FROM class_name
+declare_member(class_name,set_tooling_entry,class_name,stten)
+ROUTINE set_tooling_entry FROM class_name
+declare_member(class_name,set_tooling_exit,class_name,sttex)
+ROUTINE set_tooling_exit FROM class_name
+declare_member(class_name,set_tooling_start_offset,class_name,sttso)
+ROUTINE set_tooling_start_offset FROM class_name
+declare_member(class_name,set_tooling_stop_offset,class_name,stspo)
+ROUTINE set_tooling_stop_offset FROM class_name
 
 --set groups
 declare_member(class_name,aquire_groups,class_name,aqgrp)

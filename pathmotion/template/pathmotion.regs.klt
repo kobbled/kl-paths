@@ -2,16 +2,31 @@
 %define pathmotion_regs_t
 
 --default register list
---registers
+--speed register
 %define SPEED_REGISTER 200
+%define LINK_SPEED_REG 228
+--default speeds
 %define TERM_REGISTER 255
 %define TYPE_REGISTER 253
 %define CODE_REGISTER 259
 --position registers
 %define TOOL_OFFSET_REG 20
+%define FRAME_OFFSET_REG 21
+%define APPROACH_OFFSET_REG 78
+%define DEPART_OFFSET_REG 76
+%define LASER_START_OFFSET_REG 25
+%define LASER_STOP_OFFSET_REG 26
 %define POSE_REG 85
 %define ARC_REG1 80
 %define ARC_REG2 81
 %define ARC_REG3 82
+
+%define REG_I 178
+%define REG_INC 179
+%define REG_J 180
+%define REG_PASSES 181
+%define REG_K 182
+%define REG_POCKETS 183 
+%define REG_L 184
 
 %endif -- pathmotion_regs_t

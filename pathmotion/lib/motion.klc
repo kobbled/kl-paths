@@ -28,7 +28,6 @@ PROGRAM class_name
 %include pose.const.klt
 %include pathlib.klt
 %include toolpath.structs.klt
-%include pathplan.klt
 %include motion.deps.klt
 
 %ifdef motion_type
@@ -53,7 +52,7 @@ VAR
   motion_prog : ARRAY[2] OF STRING[12]
   --used for setting the motion programs in 'set_prog_names'
 
-%from systemlib.klh %import VEC, VEC2D
+%include systemlib.klh
 %include errors.klh
 %include pose.klh
 %include pathlib.klh
@@ -90,71 +89,117 @@ ROUTINE new
     this.interpolate = TRUE
     this.program_type = 1
     set_prog_names(this.program_type)
+    this.ref_radius = 0
 
     --default speeds
     this.useSetSpeed = TRUE
     this.tool_speed = TOOLING_SPEED
     this.link_speed = LINKING_SPEED
 
+    --set speed registers
+    registers__set_real(SPEED_REGISTER, TOOLING_SPEED)
+    registers__set_real(LINK_SPEED_REG, LINKING_SPEED)
+
     --default increments
     this.inDegrees = FALSE
     this.tool_step = TOOLING_STEP
     this.link_step = LINKING_STEP
 
+    --approach/depart offsets
+    this.start_offset = 0
+    this.stop_offset = 0
+
     --initialize toolprm
     set_retract_dist(VEC(0, 50, 50))
+    toolprm.perchDist.x = 0 ; toolprm.perchDist.y = 500 ; toolprm.perchDist.z = 150 ;
+
     set_orient(VEC(0, 0, 0))
     set_coordinate_system(PTH_CARTESAN, 3)
     set_idod(1)
+
+    --set tooling entry/exit offsets
+    set_tooling_entry
+    set_tooling_exit
+    set_tooling_start_offset
+    set_tooling_stop_offset
   
   END new
 
 ROUTINE init
   BEGIN
-    tool_offset = make_tool_offset(toolOffst)
-    frame_offset = make_user_offset
-
     this.interpolate = interp_
     this.program_type = prog_typ
     set_prog_names(this.program_type)
+    this.ref_radius = ref_radius
 
     --default speeds
     this.useSetSpeed = useSetSpeed
     this.tool_speed = tool_speed
     this.link_speed = link_speed
 
+    --set speed registers
+    registers__set_real(SPEED_REGISTER, tool_speed)
+    registers__set_real(LINK_SPEED_REG, link_speed)
+
     --default increments
     this.inDegrees = inDegrees
     this.tool_step = tool_step
     this.link_step = link_step
+
+    --approach/depart offsets
+    this.start_offset = 0
+    this.stop_offset = 0
+
+    --set offsets
+    tool_offset = make_tool_offset(toolOffst)
+    frame_offset = make_user_offset(0)
+
+    --set tooling entry/exit offsets
+      -- must be after setting tool_offset
+    set_tooling_entry
+    set_tooling_exit
+    set_tooling_start_offset
+    set_tooling_stop_offset
 
   END init
 
 ROUTINE init2
   BEGIN 
     --toolparam
-    toolprm.retractDist.x = toolprm_.retractDist.x ; toolprm.retractDist.y = toolprm_.retractDist.y ; toolprm.retractDist.z = toolprm_.retractDist.z ;
-    toolprm.orient.x = toolprm_.orient.x ; toolprm.orient.y = toolprm_.orient.y ; toolprm.orient.z = toolprm_.orient.z ;
-    toolprm.pitch = toolprm_.pitch
-    toolprm.pitchLead = toolprm_.pitchLead
-    toolprm.idod = toolprm_.idod
-    toolprm.coordSys = paths__new_coord_sys((toolprm_.coordSys.system), (toolprm_.coordSys.z_axis))
+    toolprm = paths__new_tool_params(paths__toolvec_to_vec(toolprm_.retractDist), paths__toolvec_to_vec(toolprm_.perchDist), paths__toolvec_to_vec(toolprm_.orient), (toolprm_.pitch), (toolprm_.pitchLead), (toolprm_.idod), toolprm_.coordSys)
 
-    -- sets tool_offset
-    define_tool_offset(toolprm_)
     this.interpolate = mtnprm.interpolate
     this.program_type = mtnprm.program_type
     set_prog_names(this.program_type)
+    this.ref_radius = ref_radius
 
     --default speeds
     this.useSetSpeed = mtnprm.useSetSpeed
     this.tool_speed = mtnprm.tool_speed
     this.link_speed = mtnprm.link_speed
 
+    --set speed registers
+    registers__set_real(SPEED_REGISTER, mtnprm.tool_speed)
+    registers__set_real(LINK_SPEED_REG, mtnprm.link_speed)
+
     --default increments
     this.inDegrees = mtnprm.inDegrees
     this.tool_step = mtnprm.tool_step
     this.link_step = mtnprm.link_step
+
+    --approach/depart offsets
+    this.start_offset = mtnprm.start_offset
+    this.stop_offset = mtnprm.stop_offset
+
+    -- sets offsets
+    define_tool_offset(toolprm_)
+
+    --set tooling entry/exit offsets
+      -- must be after setting tool_offset
+    set_tooling_entry
+    set_tooling_exit
+    set_tooling_start_offset
+    set_tooling_stop_offset
     
   END init2
 
@@ -275,6 +320,54 @@ ROUTINE set_idod
   BEGIN
     toolprm.idod = i
   END set_idod
+
+ROUTINE set_tooling_entry
+  VAR
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    nde = new_cart((this.start_offset + (APPROACH_OFFSET_MM)),0,0,0,0,0, (ZEROPOS(1).config_data))
+    
+    --multiply through with tool offset
+    nde = poseMul(tool_offset, nde)
+
+    set_posereg(nde, APPROACH_OFFSET_REG)
+  END set_tooling_entry
+
+ROUTINE set_tooling_exit
+  VAR
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    nde = new_cart((this.stop_offset + (DEPART_OFFSET_MM)),0,0,0,0,0, (ZEROPOS(1).config_data))
+    
+    --multiply through with tool offset
+    nde = poseMul(tool_offset, nde)
+
+    set_posereg(nde, DEPART_OFFSET_REG)
+  END set_tooling_exit
+
+ROUTINE set_tooling_start_offset
+  VAR
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    nde = new_cart((this.start_offset),0,0,0,0,0, (ZEROPOS(1).config_data))
+    
+    --multiply through with tool offset
+    nde = poseMul(tool_offset, nde)
+
+    set_posereg(nde, LASER_START_OFFSET_REG)
+  END set_tooling_start_offset
+
+ROUTINE set_tooling_stop_offset
+  VAR
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    nde = new_cart((this.stop_offset),0,0,0,0,0, (ZEROPOS(1).config_data))
+    
+    --multiply through with tool offset
+    nde = poseMul(tool_offset, nde)
+
+    set_posereg(nde, LASER_STOP_OFFSET_REG)
+  END set_tooling_stop_offset
 
 ROUTINE run_approach_path
   BEGIN
