@@ -33,7 +33,6 @@ PROGRAM test_pth_rot
 %include systemvars.klt
 %include draw.klt
 %include pose.const.klt
-%include pathplan.klt
 %include pathlib.klt
 %include toolpath.structs.klt
 
@@ -61,7 +60,7 @@ VAR
 impl_motion_head(MOTION_DATA_FILE)
 
 --polygon object
-%class tstpoly('polygon.klc','polygon.klh')
+%class tstcanv('canvas.klc','canvas.klh')
 --path object
 %class tstrot('pathmake.klc','pathmake.klh','defaultrot.klt')
 --motion object
@@ -137,7 +136,7 @@ ROUTINE draw_pad(width, length : REAL; seperation : REAL; no_of_pads : INTEGER; 
       polygon[3].coords = start + i*VEC2D(seperation, 0) + VEC2D(width,length)
       polygon[4].coords = start + i*VEC2D(seperation, 0) + VEC2D(0,length)
       
-      tstpoly__append_polygon(polygon)
+      tstcanv__append_polygon(polygon)
     ENDFOR
   END draw_pad
 
@@ -178,19 +177,23 @@ ROUTINE t_rot_delta
     draw_delta
 
     --raster polygon
-    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, NO_WALLINES, 0, PASS_OVERLAP)
+    tstcanv__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, NO_WALLINES, 0, PASS_OVERLAP)
      --append delta polygon into object
-    tstpoly__append_polygon(polygon)
+    tstcanv__append_polygon(polygon)
     --flip drawing for drawing on OD
-    tstpoly__flip_canvas
-    tstpoly__raster(PTH_LINETO)
+    tstcanv__flip_canvas
+
+    --raster poly
+    tstcanv__raster(PTH_LINETO)
+    --trace
+    tstcanv__trace(PTH_LINETO)
 
     --get bounding box
-    bbox = tstpoly__get_bounding_box_drawing
+    bbox = tstcanv__get_bounding_box_drawing
 
     -- get raster liens and contours
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
-    tstpoly__lines_to_vec_path(lines) ; tstpoly__contours_to_vec_path(contours) ;
+    tstcanv__lines_to_vec_path(lines) ; tstcanv__contours_to_vec_path(contours) ;
 
     frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
@@ -201,12 +204,12 @@ ROUTINE t_rot_delta
       -- coord frm, coordinate system, part origin, idod, doPathPlan
     tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
-      --tool offset, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
-    tstrmn__init(tool, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
+      --tool offset, reference radius, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
+    tstrmn__init(tool, DRAW_RADIUS, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
 
     --generate path
-     -- lines, contours, start_corner, raster_type, poly_depend
-    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
+     -- (lines, contours, start_corner, raster_type, poly_depend, contourFirst)
+    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE, FALSE)
 
     -- approach path
     tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
@@ -271,19 +274,22 @@ ROUTINE t_rot_OD
     pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
 
     --draw pads
-    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstcanv__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
     --flip drawing for drawing on OD
-    tstpoly__flip_canvas
+    tstcanv__flip_canvas
+
     --get raster lines
-    tstpoly__raster(PTH_LINETO)
+    tstcanv__raster(PTH_LINETO)
+    --trace
+    tstcanv__trace(PTH_LINETO)
 
     --get bounding box
-    bbox = tstpoly__get_bounding_box_drawing
+    bbox = tstcanv__get_bounding_box_drawing
 
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
     --get lines from object
-    tstpoly__lines_to_vec_path(lines) ;
+    tstcanv__lines_to_vec_path(lines) ;
 
     frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
@@ -299,12 +305,12 @@ ROUTINE t_rot_OD
       -- coord frm, coordinate system, part origin, idod, doPathPlan
     tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
-      --tool offset, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
-    tstrmn__init(tool, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
+      --tool offset, reference radius, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
+    tstrmn__init(tool, PAD_RADIUS, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
 
     --generate path
-     -- lines, contours, start_corner, raster_type, poly_depend
-    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
+     -- (lines, contours, start_corner, raster_type, poly_depend, contourFirst)
+    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE, FALSE)
 
     -- approach path
     tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, POS(0,PAD_START_DIST+100,-1*RETRACT_HEIGHT,0,0,0,(ZEROPOS(1).config_data)))
@@ -367,17 +373,20 @@ ROUTINE t_rot_ID
     pose__set_toolframe(TOOL_FRAME_NO, ROT_GRP)
 
     --draw pads
-    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstcanv__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
+    
     --get raster lines
-    tstpoly__raster(PTH_LINETO)
+    tstcanv__raster(PTH_LINETO)
+    --trace
+    tstcanv__trace(PTH_LINETO)
 
     -- get bounding box
-    bbox = tstpoly__get_bounding_box_drawing
+    bbox = tstcanv__get_bounding_box_drawing
 
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
     --get lines from object
-    tstpoly__lines_to_vec_path(lines) ;
+    tstcanv__lines_to_vec_path(lines) ;
 
     frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
@@ -387,12 +396,12 @@ ROUTINE t_rot_ID
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod, doPathPlan
     tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
-      --tool offset, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
-    tstrmn__init(tool, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
+      --tool offset, reference radius, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
+    tstrmn__init(tool, PAD_RADIUS, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
 
     --generate path
-     -- lines, contours, start_corner, raster_type, poly_depend
-    tstrot__planPath(lines, contours, ID_CORNER, ONEWAY, FALSE)
+     -- (lines, contours, start_corner, raster_type, poly_depend, contourFirst)
+    tstrot__planPath(lines, contours, ID_CORNER, ONEWAY, FALSE, FALSE)
     
     --set path type
     tstrmn__set_prog_names(MOVE_DRYRUN)
@@ -464,24 +473,27 @@ ROUTINE t_rot_pad
     drawfrm = POS(0,0,0,0,0,0,(ZEROPOS(1).config_data))
       --initialize polygon object
         -- (frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__init(drawfrm, TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstcanv__init(drawfrm, TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
       --draw pad
     draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
       --need to flip drawing for the image to not be mirrored
-    tstpoly__flip_canvas
+    tstcanv__flip_canvas
 
     --get raster lines
     -- (start_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstcanv__set_params(RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
 
-    tstpoly__raster(PTH_LINETO)
+    --raster polygon
+    tstcanv__raster(PTH_LINETO)
+    --trace
+    tstcanv__trace(PTH_LINETO)
 
     --get bounding box
-    bbox = tstpoly__get_bounding_box_drawing
+    bbox = tstcanv__get_bounding_box_drawing
 
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
     --get lines from object
-    tstpoly__lines_to_vec_path(lines) ;
+    tstcanv__lines_to_vec_path(lines) ;
 
     frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
@@ -493,12 +505,12 @@ ROUTINE t_rot_pad
       -- coord frm, coordinate system, part origin, idod, doPathPlan
     tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
-      --tool offset, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
-    tstrmn__init(tool, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
+      --tool offset, reference radius, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
+    tstrmn__init(tool, PAD_RADIUS, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
 
     --generate path
-      -- lines, contours, start_corner, raster_type, poly_depend
-    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE)
+      -- (lines, contours, start_corner, raster_type, poly_depend, contourFirst)
+    tstrot__planPath(lines, contours, OD_CORNER, ONEWAY, FALSE, FALSE)
 
     -- approach path
     tstrmn__run_approach_path(LINKING_SPEED, LINKING_STEP, (cds.system), PAD_IDOD, origin, offst)
@@ -561,17 +573,20 @@ ROUTINE t_rot_pid
 
     --draw pads
     -- (frm, onboundary, raster_angle, dir, wall_lines, line_width, line_pitch)
-    tstpoly__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
+    tstcanv__init(POS(0,0,0,0,0,0,(ZEROPOS(1).config_data)), TRUE, RASTER_ANGLE, 1, CONTOUR_LINES, 0, PASS_OVERLAP)
     draw_pad(PAD_WIDTH, PAD_LENGTH, PAD_SEPERATION, NO_OF_PADS, VEC2D(0,0))
+    
     --get raster lines
-    tstpoly__raster(PTH_LINETO)
+    tstcanv__raster(PTH_LINETO)
+    --trace
+    tstcanv__trace(PTH_LINETO)
 
     -- get bounding box
-    bbox = tstpoly__get_bounding_box_drawing
+    bbox = tstcanv__get_bounding_box_drawing
 
     paths__clear_vecpath(lines) ; paths__clear_vecpath(contours) ;
     --get lines from object
-    tstpoly__lines_to_vec_path(lines) ;
+    tstcanv__lines_to_vec_path(lines) ;
 
     frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
@@ -582,11 +597,12 @@ ROUTINE t_rot_pid
       -- coord frm, coordinate system, part origin, idod, doPathPlan
     tstrot__init(frm, cds, origin, PAD_IDOD, TRUE)
     --intialize motion friend class
-      --tool offset, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
-    tstrmn__init(tool, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
+      --tool offset, reference radius, interpolate flag, program type, tool_speed, link_speed, USESETSPEED, tool_step, link_step, INDEGREES
+    tstrmn__init(tool, PAD_RADIUS, TRUE, MOVE_DRYRUN, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, TRUE)
 
     --generate path
-    tstrot__planPath(lines, contours, ID_CORNER, ONEWAY, FALSE)
+      -- (lines, contours, start_corner, raster_type, poly_depend, contourFirst)
+    tstrot__planPath(lines, contours, ID_CORNER, ONEWAY, FALSE, FALSE)
     
     --set path type
     tstrmn__set_prog_names(MOVE_DRYRUN)
@@ -629,7 +645,7 @@ BEGIN
   t_rot_pid
 
   -- --clean up
-  -- tstpoly__delete
+  -- tstcanv__delete
   -- tstrot__delete
 
 %ifdef DEBUG_BUILD
