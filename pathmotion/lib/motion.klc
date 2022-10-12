@@ -429,13 +429,13 @@ ROUTINE moveApproach
     --..warning:: toolprm needs to be initialize with init2, or set_retract_dist/set_coordinate_system/set_idod
 
     --approach path
-    approachPath((this.link_speed), (this.link_step), (toolprm.coordSys.system), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS((toolprm.retractDist.x),(toolprm.retractDist.y),-1*(toolprm.retractDist.z),0,0,0, (ZEROPOS(1).config_data)))
+    approachPath((this.link_speed), (this.link_step), (toolprm.coordSys.system), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS((toolprm.perchDist.x),(toolprm.perchDist.y),(toolprm.perchDist.z),0,0,0, (ZEROPOS(1).config_data)))
   END moveApproach
 
 ROUTINE moveRetract
   BEGIN
     --retract path
-    retractPath((this.link_speed), (this.link_step), (toolprm.coordSys.system), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS((toolprm.retractDist.x),(toolprm.retractDist.y),-1*(toolprm.retractDist.z),0,0,0, (ZEROPOS(1).config_data)))
+    retractPath((this.link_speed), (this.link_step), (toolprm.coordSys.system), (toolprm.idod), `PATH_OBJECT_NAME`__get_origin, POS((toolprm.perchDist.x),(toolprm.perchDist.y),(toolprm.perchDist.z),0,0,0, (ZEROPOS(1).config_data)))
   END moveRetract
 
 ROUTINE movePos
