@@ -14,7 +14,6 @@ PROGRAM test_pplan
 %include systemlib.types.klt
 %include systemvars.klt
 %include pathlib.klt
-%include pathplan.klt
 %include draw.klt
 
 VAR
@@ -32,7 +31,7 @@ VAR
 --tsp object
 %class tstpln('pathplan.klc','pathplan.klh','vecpathplan.klt')
 --draw object
-%class tstpoly('polygon.klc', 'polygon.klh')
+%class tstcanv('canvas.klc', 'canvas.klh')
 
 %ifdef DEBUG_BUILD
 -- user display log
@@ -86,23 +85,21 @@ ROUTINE draw_delta(rast_ang : REAL ; pitch : REAL)
 
     --initialize polygon object
     tstpln__delete
-    tstpoly__new
-    tstpoly__set_canvas((ZEROPOS(1)))
-    tstpoly__set_params(rast_ang, 1, 1, 0, pitch)
+    tstcanv__new
+    tstcanv__set_canvas((ZEROPOS(1)))
+    tstcanv__set_params(rast_ang, 1, 1, 0, pitch)
     --append polygon
-    tstpoly__append_polygon(polygon)
-    --raster polygon
-    tstpoly__raster(PTH_LINETO)
+    tstcanv__append_polygon(polygon)
 
   END draw_delta
 
 ROUTINE draw_multi(rast_ang : REAL ; pitch : REAL)
   BEGIN
     tstpln__delete
-    tstpoly__delete
+    tstcanv__delete
 
     --create polygon
-    tstpoly__init((ZEROPOS(1)), FALSE, rast_ang, 1, 1, 0, pitch)
+    tstcanv__init((ZEROPOS(1)), FALSE, rast_ang, 1, 1, 0, pitch)
 
     clear_poly(polygon)
     append_nodes(polygon, 4)
@@ -110,22 +107,19 @@ ROUTINE draw_multi(rast_ang : REAL ; pitch : REAL)
     polygon[2].coords = VEC2D(30,30)   
     polygon[3].coords = VEC2D(30,60)
     polygon[4].coords = VEC2D(0,60)
-    tstpoly__append_polygon(polygon)
+    tstcanv__append_polygon(polygon)
    
     polygon[1].coords = VEC2D(60,30)   
     polygon[2].coords = VEC2D(90,30)   
     polygon[3].coords = VEC2D(90,60)
     polygon[4].coords = VEC2D(60,60)
-    tstpoly__append_polygon(polygon)
+    tstcanv__append_polygon(polygon)
          
     polygon[1].coords = VEC2D(120,30) 
     polygon[2].coords = VEC2D(150,30)
     polygon[3].coords = VEC2D(150,60)
     polygon[4].coords = VEC2D(120,60)
-    tstpoly__append_polygon(polygon)
-
-    --raster polygon
-    tstpoly__raster(PTH_LINETO)
+    tstcanv__append_polygon(polygon)
 
   END draw_multi
 
@@ -163,11 +157,14 @@ ROUTINE t_NN : BOOLEAN
 
     draw_delta(rast_ang, 10)
 
+    --raster polygon
+    tstcanv__raster(PTH_LINETO)
+
       --get bounding box
-    bbox = tstpoly__get_bounding_box_drawing
+    bbox = tstcanv__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
-    tstpoly__lines_to_vec_path(lines)
+    tstcanv__lines_to_vec_path(lines)
 
     --generate path
     tstpln__init(lines, POS(0,0,0,0,0,rast_ang, (ZEROPOS(1).config_data)))
@@ -208,9 +205,12 @@ ROUTINE t_rast_neigh : BOOLEAN
     -- draw_delta(rast_ang, (ZEROPOS(1)), 10)
     draw_multi(rast_ang, 3)
 
+    --raster polygon
+    tstcanv__raster(PTH_LINETO)
+
       --get contours
     paths__clear_vecpath(lines)
-    tstpoly__lines_to_vec_path(lines)
+    tstcanv__lines_to_vec_path(lines)
 
     query = paths__raster_neighbors(lines[45], TRUE, lines)
 
@@ -278,11 +278,14 @@ ROUTINE t_rast_path : BOOLEAN
 
     draw_delta(rast_ang, 10)
 
+    --raster polygon
+    tstcanv__raster(PTH_LINETO)
+
       --get bounding box
-    bbox = tstpoly__get_bounding_box_drawing
+    bbox = tstcanv__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
-    tstpoly__lines_to_vec_path(lines)
+    tstcanv__lines_to_vec_path(lines)
 
     --generate path
     tstpln__delete
@@ -342,10 +345,10 @@ ROUTINE t_rast_multi : BOOLEAN
     draw_multi(rast_ang, 3)
 
       --get bounding box
-    bbox = tstpoly__get_bounding_box_drawing
+    bbox = tstcanv__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
-    tstpoly__lines_to_vec_path(lines)
+    tstcanv__lines_to_vec_path(lines)
 
     --generate path
     clear_list(path_plan)
@@ -370,10 +373,10 @@ ROUTINE t_rast_multi : BOOLEAN
     draw_multi(rast_ang, 3)
 
       --get bounding box
-    bbox = tstpoly__get_bounding_box_drawing
+    bbox = tstcanv__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
-    tstpoly__lines_to_vec_path(lines)
+    tstcanv__lines_to_vec_path(lines)
 
     tstpln__delete
     clear_list(path_plan)
@@ -412,10 +415,10 @@ ROUTINE t_rast_mult2 : BOOLEAN
     draw_multi(rast_ang, 3)
 
       --get bounding box
-    bbox = tstpoly__get_bounding_box_drawing
+    bbox = tstcanv__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
-    tstpoly__lines_to_vec_path(lines)
+    tstcanv__lines_to_vec_path(lines)
 
     --generate path
     clear_list(path_plan)
@@ -460,16 +463,16 @@ ROUTINE t_hexagon : BOOLEAN
     clear_poly(polygon)
     draw__hexagon(hex_radius, num_of_points, POS(hex_radius,hex_radius,0,0,0,0,(ZEROPOS(1).Config_data)), polygon)
 
-    tstpoly__init((ZEROPOS(1)), TRUE, rast_ang, -1, wall_lines, 0, overlap)
+    tstcanv__init((ZEROPOS(1)), TRUE, rast_ang, -1, wall_lines, 0, overlap)
      --append polygon into object
-    tstpoly__append_polygon(polygon)
-    tstpoly__raster(PTH_LINETO)
+    tstcanv__append_polygon(polygon)
+    tstcanv__raster(PTH_LINETO)
 
       --get bounding box
-    bbox = tstpoly__get_bounding_box_drawing
+    bbox = tstcanv__get_bounding_box_drawing
       --get contours
     paths__clear_vecpath(lines)
-    tstpoly__lines_to_vec_path(lines)
+    tstcanv__lines_to_vec_path(lines)
 
     --generate path
     clear_list(path_plan)
@@ -489,44 +492,46 @@ ROUTINE t_hexagon : BOOLEAN
 
   END t_hexagon
 
+-- ********
 -- **fix**
+-- ********
 -- ..warning:: This function needs to be updated to new csv/layout
 --             and polygon->import_shape syntax
-ROUTINE t_temp : BOOLEAN
-  VAR 
-    rast_ang : REAL
-    start_corner : INTEGER
-    start_nde : INTEGER
-    i : INTEGER
-    act1, exp1 : ARRAY[20] OF INTEGER
-    bbox : t_RECT
-    apprch_pnt : t_VEC_PATH
-  BEGIN
+-- ROUTINE t_temp : BOOLEAN
+--   VAR 
+--     rast_ang : REAL
+--     start_corner : INTEGER
+--     start_nde : INTEGER
+--     i : INTEGER
+--     act1, exp1 : ARRAY[20] OF INTEGER
+--     bbox : t_RECT
+--     apprch_pnt : t_VEC_PATH
+--   BEGIN
 
-    rast_ang = 90
-    start_corner = 1
+--     rast_ang = 90
+--     start_corner = 1
 
-    tstpoly__new
-    tstpoly__set_canvas(POS(0,0,0,0,0,rast_ang,(ZEROPOS(1).config_data)))
-    tstpoly__set_params(rast_ang, 1, 1, 0, 5)
-    tstpoly__import_shape('FR:\rebel.csv')
-    tstpoly__raster(PTH_LINETO)
+--     tstcanv__new
+--     tstcanv__set_canvas(POS(0,0,0,0,0,rast_ang,(ZEROPOS(1).config_data)))
+--     tstcanv__set_params(rast_ang, 1, 1, 0, 5)
+--     tstcanv__import_shape('FR:\rebel.csv')
+--     tstcanv__raster(PTH_LINETO)
 
-      --get contours
-    paths__clear_vecpath(lines)
-    tstpoly__lines_to_vec_path(lines)
+--       --get contours
+--     paths__clear_vecpath(lines)
+--     tstcanv__lines_to_vec_path(lines)
 
-    --generate path
-    clear_list(path_plan)
-    tstpln__init(lines, POS(0,0,0,0,0,0, (ZEROPOS(1).config_data)))
-    tstpln__raster_graph(ONEWAY, FALSE, TRUE)
+--     --generate path
+--     clear_list(path_plan)
+--     tstpln__init(lines, POS(0,0,0,0,0,0, (ZEROPOS(1).config_data)))
+--     tstpln__raster_graph(ONEWAY, FALSE, TRUE)
 
-    --get start node
-    tstpln__MST(tstpln__closest_bounding_box(1))
-    tstpln__get_plan(path_plan)
+--     --get start node
+--     tstpln__MST(tstpln__closest_bounding_box(1))
+--     tstpln__get_plan(path_plan)
 
-    RETURN(TRUE)
-  END t_temp
+--     RETURN(TRUE)
+--   END t_temp
 
 -- ********
 -- **fix**
@@ -563,7 +568,8 @@ BEGIN
   kunit_test('test raster multi polygons', t_rast_multi)
   kunit_test('test raster multi polygon indep', t_rast_mult2)
   kunit_test('test raster hexagon poly', t_hexagon)
-  kunit_test('test raster svg poly', t_temp)
+  -- **fix** t_import using a csv layout
+  -- kunit_test('test raster svg poly', t_temp)
   -- **fix** t_import using a csv layout
   -- kunit_test('test import raster path', t_import)
 
@@ -571,7 +577,7 @@ BEGIN
 
   --clean up
   tstpln__delete
-  tstpoly__delete
+  tstcanv__delete
   clear_list(path_plan)
   paths__clear_vecpath(lines)
   clear_poly(polygon)

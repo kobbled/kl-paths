@@ -16,7 +16,6 @@ PROGRAM class_name
 %include systemvars.klt
 %include draw.rect.klt
 %include pose.const.klt
-%include pathplan.klt
 %include pathlib.klt
 %include pathplan.deps.klt
 
@@ -455,6 +454,9 @@ ROUTINE delete
     `GRAPH_CLASS_NAME`__delete
   END delete
 
+-- *****
+-- **fix**
+-- ..warning:: This function needs to be updated to new csv/layout
 -- *****
 ROUTINE importPath
   VAR
