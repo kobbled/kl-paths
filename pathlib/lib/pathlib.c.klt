@@ -47,4 +47,21 @@ CONST
 %define POLAR_UP_NORMAL VEC(-90,0,0)
 %define POLAR_DOWN_NORMAL VEC(90,0,0)
 
+
+--raster types
+%define NONE 0
+%define ONEWAY 1
+%define ZIGZAG 2
+%define NEARESTNEIGHBOR 3
+    --..warning:: not implemented
+%define BOTTOMFILL 4
+%define CASCADEFILL 5
+
+--corner defintions
+%defeval LEFT_BOTTOM 1
+%defeval RIGHT_BOTTOM 2
+%defeval RIGHT_TOP 3
+%defeval LEFT_TOP 4
+
+
 %endif --pathlib_const_t
