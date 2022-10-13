@@ -55,6 +55,7 @@ layout_friends(LAYOUT_OBJECT_NAME,LAYOUT_STRUCT)
 %from math.klh %import norm
 %from pose.klh %import cartesian_to_cylindrical, replace_orient
 %from pathlib.klh %import clear_toolpath, new_coord_sys, new_tool_params
+%from registers.klh %import set_real, set_int
 
 
 --define layout object
@@ -136,7 +137,7 @@ ROUTINE new
     prm : t_PATH_PARAM
   BEGIN
     --initialize lam
-    `LAM_NAME`__init(lsrprm_, powprm_)
+    `LAM_NAME`__init(lsrprm_, powprm_.powder, powprm_, overrideLAM)
 
     --set params
     --make copy
@@ -156,7 +157,7 @@ ROUTINE new
     `PATH_OBJECT_NAME`__set_linking_coordinate_system((make_prm_.coord_system.system), (make_prm_.coord_system.z_axis))
 
     --initialize pathmotion
-    `MOTION_OBJECT_NAME`__init2(mtnprm_, toolprm_)
+    `MOTION_OBJECT_NAME`__init2(mtnprm_, toolprm_, (make_prm_.origin.z))
      --needed for using LAM
     program_type = (mtnprm_.program_type)
 
@@ -405,11 +406,11 @@ ROUTINE run
     --lock groups
     `MOTION_OBJECT_NAME`__aquire_groups
 
-    --start extruder and enable laser
-    lam_start
-
     --open layout file & load starting layer
     open_layout
+
+    --start extruder and enable laser
+    lam_start
 
     --loop layers
     REPEAT
@@ -452,11 +453,11 @@ ROUTINE run
       `MOTION_OBJECT_NAME`__moveRetract
     UNTIL (NOT bLayer) -- check if there are more layers to read
 
-    --close layout file
-    close_layout
-
     --stop extruder and disable laser
     lam_stop
+    
+    --close layout file
+    close_layout
 
     --unlock groups
     `MOTION_OBJECT_NAME`__release_groups

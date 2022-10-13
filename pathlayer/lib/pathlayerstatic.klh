@@ -10,7 +10,7 @@ header_def -- define class
 declare_member(class_name,new,class_name,new)
 ROUTINE new(layer_prm_ : t_PATH_LAYER ; make_prm_ : t_PATH_PARAM; &
             mtnprm_ : t_MOTION_PRM; toolprm_ : t_TOOL_VARS; &
-            lsrprm_ : t_LASER; powprm_ : t_POWDER) FROM class_name
+            lsrprm_ : t_LASER; powprm_ : t_POWDER; overrideLAM : BOOLEAN) FROM class_name
 declare_member(class_name,delete,class_name,del)
 ROUTINE delete FROM class_name
 

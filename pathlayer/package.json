@@ -15,7 +15,7 @@
   "tests-includes" : [
     "test/configs",
     "test/configs/pathplan",
-    "test/configs/static/rotary",
+    "test/configs/rotary",
     "test/configs/lam"
   ],
   "tests-tp" : [    
@@ -36,10 +36,9 @@
     "systemlib",
     "math",
     "pose",
+    "registers",
     "pathlib",
-    "pathplan",
     "pathmake",
-    "pathdraw",
     "pathmotion",
     "layout",
     "lam"
