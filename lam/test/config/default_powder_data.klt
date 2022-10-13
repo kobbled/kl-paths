@@ -21,6 +21,56 @@
     powder_names[4] = '1535-30'
   END powderNames`
 
+
+-- --------
+-- powder parameters
+
+%define define_pow_params `ROUTINE initPowParam(powType : INTEGER; override : BOOLEAN)
+  BEGIN
+    SELECT powType OF
+      CASE(POWDER_INCONEL):
+        -- Inconel 625
+        powprm.powder = POWDER_INCONEL ;
+
+        IF (NOT override) THEN
+          lsrprm.power = 4000
+          powprm.hopper = 2 ; 
+          powprm.rpm = 2.6 ; 
+          powprm.lpm = 4 ; 
+          powprm.flow_rate = 0.95 ;
+          powprm.height = 1 ;
+        ENDIF
+      CASE(POWDER_431L):
+        -- 431L HC
+        powprm.powder = POWDER_431L ;
+
+        IF (NOT override) THEN
+          lsrprm.power = 4000
+          powprm.hopper = 2 ; 
+          powprm.rpm = 1.8 ; 
+          powprm.lpm = 5 ; 
+          powprm.flow_rate = 0.59 ;
+          powprm.height = 1 ;
+        ENDIF
+      CASE(POWDER_1535_30):
+        -- 1535-30
+        powprm.powder = POWDER_1535_30 ;
+
+        IF (NOT override) THEN
+          lsrprm.power = 4000
+          powprm.hopper = 2 ; 
+          powprm.rpm = 1.6 ; 
+          powprm.lpm = 5 ; 
+          powprm.flow_rate = 0.73 ;
+          powprm.height = 1 ;
+        ENDIF
+      ELSE:
+      
+    ENDSELECT
+
+
+  END initPowParam`
+
 -- --------
 -- depth to speed conversion
 

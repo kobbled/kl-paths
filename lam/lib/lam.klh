@@ -10,7 +10,7 @@ header_def -- define class
 declare_member(class_name,new,class_name,new)
 ROUTINE new FROM class_name
 declare_member(class_name,init,class_name,init)
-ROUTINE init(laserprm_ : t_LASER; powderprm_ : t_POWDER) FROM class_name
+ROUTINE init(laserprm_ : t_LASER; powder_type : INTEGER; powderprm_ : t_POWDER; override : BOOLEAN) FROM class_name
 declare_member(class_name,delete,class_name,del)
 ROUTINE delete FROM class_name
 

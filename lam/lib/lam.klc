@@ -18,7 +18,8 @@ VAR
 --private
   -- user macro
 define_powder_names
-
+  -- user macro
+define_pow_params
   -- user macro
 define_depth_maps
 
@@ -35,13 +36,14 @@ ROUTINE init
     powderNames
     initDepthMap
 
-    --laser parameters copy
-    lsrprm.power = laserprm_.power
+    --laser parameters reference
+    lsrprm = laserprm_
 
-    --powder parameters copy
-    powprm.hopper = powderprm_.hopper ; powprm.powder = powderprm_.powder ; 
-    powprm.rpm = powderprm_.rpm ; powprm.lpm = powderprm_.lpm ; powprm.flow_rate = powderprm_.flow_rate ;
-    powprm.height = powderprm_.height ;
+    --powder parameters reference
+    powprm = powderprm_
+
+    --update
+    initPowParam(powder_type, override)
 
   END init
 
