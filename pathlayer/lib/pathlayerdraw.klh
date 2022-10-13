@@ -1,0 +1,51 @@
+--header
+%include header_guard.m
+--oop
+%include namespace.m
+
+--start header file
+header_if -- ifndef class
+header_def -- define class
+
+declare_member(class_name,new,class_name,new)
+ROUTINE new(layer_prm_ : t_PATH_LAYER ; make_prm_ : t_PATH_PARAM; &
+            mtnprm_ : t_MOTION_PRM; toolprm_ : t_TOOL_VARS; &
+            lsrprm_ : t_LASER; powprm_ : t_POWDER) FROM class_name
+declare_member(class_name,delete,class_name,del)
+ROUTINE delete FROM class_name
+
+--layout members
+declare_member(class_name,import_layout,class_name,imptl)
+ROUTINE import_layout(filename : STRING) FROM class_name
+declare_member(class_name,open_layout,class_name,oplay)
+ROUTINE open_layout FROM class_name
+declare_member(class_name,close_layout,class_name,cllay)
+ROUTINE close_layout FROM class_name
+
+
+declare_member(class_name,set_start_layer,class_name,stlay)
+ROUTINE set_start_layer(startlay : INTEGER) FROM class_name
+declare_member(class_name,set_start_pass,class_name,stpas)
+ROUTINE set_start_pass(startpass : INTEGER) FROM class_name
+declare_member(class_name,set_drawing_type,class_name,stdrt)
+ROUTINE set_drawing_type(shape_type_ : INTEGER) FROM class_name
+declare_member(class_name,next_layer,class_name,nxtly)
+ROUTINE next_layer : BOOLEAN FROM class_name
+declare_member(class_name,next_pass,class_name,nxtps)
+ROUTINE next_pass : BOOLEAN FROM class_name
+declare_member(class_name,interStartlayer,class_name,insly)
+ROUTINE interStartlayer FROM class_name
+declare_member(class_name,interStoplayer,class_name,intly)
+ROUTINE interStoplayer FROM class_name
+declare_member(class_name,interpass,class_name,intps)
+ROUTINE interpass FROM class_name
+declare_member(class_name,run,class_name,run)
+ROUTINE run FROM class_name
+
+--lam members
+declare_member(class_name,lam_start,class_name,lmsrt)
+ROUTINE lam_start FROM class_name
+declare_member(class_name,lam_stop,class_name,lmstp)
+ROUTINE lam_stop FROM class_name
+
+%endif --end header

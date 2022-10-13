@@ -1,4 +1,9 @@
 %ifndef pathlayer_types_t
 %define pathlayer_types_t
 
+CONST
+  SHP_PAD     = 1
+  SHP_HEX     = 2
+  SHP_CUST    = 3
+
 %endif --pathlayer_types_t

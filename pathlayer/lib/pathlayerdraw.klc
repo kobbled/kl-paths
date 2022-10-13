@@ -1,0 +1,244 @@
+PROGRAM class_name
+%NOBUSYLAMP
+%COMMENT = 'pthlayerstat'
+%NOLOCKGROUP
+
+%include namespace.m
+
+%define BASE_CLASSNAME class_name
+
+%include pathlayer.deps.klt
+
+%ifeq DEBUG_BUILD FALSE
+%undef DEBUG_BUILD
+%endif
+
+%ifdef DEBUG_BUILD
+%include display.c.klt
+%endif
+
+%include errors.klt
+%include systemvars.klt
+%include systemlib.types.klt
+%include systemlib.datatypes.klt
+%include pose.const.klt
+%include pathlib.klt
+%include lam.klt
+%include toolpath.structs.klt
+
+%include pathlayer.klt
+
+--define layout struct
+layout_type
+
+--
+VAR
+  this   : t_PATH_LAYER
+  params : t_PATH_PARAM
+  passes : PATH nodedata = t_INTEGER
+  layers : INTEGER
+  program_type : INTEGER
+  shape_type : INTEGER
+
+-- include reference to pathmake "pth", and "line_endpnts".
+%include pathmake.friend.members.klt
+pathmake_friends(PATH_OBJECT_NAME)
+
+-- include reference to pathdraw "contours", and "lines".
+%include pathdraw.friend.members.klt
+pathdraw_friends(PATHDRAW_NAME)
+
+-- include reference to layout "buffer".
+%include layout.friends.klt
+layout_friends(LAYOUT_OBJECT_NAME,LAYOUT_STRUCT)
+
+%ifdef DEBUG_BUILD
+%include strings.klh
+%endif
+
+%include errors.klh
+%from systemlib.klh %import VEC, VEC2D
+%from math.klh %import norm
+%from pose.klh %import cartesian_to_cylindrical, replace_orient
+%include pathlib.klh %import clear_toolpath, new_coord_sys, new_tool_params
+
+--define layout object
+define_layout(LAYOUT_OBJECT_NAME,LAYOUT_CONFIG_FILENAME)
+
+--define path object
+path_make_define(PATH_OBJECT_NAME,CONFIG_FILENAME)
+
+--motion object
+path_motion_define(MOTION_OBJECT_NAME,CONFIG_FILENAME)
+
+--path draw object
+path_draw_define(PATHDRAW_NAME,CONFIG_FILENAME)
+
+--lam object
+lam_define(LAM_NAME,LAM_CNFG)
+
+
+%ifdef DEBUG_BUILD
+-- user display log
+%class usrdis('dispclass.klc','dispclass.klh')
+%endif
+
+%defeval class_name BASE_CLASSNAME
+
+%include pathlayerdraw.klh
+%include pathlayerdraw.private.klh
+
+--private
+
+--public
+ROUTINE new
+  VAR
+    prm : t_PATH_PARAM
+  BEGIN
+    --initialize lam
+    `LAM_NAME`__init(lsrprm_, powprm_)
+
+    --set params
+    --make copy
+    params.frm = (make_prm_.frm)
+    params.idod = (make_prm_.idod)
+    params.origin = (make_prm_.origin)
+    params.coord_system = paths__new_coord_sys((make_prm_.coord_system.system), (make_prm_.coord_system.z_axis))
+      --always use pathplan
+    params.usePathPlan = TRUE
+
+    --initialize pathmake
+    `PATH_OBJECT_NAME`__init((params.frm), params.coord_system, (params.origin), (params.idod), (params.usePathPlan))
+    --set linking coordinate system. Set as PTH_CYLINDER, or PTH_POLAR to transform linking
+    `PATH_OBJECT_NAME`__set_linking_coordinate_system((make_prm_.coord_system.system), (make_prm_.coord_system.z_axis))
+
+    --initialize pathmotion
+    `MOTION_OBJECT_NAME`__init2(mtnprm_, toolprm_, (make_prm_.origin.z))
+     --needed for using LAM
+    program_type = (mtnprm_.program_type)
+
+    clear_passes
+    layers = 0
+    this = layer_prm_
+
+    --set default
+      -- set externally
+    shape_type = SHP_PAD
+  END new
+
+ROUTINE delete
+  VAR
+    uninit_lay : t_PATH_LAYER
+    uninit_prm : t_PATH_PARAM
+    uninit_cds : t_COORD_SYS
+    uninit_tool : t_TOOL_VARS
+  BEGIN
+    --pathdraw delete
+    `PATHDRAW_NAME`__delete
+
+    --pathmake delete
+    `PATH_OBJECT_NAME`__delete
+
+    --layout delete
+    `LAYOUT_OBJECT_NAME`__delete
+
+    --motion delete
+    `MOTION_OBJECT_NAME`__delete
+
+    --lam delete
+    `LAM_NAME`__delete
+
+    clear_passes
+
+    this = uninit_lay
+    params = uninit_prm
+    shape_type = 0
+  END delete
+
+ROUTINE set_drawing_type
+  BEGIN
+    shape_type = shape_type_
+  END set_drawing_type
+
+ROUTINE run
+  VAR
+    bLayer : BOOLEAN
+    bPass : BOOLEAN
+  BEGIN
+    --lock groups
+    `MOTION_OBJECT_NAME`__aquire_groups
+
+    --start extruder and enable laser
+    lam_start
+
+    --open layout file & load starting layer
+    open_layout
+
+    --loop layers
+    REPEAT
+      --set next layer
+      bLayer = next_layer
+%ifdef DEBUG_BUILD
+      usrdis__print(DEBUG, 'next layer = ' + b_to_s(bLayer) )
+%endif
+
+      --interlayer start logic
+      --(i.e. pause, cool, rotate part)
+      interStartLayer
+
+      --approach point
+      `MOTION_OBJECT_NAME`__moveApproach
+
+      --loop passes
+      REPEAT
+        --set next pass
+        bPass = next_pass
+%ifdef DEBUG_BUILD
+        usrdis__print(DEBUG, 'next pass = ' + b_to_s(bPass) )
+%endif
+
+        --move through pass/layer
+          --use linear moves for tool path
+        `MOTION_OBJECT_NAME`__move(FALSE)
+        interPass
+
+        --run linking pass
+        IF bPass THEN
+          `MOTION_OBJECT_NAME`__move(FALSE)
+        ENDIF
+      UNTIL (NOT bPass) -- check if there are more passes to read
+
+      --interlayer stop logic
+      interStopLayer
+
+      --retract point
+      `MOTION_OBJECT_NAME`__moveRetract
+    UNTIL (NOT bLayer) -- check if there are more layers to read
+
+    --close layout file
+    close_layout
+
+    --stop extruder and disable laser
+    lam_stop
+
+    --unlock groups
+    `MOTION_OBJECT_NAME`__release_groups
+  END run
+
+ROUTINE lam_start
+  BEGIN
+    IF program_type = MOVE_WORKING THEN
+      `LAM_NAME`__set_registers
+      `LAM_NAME`__start
+    ENDIF
+  END lam_start
+
+ROUTINE lam_stop
+  BEGIN
+    IF program_type = MOVE_WORKING THEN
+      `LAM_NAME`__stop
+    ENDIF
+  END lam_stop
+
+BEGIN
+END class_name
