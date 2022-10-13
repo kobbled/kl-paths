@@ -36,6 +36,14 @@ VAR
   lsrprm : t_LASER
   powprm : t_POWDER
 
+  -- set parameters
+  file_name : STRING[20]
+  run_type : INTEGER
+  --
+  pearch_rad : REAL
+  pearch_dist : REAL
+
+
 %include display.klh
 %from systemlib.klh %import VEC
 %from pose.klh %import set_config
@@ -44,6 +52,9 @@ VAR
 
 --layer object
 %class tstlst('pathlayerstatic.klc','pathlayerstatic.klh','defaultstaticrotlayer.klt')
+
+-- --draw layer object
+-- class tstldt('pathlayerdraw.klc','pathlayerdraw.klh','defaultdrawrotlayer.klt')
 
 %ifdef DEBUG_BUILD
 -- user display log
@@ -54,55 +65,72 @@ VAR
 %class usrplt('dispclass.klc','dispclass.klh')
 %endif
 
+ROUTINE uninit_vars
+  --file
+%define TEST_FILE_NAME 'FR:TEST103599.csv'
+%define LASER_POWER 3000
+  --perch dist
+%define DRAW_RADIUS 75
+%define START_DIST 520
+  --index
+%define STARTPASS 0
+%define STARTLAYER 0
+  --powder
+%defeval TEST_POWDER POWDER_INCONEL
+%define POWDER_HOPPER 2
+%define POWDER_RPM 2.6
+%define POWDER_LPM 4
+%define POWDER_FLOW_RATE 0.95
+%define POWDER_LAYER_HEIGHT 0.05*25.4
+          --change to MOVE_WORKING
+%defeval PROG_TYPE MOVE_DRYRUN
+  BEGIN
+    IF UNINIT(file_name) THEN file_name = TEST_FILE_NAME ; ENDIF
+    IF UNINIT(run_type) THEN run_type = PROG_TYPE ; ENDIF
+
+    IF UNINIT(pearch_rad) THEN pearch_rad = DRAW_RADIUS ; ENDIF
+    IF UNINIT(pearch_dist) THEN pearch_dist = START_DIST ; ENDIF
+
+    IF UNINIT(lsrprm.power) THEN
+      lsrprm = lamlib__new_laser_params(LASER_POWER)
+    ENDIF
+    IF UNINIT(powprm.powder) THEN 
+      powprm = lamlib__new_powder_params(POWDER_HOPPER, TEST_POWDER, POWDER_RPM, POWDER_LPM, POWDER_FLOW_RATE, POWDER_LAYER_HEIGHT)
+    ENDIF
+    IF UNINIT(layparams.start_pass) THEN
+      layparams = paths__new_layer_params(STARTPASS, STARTLAYER)
+    ENDIF
+  END uninit_vars
+
 ROUTINE t_stat_pad
   VAR
   --offsets
 %define HEIGHT_OFFSET 0
 %define X_OFFSET 0
 %define Y_OFFSET 0
-%define DRAW_RADIUS 75
-%define START_DIST 520
-  --file
-%define TEST_FILE_NAME 'FR:TEST103599.csv'
-%define START_PASS 0
-%define START_LAYER 0
   --path params
-    --change to MOVE_WORKING
-%defeval PROG_TYPE MOVE_DRYRUN
-%define PASS_OVERLAP 6
+%define TOOL_TILT 0
   --motion params
 %define RETRACT_HEIGHT 30
 %define RETRACT_LENGTH 50
 %define LINKING_SPEED 100
 %define LINKING_STEP 20
-  --LAM params
-%define LASER_POWER 3000
-%define POWDER_HOPPER 2
-%defeval TEST_POWDER POWDER_INCONEL
-%define POWDER_RPM 2.6
-%define POWDER_LPM 4
-%define POWDER_FLOW_RATE 0.95
-%define POWDER_LAYER_HEIGHT 0.05*25.4
     frm : XYZWPR
     origin : XYZWPR
     cds : t_COORD_SYS
   BEGIN
     frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
-    origin = POS(0,START_DIST,DRAW_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
+    origin = POS(0,pearch_dist,pearch_rad,0,0,0,pose__set_config(DEFAULT_CONFIG))
 
     --initialize paths
-    layparams = paths__new_layer_params(START_PASS, START_LAYER)
       -- coord_frm, coord_sys (t_COORD_SYS), origin, idod, doPathPlan
     pthparams = paths__new_make_params(frm, cds, origin, 1, FALSE)
     --initialize motion
-      -- program_type, interpolate, tool_speed, link_speed, useSetSpeed, tool_step, link_step, inDegrees
-    mtnprm = paths__new_motion_params(PROG_TYPE, TRUE, 1, LINKING_SPEED, FALSE, 1, LINKING_STEP, FALSE)
+      -- program_type, interpolate, tool_speed, link_speed, useSetSpeed, tool_step, link_step, aprch_ofst, deprt_ofst, inDegrees
+    mtnprm = paths__new_motion_params(run_type, TRUE, 1, LINKING_SPEED, FALSE, 1, LINKING_STEP, 0, 0, FALSE)
       -- retractDist, orient, tool pitch, leader pitch, idod, coord_system
-    toolprm = paths__new_tool_params(VEC(0,RETRACT_LENGTH,RETRACT_HEIGHT), VEC(TOOL_ORIENT_DOWN), PASS_OVERLAP, 0, 1, cds)
-    --initialize LAM
-    lsrprm = lamlib__new_laser_params(LASER_POWER)
-    powprm = lamlib__new_powder_params(POWDER_HOPPER, TEST_POWDER, POWDER_RPM, POWDER_LPM, POWDER_FLOW_RATE, POWDER_LAYER_HEIGHT)
+    toolprm = paths__new_tool_params(VEC(0,RETRACT_LENGTH,RETRACT_HEIGHT), VEC(TOOL_ORIENT_DOWN), TOOL_TILT, 0, 1, cds)
 
     --constructor
     tstlst__new(layparams, pthparams, mtnprm, toolprm, lsrprm, powprm)
@@ -131,6 +159,9 @@ BEGIN
   usrplt__new(PLOT_NAME, FALSE, TRUE, TRUE)
   usrplt__clear_file
 %endif
+
+-- uninit variables
+uninit_vars
 
 t_stat_pad
 
