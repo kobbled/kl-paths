@@ -34,6 +34,7 @@ VAR
   this   : t_PATH_LAYER
   params : t_PATH_PARAM
   layoutCDS : t_COORD_SYS
+  start_pos : XYZWPR
   passes : PATH nodedata = t_INTEGER
   layers : INTEGER
   program_type : INTEGER
@@ -308,7 +309,9 @@ ROUTINE next_layer
         paths__clear_toolpath(pth_endpnts)
         layout_to_toolpath(1, params.coord_system, pth_endpnts)
         stnde = get_buffer_index(1)
-        --set drawing frame
+        --store starting pose
+        start_pos = stnde.v
+        --set drawing frame (linking retract plane)
         `PATH_OBJECT_NAME`__set_origin((pth_endpnts[1].v.x),(stnde.v.z),(params.origin.z),0,0,0)
         params.origin = POS((pth_endpnts[1].v.x),(stnde.v.z),(params.origin.z),0,0,0,(params.origin.config_data))
       ENDIF
