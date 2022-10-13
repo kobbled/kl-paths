@@ -56,8 +56,6 @@ ROUTINE aquire_groups FROM class_name
 declare_member(class_name,release_groups,class_name,rlgrp)
 ROUTINE release_groups FROM class_name
 --path creation
-declare_member(class_name,createPath,class_name,crpth)
-ROUTINE createPath(lines : PATH nodedata = t_VEC_PATH; contours : PATH nodedata = t_VEC_PATH; rastprm : t_PATH_RAST) FROM class_name
 declare_member(class_name,run_approach_path,class_name,appth)
 ROUTINE run_approach_path(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : INTEGER; origin : XYZWPR; offset : XYZWPR) FROM class_name
 declare_member(class_name,run_retract_path,class_name,rtpth)

@@ -299,11 +299,8 @@ ROUTINE set_coordinate_system
     toolprm.coordSys.z_axis = z_axis
   END set_coordinate_system
 
-ROUTINE createPath
 ROUTINE set_retract_dist
   BEGIN
-    `PATH_OBJECT_NAME`__planPath(lines, contours, (rastprm.startCorner), (rastprm.rastType), (rastprm.constrain))
-  END createPath
     toolprm.retractDist.x = retractDist.x ; 
     toolprm.retractDist.y = retractDist.y ; 
     toolprm.retractDist.z = retractDist.z ;
