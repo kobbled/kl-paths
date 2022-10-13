@@ -9,5 +9,10 @@ declare_member(class_name,get_buffer_index,class_name,gtbuf)
 ROUTINE get_buffer_index(idx : INTEGER) : t_TOOLPATH FROM class_name
 declare_member(class_name,move_to_start_pass,class_name,mtsp)
 ROUTINE move_to_start_pass FROM class_name
+declare_member(class_name,update_registers,class_name,uprg)
+ROUTINE update_registers FROM class_name
+declare_member(class_name,update_registers_inc,class_name,upri)
+ROUTINE update_registers_inc FROM class_name
+
 
 %endif --pathlayer_private_h

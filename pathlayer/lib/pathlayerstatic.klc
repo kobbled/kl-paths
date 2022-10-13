@@ -128,6 +128,22 @@ ROUTINE move_to_start_pass
     ENDIF
   END move_to_start_pass
 
+
+ROUTINE update_registers
+  BEGIN
+    registers__set_int(REG_J, (this.curr_pass))
+    registers__set_int(REG_PASSES, passes[(this.curr_layer+1)].v)
+    registers__set_int(REG_L, (this.curr_layer))
+    registers__set_int(REG_LAYERS, layers)
+  END update_registers
+
+ROUTINE update_registers_inc
+  BEGIN
+    registers__set_int(REG_I, 0)
+    registers__set_int(REG_INC, PATH_LEN(pth))
+  END update_registers_inc
+
+
   -- user macro
 impl_buffer_conversion
 
@@ -367,6 +383,10 @@ ROUTINE next_pass
     `PATH_OBJECT_NAME`__set_path_end(TRUE)
 
     this.curr_pass = this.curr_pass + 1
+
+    --update registers for user progress
+    update_registers
+    update_registers_inc
 
     IF this.last_idx >= PATH_LEN(buffer) THEN
       --at the end of the layer buffer
