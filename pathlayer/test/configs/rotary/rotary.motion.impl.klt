@@ -35,10 +35,12 @@
 
 %define impl_motion_head(parent) `declare_member(parent,new_pose,parent,npose)
 ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,new_cart,parent,ncart)
+ROUTINE new_cart(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,make_tool_offset,parent,mktof)
 ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,make_user_offset,parent,mkuof)
-ROUTINE make_user_offset : MOTION_DATA_TYPE FROM parent
+ROUTINE make_user_offset(deg_offset : REAL) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,define_tool_offset,parent,dftof)
 ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) FROM parent
 declare_member(parent,set_lpos,parent,stlps)
@@ -82,6 +84,26 @@ ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE
     RETURN( nde )
   END new_pose
 
+declare_member(parent,new_cart,parent,ncart)
+ROUTINE new_cart(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE
+  VAR
+    deg : REAL
+    nde : MOTION_DATA_TYPE
+  BEGIN
+    IF (x = 0) AND (y = 0) THEN
+      deg = 0
+    ELSE
+      deg = ATAN2(y, x)
+    ENDIF
+    IF (`PATH_OBJECT_NAME`__get_idod = -1) THEN deg = (deg-180) ; ENDIF
+
+    nde.pose = POS(x,y,z,w,p,r, cnfg) 
+    nde.rot = pose__zero_jointpos
+    nde.rot = pose__set_jointpos_axis((nde.rot), ROTARY_JNT, ROT_DIRECTION*r)
+
+    RETURN( nde )
+  END new_cart
+
 declare_member(parent,make_tool_offset,parent,mktof)
 ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE
   BEGIN
@@ -89,7 +111,7 @@ ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE
   END make_tool_offset
 
 declare_member(parent,make_user_offset,parent,mkuof)
-ROUTINE make_user_offset : MOTION_DATA_TYPE
+ROUTINE make_user_offset(deg_offset : REAL) : MOTION_DATA_TYPE
   BEGIN
     RETURN(new_pose(0,0,0,0,0,0, 0, pose__set_config(DEFAULT_CONFIG)))
   END make_user_offset
@@ -99,7 +121,7 @@ ROUTINE define_tool_offset(toolprm : t_TOOL_VARS)
   BEGIN
     --set tool offset
     tool_offset = new_pose(0,0,0,(toolprm.orient.x + toolprm.pitch), toolprm.orient.y, toolprm.orient.z, 0, pose__set_config(DEFAULT_CONFIG))
-    frame_offset = new_pose(0,0,0,0,0,0, 0, pose__set_config(DEFAULT_CONFIG))
+    frame_offset = make_user_offset(0)(0,0,0,0,0,0, 0, pose__set_config(DEFAULT_CONFIG))
 
   END define_tool_offset
 
@@ -120,7 +142,8 @@ ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE
     deg : REAL
     p : MOTION_DATA_TYPE
   BEGIN
-    IF (`PATH_OBJECT_NAME`__get_idod = -1) THEN deg = nde.v.r-180 ; ELSE deg = nde.v.r ; ENDIF
+    deg = ATAN2(nde.v.y, nde.v.x)
+    IF (`PATH_OBJECT_NAME`__get_idod = -1) THEN deg = (deg-180) ; ENDIF
     p.pose = nde.v
     p.rot = pose__zero_jointpos
     p.rot = pose__set_jointpos_axis((p.rot), ROTARY_JNT, ROT_DIRECTION*deg )
@@ -208,6 +231,9 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
     spos, spos2 : VECTOR
     vpos1, vpos2 : VECTOR
   BEGIN
+    -- ..NOTE:: notice in `makeline` if origin is not included 3rd arguement is
+    --          origin. If origin poitn is included in points it is excluded in
+    --          third arguement (ZEROPOS(1))
 
 %ifdef DEBUG_PLOT_POINTS
     usrplt__print(INFO, '* Approach Path *')
@@ -239,7 +265,7 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
     IF (coordSys=PTH_CARTESAN) THEN
       spos = VEC(lpos.x, lpos.y, lpos.z)
 
-      `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, speed, 1, VEC(1,0,0))
+      `PATH_OBJECT_NAME`__makeline(spos, spos2, origin, PTH_LINKING, PTH_LINETO, stepSize, speed, 1, VEC(1,0,0))
       moveLine
     ENDIF
 
@@ -312,9 +338,6 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
     lpos = `PATH_OBJECT_NAME`__get_end_node
     --get into degress from 0-360
     lpos.x = lpos.x/origin.z*180/M_PI
-%ifdef DEBUG_BUILD
-    WRITE TPDISPLAY('deg: ', lpos.x::6::2, CR)
-%endif
     lpos.x = lpos.x*origin.z*M_PI/180
 
     vpos1 = VEC(lpos.x, lpos.y, lpos.z)
