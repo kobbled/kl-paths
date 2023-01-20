@@ -6,7 +6,8 @@
   "license" : "MIT",
   "author" : "kobbled",
   "includes" : [
-    "lib"
+    "lib",
+    "interfaces"
   ],
   "depends" : [
     "ktransw-macros",
