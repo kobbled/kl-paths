@@ -7,7 +7,11 @@
 
 -- for a simple type
 %defeval MOTION_DATA_TYPE t_NODE
+%defeval MOTION_DATA_JOINT_TYPE t_JNODE
 %defeval MOTION_DATA_FILE rbtgp2
+
+%define MOTION_TYPE_ATTR1 pose
+%define MOTION_TYPE_ATTR2 rot
 
 %mode push
 %mode string QQQ "`" "`" "\\"
@@ -16,6 +20,11 @@
 
   t_NODE FROM parent = STRUCTURE
     pose : XYZWPR IN GROUP[RBT_GRP]
+    rot  : t_ROTARY
+  ENDSTRUCTURE
+
+  t_JNODE FROM parent = STRUCTURE
+    pose : JOINTPOS6 IN GROUP[RBT_GRP]
     rot  : t_ROTARY
   ENDSTRUCTURE`
 %mode pop
@@ -60,7 +69,9 @@ declare_member(parent,define_tool_offset,parent,dftof)
 ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) FROM parent$
 
 %define impl_motion_convert_head(parent) $declare_member(parent,tpath2pos,parent,tppse)
-ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE FROM parent$
+ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,copy,parent,copy)
+ROUTINE copy(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) FROM parent$
 
 %define impl_motion_setters_head(parent) $declare_member(parent,set_lpos,parent,stlps)
 ROUTINE set_lpos : MOTION_DATA_TYPE FROM parent
@@ -198,6 +209,13 @@ ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE
     
     RETURN(p)
   END tpath2pos
+
+declare_member(parent,copy,parent,copy)
+ROUTINE copy(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE)
+  BEGIN
+    nde1.pose = nde2.pose
+    nde1.rot = nde2.rot
+  END copy
 $
 
 %define impl_motion_setters_members(parent) $declare_member(parent,set_lpos,parent,stlps)

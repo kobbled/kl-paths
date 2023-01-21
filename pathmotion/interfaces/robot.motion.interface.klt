@@ -7,6 +7,7 @@
 
 -- for a simple type
 %defeval MOTION_DATA_TYPE XYZWPR
+%defeval MOTION_DATA_JOINT_TYPE JOINTPOS
 %defeval MOTION_DATA_FILE rbtgp1
 
 -- ***********
@@ -49,7 +50,9 @@ declare_member(parent,define_tool_offset,parent,dftof)
 ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) FROM parent$
 
 %define impl_motion_convert_head(parent) $declare_member(parent,tpath2pos,parent,tppse)
-ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE FROM parent$
+ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,copy,parent,copy)
+ROUTINE copy(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) FROM parent$
 
 %define impl_motion_setters_head(parent) $declare_member(parent,set_lpos,parent,stlps)
 ROUTINE set_lpos : MOTION_DATA_TYPE FROM parent
@@ -143,6 +146,12 @@ ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE
   BEGIN
     RETURN(nde.v)
   END tpath2pos
+
+declare_member(parent,copy,parent,copy)
+ROUTINE copy(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE)
+  BEGIN
+    nde2 = nde1
+  END copy
 $
 
 %define impl_motion_setters_members(parent) $declare_member(parent,set_lpos,parent,stlps)
