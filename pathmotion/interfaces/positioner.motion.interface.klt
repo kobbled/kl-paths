@@ -65,11 +65,17 @@ ROUTINE new_cart(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE FROM pare
 ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE  FROM parent
 declare_member(parent,make_user_offset,parent,mkuof)
 ROUTINE make_user_offset(deg_offset : REAL) : MOTION_DATA_TYPE FROM parent
+%ifdef toolpath_structs_t
 declare_member(parent,define_tool_offset,parent,dftof)
-ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) FROM parent$
+ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) FROM parent
+%endif
+$
 
-%define impl_motion_convert_head(parent) $declare_member(parent,tpath2pos,parent,tppse)
+%define impl_motion_convert_head(parent) $
+%ifdef pathlib_types_t
+declare_member(parent,tpath2pos,parent,tppse)
 ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE FROM parent
+%endif
 declare_member(parent,copy,parent,copy)
 ROUTINE copy(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) FROM parent$
 
@@ -180,6 +186,7 @@ ROUTINE make_user_offset(deg_offset : REAL) : MOTION_DATA_TYPE
     RETURN(new_pose(0,0,0,0,0,0, positnr_j1,0, pose__set_config(DEFAULT_CONFIG)))
   END make_user_offset
 
+%ifdef toolpath_structs_t
 declare_member(parent,define_tool_offset,parent,dftof)
 ROUTINE define_tool_offset(toolprm : t_TOOL_VARS)
   BEGIN
@@ -188,9 +195,12 @@ ROUTINE define_tool_offset(toolprm : t_TOOL_VARS)
     frame_offset = make_user_offset((toolprm.pitchLead))
 
   END define_tool_offset
+%endif
 $
 
-%define impl_motion_convert_members(parent) $declare_member(parent,tpath2pos,parent,tppse)
+%define impl_motion_convert_members(parent) $
+%ifdef pathlib_types_t
+declare_member(parent,tpath2pos,parent,tppse)
 ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE
   VAR
     deg : REAL
@@ -209,6 +219,7 @@ ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE
     
     RETURN(p)
   END tpath2pos
+%endif
 
 declare_member(parent,copy,parent,copy)
 ROUTINE copy(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE)
