@@ -146,15 +146,8 @@ ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE
 declare_member(parent,new_cart,parent,ncart)
 ROUTINE new_cart(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE
   VAR
-    deg : REAL
     nde : MOTION_DATA_TYPE
   BEGIN
-    IF (x = 0) AND (y = 0) THEN
-      deg = 0
-    ELSE
-      deg = ATAN2(y, x)
-    ENDIF
-    IF (`PATH_OBJECT_NAME`__get_idod = -1) THEN deg = (deg-180) ; ENDIF
 
     nde.pose = POS(x,y,z,w,p,r, cnfg) 
     nde.rot = pose__zero_jointpos
