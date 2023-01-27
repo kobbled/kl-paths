@@ -461,7 +461,7 @@ ROUTINE run
         --move through pass/layer
           --use linear moves for tool path
         `MOTION_OBJECT_NAME`__move(FALSE)
-        interPass
+        interpass
 
         --run linking pass
         IF bPass THEN

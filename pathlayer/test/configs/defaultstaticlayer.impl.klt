@@ -71,7 +71,7 @@ $
 %mode push
 %mode string QQQ "$" "$" "\\"
 %define impl_inter_logic $
-  ROUTINE interStartlayer
+  ROUTINE interStartLayer
     BEGIN
       --do after first layer as first layer will
       --already be enabled
@@ -86,7 +86,7 @@ $
 %endif        
       ENDIF
 
-    END interStartlayer
+    END interStartLayer
 
   ROUTINE interStopLayer
     BEGIN
