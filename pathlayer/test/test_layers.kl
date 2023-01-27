@@ -25,6 +25,7 @@ PROGRAM test_layers
 %include pathlib.klt
 %include toolpath.structs.klt
 %include lam.klt
+
 %include default_lam.klt
 
 VAR
@@ -33,15 +34,21 @@ VAR
   mtnprm : t_MOTION_PRM
   toolprm : t_TOOL_VARS
   --work parameters
-  lsrprm : t_LASER
-  powprm : t_POWDER
+  lsrprm  IN CMOS : t_LASER
+  powprm IN CMOS : t_POWDER
+  overrideLAM IN CMOS : BOOLEAN
 
   -- set parameters
-  file_name : STRING[20]
-  run_type : INTEGER
+  file_name IN CMOS : STRING[20]
+  run_type IN CMOS : INTEGER
   --
-  pearch_rad : REAL
-  pearch_dist : REAL
+  pearch_rad IN CMOS : REAL
+  pearch_dist IN CMOS : REAL
+
+  start_offset IN CMOS : REAL
+  stop_offset IN CMOS : REAL
+
+  run_fast IN CMOS : BOOLEAN
 
 
 %include display.klh
@@ -52,9 +59,6 @@ VAR
 
 --layer object
 %class tstlst('pathlayerstatic.klc','pathlayerstatic.klh','defaultstaticrotlayer.klt')
-
--- --draw layer object
--- class tstldt('pathlayerdraw.klc','pathlayerdraw.klh','defaultdrawrotlayer.klt')
 
 %ifdef DEBUG_BUILD
 -- user display log
@@ -67,21 +71,16 @@ VAR
 
 ROUTINE uninit_vars
   --file
-%define TEST_FILE_NAME 'FR:TEST103599.csv'
-%define LASER_POWER 3000
+%define TEST_FILE_NAME 'FR:DM14384-1.CSV'
+%define LASER_POWER 4000
   --perch dist
-%define DRAW_RADIUS 75
-%define START_DIST 520
+%define DRAW_RADIUS 150
+%define START_DIST 720
   --index
 %define STARTPASS 0
 %define STARTLAYER 0
   --powder
 %defeval TEST_POWDER POWDER_INCONEL
-%define POWDER_HOPPER 2
-%define POWDER_RPM 2.6
-%define POWDER_LPM 4
-%define POWDER_FLOW_RATE 0.95
-%define POWDER_LAYER_HEIGHT 0.05*25.4
           --change to MOVE_WORKING
 %defeval PROG_TYPE MOVE_DRYRUN
   BEGIN
@@ -90,15 +89,22 @@ ROUTINE uninit_vars
 
     IF UNINIT(pearch_rad) THEN pearch_rad = DRAW_RADIUS ; ENDIF
     IF UNINIT(pearch_dist) THEN pearch_dist = START_DIST ; ENDIF
+    IF UNINIT(start_offset) THEN start_offset = 0 ; ENDIF
+    IF UNINIT(stop_offset) THEN stop_offset = 0 ; ENDIF
+
+    IF UNINIT(run_fast) THEN run_fast = FALSE ; ENDIF
 
     IF UNINIT(lsrprm.power) THEN
       lsrprm = lamlib__new_laser_params(LASER_POWER)
     ENDIF
     IF UNINIT(powprm.powder) THEN 
-      powprm = lamlib__new_powder_params(POWDER_HOPPER, TEST_POWDER, POWDER_RPM, POWDER_LPM, POWDER_FLOW_RATE, POWDER_LAYER_HEIGHT)
+      powprm.powder = TEST_POWDER
+    ENDIF
+    IF UNINIT(overrideLAM) THEN 
+      overrideLAM = FALSE
     ENDIF
     IF UNINIT(layparams.start_pass) THEN
-      layparams = paths__new_layer_params(STARTPASS, STARTLAYER)
+      layparams = paths__new_layer_params(STARTPASS, STARTLAYER, TRUE)
     ENDIF
   END uninit_vars
 
@@ -108,12 +114,11 @@ ROUTINE t_stat_pad
 %define HEIGHT_OFFSET 0
 %define X_OFFSET 0
 %define Y_OFFSET 0
-  --path params
-%define TOOL_TILT 0
+%define TOOL_PITCH 0
   --motion params
 %define RETRACT_HEIGHT 30
 %define RETRACT_LENGTH 50
-%define LINKING_SPEED 100
+%define LINKING_SPEED 150
 %define LINKING_STEP 20
     frm : XYZWPR
     origin : XYZWPR
@@ -127,16 +132,16 @@ ROUTINE t_stat_pad
       -- coord_frm, coord_sys (t_COORD_SYS), origin, idod, doPathPlan
     pthparams = paths__new_make_params(frm, cds, origin, 1, FALSE)
     --initialize motion
-      -- program_type, interpolate, tool_speed, link_speed, useSetSpeed, tool_step, link_step, aprch_ofst, deprt_ofst, inDegrees
-    mtnprm = paths__new_motion_params(run_type, TRUE, 1, LINKING_SPEED, FALSE, 1, LINKING_STEP, 0, 0, FALSE)
+      -- program_type, interpolate, tool_speed, link_speed, useSetSpeed, tool_step, link_step, aprch_ofst, depart_ofst, inDegrees
+    mtnprm = paths__new_motion_params(run_type, TRUE, 40, LINKING_SPEED, run_fast, 1, LINKING_STEP, start_offset, stop_offset, FALSE)
       -- retractDist, orient, tool pitch, leader pitch, idod, coord_system
-    toolprm = paths__new_tool_params(VEC(0,RETRACT_LENGTH,RETRACT_HEIGHT), VEC(TOOL_ORIENT_DOWN), TOOL_TILT, 0, 1, cds)
+    toolprm = paths__new_tool_params(VEC(0,RETRACT_LENGTH,RETRACT_HEIGHT), VEC(0,pearch_dist,pearch_rad), VEC(TOOL_ORIENT_DOWN), TOOL_PITCH, 0, 1, cds)
 
     --constructor
-    tstlst__new(layparams, pthparams, mtnprm, toolprm, lsrprm, powprm)
+    tstlst__new(layparams, pthparams, mtnprm, toolprm, lsrprm, powprm, overrideLAM)
 
     --load layout & determine number of layers and passes
-    tstlst__import_layout(TEST_FILE_NAME)
+    tstlst__import_layout(file_name)
 
     --run loaded layout
     tstlst__run
@@ -163,6 +168,7 @@ BEGIN
 -- uninit variables
 uninit_vars
 
+--run prog
 t_stat_pad
 
 %ifdef DEBUG_BUILD

@@ -5,8 +5,6 @@
 
  -- enum list
 %define POWDER_INCONEL  1
-%define POWDER_431L     2
-%define POWDER_1535_30  3
 
  -- needed for form display
 %mode push
@@ -17,9 +15,33 @@
     --first entry must be blank
     powder_names[1] = ''
     powder_names[2] = 'Inconcel 625'
-    powder_names[3] = '431L HC'
-    powder_names[4] = '1535-30'
   END powderNames`
+
+-- --------
+-- powder parameters
+
+%define define_pow_params `ROUTINE initPowParam(powType : INTEGER; override : BOOLEAN)
+  BEGIN
+    SELECT powType OF
+      CASE(POWDER_INCONEL):
+        -- Inconel 625
+        powprm.powder = POWDER_INCONEL ;
+
+        IF (NOT override) THEN
+          lsrprm.power = 1000
+          powprm.hopper = 1 ; 
+          powprm.rpm = 1 ; 
+          powprm.lpm = 3 ; 
+          powprm.flow_rate = 0.5 ;
+          powprm.height = 0.5 ;
+        ENDIF
+      ELSE:
+      
+    ENDSELECT
+
+
+  END initPowParam`
+
 
 -- --------
 -- depth to speed conversion
@@ -32,12 +54,6 @@
     -- Inconel 625
     depth_maps[POWDER_INCONEL].slope = -12.114
     depth_maps[POWDER_INCONEL].intercept = 20.308
-    -- 431L HC
-    depth_maps[POWDER_431L].slope = -10.124
-    depth_maps[POWDER_431L].intercept = 13.571
-    -- 1535-30
-    depth_maps[POWDER_1535_30].slope = -13.485
-    depth_maps[POWDER_1535_30].intercept = 19.095
 
   END initDepthMap`
 

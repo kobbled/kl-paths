@@ -64,6 +64,7 @@ TYPE
     curr_pass : SHORT
     curr_layer : SHORT
     last_idx : INTEGER
+    pause_layer : BOOLEAN
   ENDSTRUCTURE
 
 %endif --pathlib_types_t

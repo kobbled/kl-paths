@@ -18,3 +18,5 @@
 %define LASER_DISABLE_PROG 'G0_LASER_DISABLE'
 %define EXTRUDER_START_PROG 'G0_POWDER_START'
 %define EXTRUDER_STOP_PROG 'G0_POWDER_STOP'
+
+%include default_powder_data.klt
