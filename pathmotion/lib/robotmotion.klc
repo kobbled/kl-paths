@@ -1,0 +1,64 @@
+PROGRAM class_name
+%NOBUSYLAMP
+%COMMENT = 'robot interface'
+%NOLOCKGROUP
+
+%ifdef ROT_GRP
+%ifeq ROT_GRP 0
+%undef ROT_GRP
+%endif
+%endif
+%ifdef TRACK_GRP
+%ifeq TRACK_GRP 0
+%undef TRACK_GRP
+%endif
+%endif
+
+%include namespace.m
+
+%ifdef DEBUG_BUILD
+%include display.c.klt
+%endif
+
+%include errors.klt
+%include systemlib.types.klt
+%include systemvars.klt
+%include math.klt
+%include draw.klt
+%include pose.const.klt
+%include pathlib.klt
+%include toolpath.structs.klt
+%include motion.deps.klt
+
+%ifdef motion_type
+motion_type(class_name)
+%endif
+
+%define BASE_CLASSNAME class_name
+
+%include systemlib.klh
+%include errors.klh
+%include pose.klh
+%include pathlib.klh
+%from registers.klh %import set_real, set_int
+%from strings.klh %import pose_to_s, joint_to_s, i_to_s, vec_to_s, p_to_s
+
+%ifdef DEBUG_BUILD
+-- user display log
+%class usrdis('dispclass.klc','dispclass.klh')
+%endif
+%ifdef DEBUG_PLOT_POINTS
+-- plot debug
+%class usrplt('dispclass.klc','dispclass.klh')
+%endif
+
+--define path object
+path_make_define(PATH_OBJECT_NAME,CONFIG_FILENAME)
+
+%defeval class_name BASE_CLASSNAME
+
+--members
+impl_motion_members(class_name)
+
+BEGIN
+END class_name

@@ -4,4 +4,7 @@
 --pathclass dependency
 %define path_make_define(object_name,cnfg_file) `%class object_name('pathmake.klc','pathmake.klh','cnfg_file')`
 
+--robot motion interface
+%define robot_motion_define(object_name,cnfg_file) `%class object_name('robotmotion.klc','robotmotion.klh','cnfg_file')`
+
 %mode pop
