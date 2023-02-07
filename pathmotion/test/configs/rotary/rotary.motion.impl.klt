@@ -7,6 +7,7 @@
 
 -- for a simple type
 %defeval MOTION_DATA_TYPE t_NODE
+%defeval MOTION_DATA_JOINT_TYPE t_JNODE
 %defeval MOTION_DATA_FILE rbtgp2
 
 %mode push
@@ -16,6 +17,11 @@
 
   t_NODE FROM parent = STRUCTURE
     pose : XYZWPR IN GROUP[RBT_GRP]
+    rot  : t_ROTARY
+  ENDSTRUCTURE
+  
+  t_JNODE FROM parent = STRUCTURE
+    pose : JOINTPOS6 IN GROUP[RBT_GRP]
     rot  : t_ROTARY
   ENDSTRUCTURE`
 %mode pop

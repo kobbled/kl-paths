@@ -41,14 +41,13 @@
 
 %mode push
 %mode string QQQ "$" "$" "\\"
-%define impl_motion_head(parent) $
+%defeval impl_motion_head(parent) $
 impl_motion_init_head(parent)
 impl_motion_offsets_head(parent)
 impl_motion_convert_head(parent)
 impl_motion_setters_head(parent)
 impl_motion_getters_head(parent)
 impl_motion_operation_head(parent)
-impl_motion_paths_head(parent)
 $
 %mode pop
 
@@ -59,7 +58,10 @@ $
 %define impl_motion_init_head(parent) $declare_member(parent,new_pose,parent,npose)
 ROUTINE new_pose(x,y,z,w,p,r,j1 : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,new_cart,parent,ncart)
-ROUTINE new_cart(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE FROM parent$
+ROUTINE new_cart(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE FROM parent
+declare_member(parent,new_joint,parent,njnt)
+ROUTINE new_joint(gp1_j1,gp1_j2,gp1_j3,gp1_j4,gp1_j5,gp1_j6,gp2_j1 : REAL) : MOTION_DATA_JOINT_TYPE FROM parent
+$
 
 %define impl_motion_offsets_head(parent) $declare_member(parent,make_tool_offset,parent,mktof)
 ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE  FROM parent
@@ -70,12 +72,13 @@ ROUTINE define_tool_offset(toolprm : t_TOOL_VARS) : MOTION_DATA_TYPE FROM parent
 $
 
 %define impl_motion_convert_head(parent) $
-%ifdef pathlib_types_t
 declare_member(parent,tpath2pos,parent,tppse)
 ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE FROM parent
-%endif
 declare_member(parent,copy,parent,copy)
-ROUTINE copy(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) FROM parent$
+ROUTINE copy(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) FROM parent
+declare_member(parent,copy_joint,parent,cpyj)
+ROUTINE copy_joint(nde1 : MOTION_DATA_JOINT_TYPE; nde2 : MOTION_DATA_JOINT_TYPE) FROM parent
+$
 
 %define impl_motion_setters_head(parent) $declare_member(parent,set_lpos,parent,stlps)
 ROUTINE set_lpos : MOTION_DATA_TYPE FROM parent
@@ -121,7 +124,6 @@ impl_motion_convert_members(parent)
 impl_motion_setters_members(parent)
 impl_motion_getters_members(parent)
 impl_motion_operations_members(parent)
-impl_motion_paths_members(parent)
 $
 %mode pop
 
@@ -153,6 +155,19 @@ ROUTINE new_cart(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE
 
     RETURN( nde )
   END new_cart
+declare_member(parent,new_joint,parent,njnt)
+ROUTINE new_joint(gp1_j1,gp1_j2,gp1_j3,gp1_j4,gp1_j5,gp1_j6,gp2_j1 : REAL) : MOTION_DATA_JOINT_TYPE
+  VAR
+    arr : ARRAY[6] OF REAL
+    nde : MOTION_DATA_JOINT_TYPE
+  BEGIN
+    arr[1] = gp1_j1; arr[2] = gp1_j2; arr[3] = gp1_j3; arr[4] = gp1_j4; arr[5] = gp1_j5; arr[6] = gp1_j6
+    nde.pose = pose__set_jointpos(arr)
+    nde.rot = pose__zero_jointpos
+    nde.rot = pose__set_jointpos_axis((nde.rot), ROTARY_JNT, gp2_j1)
+
+    RETURN( nde )
+  END new_joint
 $
 
 %define impl_motion_offsets_members(parent) $declare_member(parent,make_tool_offset,parent,mktof)
@@ -198,9 +213,17 @@ ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE
 declare_member(parent,copy,parent,copy)
 ROUTINE copy(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE)
   BEGIN
-    nde1.pose = nde2.pose
-    nde1.rot = nde2.rot
+    nde2.pose = nde1.pose
+    nde2.rot = nde1.rot
   END copy
+
+declare_member(parent,copy_joint,parent,cpyj)
+ROUTINE copy_joint(nde1 : MOTION_DATA_JOINT_TYPE; nde2 : MOTION_DATA_JOINT_TYPE)
+  BEGIN
+    nde2.pose = nde1.pose
+    nde2.rot = nde1.rot
+  END copy_joint
+
 $
 
 %define impl_motion_setters_members(parent) $declare_member(parent,set_lpos,parent,stlps)
