@@ -490,9 +490,13 @@ ROUTINE planPath
 
 ROUTINE planImportPath
   BEGIN
+    -- **fix**
+    -- ..warning:: This function needs to be updated to new csv/layout
+    --             and pathplan->importPath syntax
     IF this.usePathPlan THEN
-      `PATH_PLAN_NAME`__new(this.origin)
-      `PATH_PLAN_NAME`__importPath(filename)
+      -- **fix** Leaving in until fixed
+      -- `PATH_PLAN_NAME`__new(this.origin)
+      -- `PATH_PLAN_NAME`__importPath(filename)
 
       IF raster_type = NEARESTNEIGHBOR THEN
         `PATH_PLAN_NAME`__NN_graph
