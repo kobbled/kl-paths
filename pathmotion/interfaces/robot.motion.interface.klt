@@ -45,7 +45,7 @@ ROUTINE new_joint(j1,j2,j3,j4,j5,j6 : REAL) : MOTION_DATA_JOINT_TYPE FROM parent
 $
 
 %define impl_motion_offsets_head(parent) $declare_member(parent,make_tool_offset,parent,mktof)
-ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE  FROM parent
+ROUTINE make_tool_offset(ofst : XYZWPR) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,make_user_offset,parent,mkuof)
 ROUTINE make_user_offset(toolprm : t_TOOL_VARS) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,define_tool_offset,parent,dftof)
