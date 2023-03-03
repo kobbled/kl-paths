@@ -30,7 +30,6 @@
     "pose",
     "tof-sensor",
     "pathlib",
-    "pathdraw",
     "pathmake",
     "pathmotion",
     "lam"
