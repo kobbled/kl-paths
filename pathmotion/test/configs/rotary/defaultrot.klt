@@ -25,7 +25,7 @@
 --rotary parameters
 %define ROT_AXES 1
 %define ROTARY_JNT 1 
-%define ROT_DIRECTION -1
+%define ROT_DIRECTION 1
 -- *********
 
 --import registers

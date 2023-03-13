@@ -639,10 +639,10 @@ BEGIN
 %endif
 
   --t_rot_delta
-  --t_rot_OD
+  t_rot_OD
   --t_rot_ID
   --t_rot_pad
-  t_rot_pid
+  --t_rot_pid
 
   -- --clean up
   -- tstcanv__delete
