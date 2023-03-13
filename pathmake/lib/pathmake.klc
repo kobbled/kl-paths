@@ -27,7 +27,6 @@ PROGRAM class_name
 %include systemvars.klt
 %include pose.const.klt
 %include pathlib.klt
-%include pathplan.klt
 %include draw.klt
 %include toolpath.structs.klt
 %include pathmake.deps.klt
@@ -464,19 +463,36 @@ ROUTINE planPath
   BEGIN
     IF this.usePathPlan THEN
       `PATH_PLAN_NAME`__init(lines, this.origin)
-      IF raster_type = NEARESTNEIGHBOR THEN
-        `PATH_PLAN_NAME`__NN_graph
-      ELSE
-        --(poly_depend, strict_dir)
-        `PATH_PLAN_NAME`__raster_graph(raster_type, poly_depend, TRUE)
-      ENDIF
 
-      IF PATH_LEN(contours) > 0 THEN
+      --Add contours to pathplan
+      --if they should go before raster
+      IF (contourFirst) AND (PATH_LEN(contours) > 0) THEN
         --append contours after to not include in rastering process
         -- (add to kd tree) = FALSE
         `PATH_PLAN_NAME`__append_path(contours, FALSE)
       ENDIF
 
+      --determine if polygon needs to be rastered
+      IF raster_type > NONE THEN
+        --delegate pathplanning algorithm
+        IF raster_type = NEARESTNEIGHBOR THEN
+          `PATH_PLAN_NAME`__NN_graph
+        ELSE
+          --Use for ZIGZAG, or ONEWAY 
+          --(poly_depend, strict_dir)
+          `PATH_PLAN_NAME`__raster_graph(raster_type, poly_depend, TRUE)
+        ENDIF
+      ENDIF
+
+      --Add contours to pathplan
+      --if they should go after raster
+      IF (NOT contourFirst) AND (PATH_LEN(contours) > 0) THEN
+        --append contours after to not include in rastering process
+        -- (add to kd tree) = FALSE
+        `PATH_PLAN_NAME`__append_path(contours, FALSE)
+      ENDIF
+
+      --solve graph with Minimum spanning tree algorithm
       `PATH_PLAN_NAME`__MST(`PATH_PLAN_NAME`__closest_bounding_box(start_corner))
 
       --set point orientation
@@ -572,6 +588,7 @@ ROUTINE makeline
 
     --clear endpoints after to cleanup
       -- next_toolpath uses it to determine if a linking path or not
+    -- **FIX** Use a flag instead. Destructing info doesn't help while debugging.
     paths__clear_toolpath(line_endpnts)
   END makeline
 

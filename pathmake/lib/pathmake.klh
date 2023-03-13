@@ -66,7 +66,7 @@ declare_member(class_name,is_path_end,class_name,ipte)
 ROUTINE is_path_end : BOOLEAN FROM class_name
 declare_member(class_name,planPath,class_name,pthpl)
 ROUTINE planPath(lines : PATH nodedata = t_VEC_PATH; contours : PATH nodedata = t_VEC_PATH; & 
-               start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN) FROM class_name
+               start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN; contourFirst : BOOLEAN) FROM class_name
 declare_member(class_name,planImportPath,class_name,ldpth)
 ROUTINE planImportPath(filename : STRING; start_corner : INTEGER; raster_type : INTEGER; poly_depend : BOOLEAN; intrep_tool : BOOLEAN) FROM class_name
 declare_member(class_name,get_start_node,class_name,gtsrn)
