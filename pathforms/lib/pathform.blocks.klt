@@ -22,15 +22,29 @@ path_motion_define(STATION4_MOTION,STATION4_CNFG)
 %endif
 $
 
+-- **** NEW ****
+%define initialize_new_stations(MOTION_NAME,LAYER_NAME) $
+    --initialize pathclass
+      -- coord frm, coordinate system, part origin, idod
+    makeparams = paths__new_make_params(frm, toolprm.coordSys, origin, (toolprm.idod), TRUE)
+    layerparams = paths__new_layer_params(start_pass, start_layer)
+
+    `LAYER_NAME`__new(layerparams, makeparams, mtnprm, toolprm)
+$
+
+%define initialize_stations(MOTION_NAME,PATH_NAME) $
     --initialize pathclass
       -- coord frm, coordinate system, part origin, idod
     `PATH_NAME`__init(frm, toolprm.coordSys, origin, (toolprm.idod), TRUE)
     --intialize motion friend class
       --tool offset, interpolate flag, program type
-    `MOTION_NAME`__init2(motnprm, toolprm)
+    `MOTION_NAME`__init2(motnprm, toolprm, (makeparams.origin.z))
     --intialize LAM object
     `LAM_NAME`__init(lsrprm, powprm)
 $
+-- *********
+
+-- **** OLD ****
 --constructors for station objects
 %define initialize_select_stations $
     SELECT station OF
@@ -54,12 +68,21 @@ $
         ABORT
     ENDSELECT
 $
+-- *********
 
+-- **** NEW ****
+%define station_run(MOTION_NAME,LAYER_NAME) $
+    `LAYER_NAME`__run
+$
+-- *********
+
+-- **** OLD ****
 %define station_move(MOTION_NAME,MAKE_NAME) $
     `MOTION_NAME`__aquire_groups
     `MOTION_NAME`__move(use_arc)
     `MOTION_NAME`__release_groups
 $
+-- *********
 
 --move through the path with the selected station
 %define station_select_move $
@@ -167,21 +190,21 @@ $
       SELECT station OF
         CASE(1):
           -- **fix** can get `orient` from `params` in pathlayer
-          toolprm.orient = paths__vec_to_toolvec(`STATION1_PATH`__get_orient(toolprm.idod))
+          toolprm.orient = paths__vec_to_toolvec(`STATION1_PATH`__get_tool_orient(toolprm.idod))
 %ifdef STATION2_CNFG
         CASE(2):
           -- **fix** can get `orient` from `params` in pathlayer
-          toolprm.orient = paths__vec_to_toolvec(`STATION2_PATH`__get_orient(toolprm.idod))
+          toolprm.orient = paths__vec_to_toolvec(`STATION2_PATH`__get_tool_orient(toolprm.idod))
 %endif
 %ifdef STATION3_CNFG
         CASE(3):
           -- **fix** can get `orient` from `params` in pathlayer
-          toolprm.orient = paths__vec_to_toolvec(`STATION3_PATH`__get_orient(toolprm.idod))
+          toolprm.orient = paths__vec_to_toolvec(`STATION3_PATH`__get_tool_orient(toolprm.idod))
 %endif
 %ifdef STATION4_CNFG
         CASE(4):
           -- **fix** can get `orient` from `params` in pathlayer
-          toolprm.orient = paths__vec_to_toolvec(`STATION4_PATH`__get_orient(toolprm.idod))
+          toolprm.orient = paths__vec_to_toolvec(`STATION4_PATH`__get_tool_orient(toolprm.idod))
 %endif
         ELSE:
           ABORT
@@ -276,7 +299,7 @@ $
       CASE(SHP_PAD):
         --set canvas origin/perspective
         `PATHDRAW_NAME`__set_origin(toolprm.idod, (toolprm.coordSys.system), 0, (polyprm.polyRotation))
-        `PATHDRAW_NAME`__drawPad(padprm, polyprm, rastprm)
+        `PATHDRAW_NAME`__drawPad(padprm, polyprm, rastprm, layer)
         `PATHDRAW_NAME`__raster(rastprm)
       CASE(SHP_HEX):
         --set canvas origin/perspective. polyRotation is handled in polygon__hexagon.

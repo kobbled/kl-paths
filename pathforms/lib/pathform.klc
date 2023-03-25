@@ -32,7 +32,6 @@ PROGRAM class_name
 %include errors.klt
 %include systemlib.types.klt
 %include pose.const.klt
-%include pathplan.klt
 %include pathlib.klt
 %include toolpath.structs.klt
 %include lam.klt
