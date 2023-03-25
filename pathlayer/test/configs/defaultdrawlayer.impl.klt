@@ -1,0 +1,145 @@
+--convert between buffer and t_TOOLPATH
+%mode push
+%mode string QQQ "$" "$" "\\"
+%define impl_buffer_conversion $
+  ROUTINE layout_to_toolpath
+    VAR
+      status : INTEGER
+    BEGIN
+      APPEND_NODE(out_pth,status)
+      out_pth[PATH_LEN(out_pth)].v = POS((buffer[idx].pose.x), (buffer[idx].pose.y), (buffer[idx].pose.z), & 
+                      (buffer[idx].orient.x), (buffer[idx].orient.y), (buffer[idx].orient.z), & 
+                      (params.frm.config_data) )
+      
+      -- must set powprm.powder in lam before this
+      out_pth[PATH_LEN(out_pth)].speed   = `LAM_NAME`__getSpeedFromDepth(0, buffer[idx].depth)
+      out_pth[PATH_LEN(out_pth)].code    = buffer[idx].code
+      out_pth[PATH_LEN(out_pth)].typ     = PTH_TOOLING
+
+%ifdef DEBUG_BUILD
+      usrdis__print(DEBUG, 'running at ' + r_to_s(out_pth[PATH_LEN(out_pth)].speed) +' mm/s')
+%endif
+      
+      -- ..warning:: tangent is not calculated for cartesian points
+
+      --convert to coordinate system
+      SELECT cds.system OF
+        CASE(PTH_CYLINDER):
+          --convert start point to cylindrical
+          out_pth[PATH_LEN(out_pth)].v = pose__cartesian_to_cylindrical((params.origin), (out_pth[PATH_LEN(out_pth)].v), (cds.z_axis), params.origin.z, TRUE)
+            --insert tool orientation
+          out_pth[PATH_LEN(out_pth)].v = pose__replace_orient(out_pth[PATH_LEN(out_pth)].v, `PATH_OBJECT_NAME`__get_orient)
+        CASE(PTH_POLAR):
+          karelError(INVALID_TYPE_CODE, 'class_name: interpass doesnt support spherical systems yet.', ER_ABORT)
+        ELSE:
+      ENDSELECT
+
+    END layout_to_toolpath
+
+  ROUTINE layout_to_vecpath
+    VAR
+      status : INTEGER
+    BEGIN
+      APPEND_NODE(out_pth,status)
+      out_pth[PATH_LEN(out_pth)].v = VEC((buffer[idx].pose.x), (buffer[idx].pose.y), (buffer[idx].pose.z))
+      out_pth[PATH_LEN(out_pth)].code  = buffer[idx].code
+      out_pth[PATH_LEN(out_pth)].polygon = 1
+
+      --ijk vector of tool normal
+      --..warning:: NEED TO CONVERT FIRST FROM NORMAL VECTOR TO TANGENT VECTOR
+      --            THEN FROM TANGENT VECTOR TO WPR
+      out_pth[PATH_LEN(out_pth)].tangent = VEC((buffer[idx].orient.x), (buffer[idx].orient.y), (buffer[idx].orient.z))
+
+    END layout_to_vecpath
+
+  ROUTINE get_buffer_index
+    VAR
+      nde : t_TOOLPATH
+    BEGIN
+      nde.v = POS((buffer[idx].pose.x), (buffer[idx].pose.y), (buffer[idx].pose.z), & 
+                  (buffer[idx].orient.x), (buffer[idx].orient.y), (buffer[idx].orient.z), & 
+                  (params.frm.config_data) )
+      nde.speed   = `LAM_NAME`__getSpeedFromDepth(0, buffer[idx].depth)
+      nde.code    = buffer[idx].code
+      nde.typ     = PTH_TOOLING
+
+      RETURN(nde)
+    END get_buffer_index
+$
+%mode pop
+
+%mode push
+%mode string QQQ "$" "$" "\\"
+%define impl_inter_logic $
+  ROUTINE interStartLayer
+    BEGIN
+      --do after first layer as first layer will
+      --already be enabled
+      IF this.curr_layer > this.start_layer THEN
+        --pause for inspection
+        --PAUSE
+        DELAY 2000
+        --start extruder and enable laser
+        lam_start
+%ifdef DEBUG_BUILD
+        usrdis__print(INFO, 'hit layer interrupt!')
+%endif        
+      ENDIF
+
+    END interStartLayer
+
+  ROUTINE interStopLayer
+    BEGIN
+      --stop extruder and disable laser
+      lam_stop
+    END interStopLayer
+
+  ROUTINE interpass
+    VAR
+      n : REAL
+      startv, endv : VECTOR
+    BEGIN
+      --store endpoints
+        --if line_endpnts in empty in pathmake->next_toolpath
+        -- no "pth" will be created, and nothing will run
+      paths__clear_toolpath(line_endpnts)
+
+      -- Do not do on last pass of layer
+      IF this.last_idx < PATH_LEN(buffer) THEN
+        --create a line inbetween the stop pass and the start of
+        --the next pass
+        layout_to_toolpath((this.last_idx), params.coord_system, line_endpnts)
+        layout_to_toolpath((this.last_idx+1), params.coord_system, line_endpnts)
+
+        --update type
+        line_endpnts[1].typ = PTH_LINKING
+        line_endpnts[2].typ = PTH_LINKING
+        --update code
+        line_endpnts[1].code = PTH_MOVETO
+        line_endpnts[2].code = PTH_CLOSE
+        
+        --compute tangent vector between two points
+          --convert into vectors
+        startv = VEC((line_endpnts[1].v.x), (line_endpnts[1].v.y), (line_endpnts[1].v.z))
+        endv = VEC((line_endpnts[2].v.x), (line_endpnts[2].v.y), (line_endpnts[2].v.z))
+        n = math__norm((endv-startv))
+        IF n > 0 THEN
+          line_endpnts[1].tangent = (endv-startv)/n
+        ELSE
+          line_endpnts[1].tangent = pth[1].tangent
+        ENDIF
+        line_endpnts[2].tangent = line_endpnts[1].tangent
+
+%ifdef DEBUG_BUILD
+        usrdis__print(INFO, 'hit pass interrupt!')
+        usrdis__print(DEBUG, 'Linking startPoint: ' + p_to_s(line_endpnts[1].v))
+        usrdis__print(DEBUG, 'Linking endPoint: ' + p_to_s(line_endpnts[2].v))
+        usrdis__print(DEBUG, 'Linking tangent: ' + vec_to_s((line_endpnts[1].tangent), ','))
+%endif
+
+      ENDIF
+
+      --use line_endpnts in next_toolpath to create pth
+    END interpass
+$
+%mode pop

@@ -1,0 +1,34 @@
+-- --draw layer object
+-- class tstldt('pathlayerdraw.klc','pathlayerdraw.klh','defaultdrawrotlayer.klt')
+
+-- ROUTINE t_draw_pad
+--   VAR
+--   %define PAD_IDOD 1
+--     frm : XYZWPR
+--     origin : XYZWPR
+--     cds : t_COORD_SYS
+--   BEGIN
+--     frm = POS(0,0,0,0,0,0, pose__set_config(DEFAULT_CONFIG))
+--     cds = paths__new_coord_sys(PTH_CYLINDER, VERT_AXES)
+--     origin = POS(0,START_DIST,DRAW_RADIUS,0,0,0,pose__set_config(DEFAULT_CONFIG))
+
+--     --initialize paths
+--     layparams = paths__new_layer_params(START_PASS, START_LAYER)
+--       -- coord_frm, coord_sys (t_COORD_SYS), origin, idod, doPathPlan
+--     pthparams = paths__new_make_params(frm, cds, origin, PAD_IDOD, TRUE)
+--     --initialize motion
+--       -- program_type, interpolate, tool_speed, link_speed, useSetSpeed, tool_step, link_step, inDegrees
+--     mtnprm = paths__new_motion_params(PROG_TYPE, TRUE, TOOLING_SPEED, LINKING_SPEED, TRUE, TOOLING_STEP, LINKING_STEP, FALSE)
+--       -- retractDist, orient, tool pitch, leader pitch, idod, coord_system
+--     toolprm = paths__new_tool_params(VEC(0,RETRACT_LENGTH,RETRACT_HEIGHT), VEC(TOOL_ORIENT_DOWN), PASS_OVERLAP, 0, 1, cds)
+--     --initialize LAM
+--     lsrprm = lamlib__new_laser_params(LASER_POWER)
+--     powprm = lamlib__new_powder_params(POWDER_HOPPER, TEST_POWDER, POWDER_RPM, POWDER_LPM, POWDER_FLOW_RATE, POWDER_LAYER_HEIGHT)
+
+--     --constructor
+--     tstldt__new(layparams, pthparams, mtnprm, toolprm, lsrprm, powprm)
+
+--     --set pad
+    
+
+--   END t_draw_pad
