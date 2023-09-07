@@ -74,20 +74,25 @@
 -- --------
 -- depth to speed conversion
 
-%define SPEED_LIMIT_HIGH 15
-%define SPEED_LIMIT_LOW 6
-
 %define define_depth_maps `ROUTINE initDepthMap
   BEGIN
     -- Inconel 625
     depth_maps[POWDER_INCONEL].slope = -12.114
     depth_maps[POWDER_INCONEL].intercept = 20.308
+    depth_maps[POWDER_INCONEL].high_limit = 20.308
+    depth_maps[POWDER_INCONEL].low_limit = 0
+
     -- 431L HC
     depth_maps[POWDER_431L].slope = -10.124
     depth_maps[POWDER_431L].intercept = 13.571
+    depth_maps[POWDER_431L].high_limit = 13.571
+    depth_maps[POWDER_431L].low_limit = 0
+
     -- 1535-30
     depth_maps[POWDER_1535_30].slope = -13.485
     depth_maps[POWDER_1535_30].intercept = 19.095
+    depth_maps[POWDER_1535_30].high_limit = 19.095
+    depth_maps[POWDER_1535_30].low_limit = 0
 
   END initDepthMap`
 

@@ -68,10 +68,10 @@ ROUTINE getSpeedFromDepth
     speed = depth_maps[powder].slope*depth + depth_maps[powder].intercept
 
     --clip speed on testing bounds
-    IF speed > SPEED_LIMIT_HIGH THEN
-      speed = SPEED_LIMIT_HIGH
-    ELSE IF speed < SPEED_LIMIT_LOW THEN
-      speed = SPEED_LIMIT_LOW
+    IF speed > depth_maps[powder].high_limit THEN
+      speed = depth_maps[powder].high_limit
+    ELSE IF speed < depth_maps[powder].low_limit THEN
+      speed = depth_maps[powder].low_limit
     ENDIF 
     ENDIF
 
