@@ -19,6 +19,8 @@ TYPE
   t_DEPTHREGR FROM lamlib = STRUCTURE
     slope : REAL
     intercept : REAL
+    low_limit : REAL
+    high_limit : REAL
   ENDSTRUCTURE
 
 %endif --lam_types_t

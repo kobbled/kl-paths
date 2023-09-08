@@ -30,7 +30,7 @@ BEGIN
   --alternative initalize
   lsrprm = lamlib__new_laser_params(3000)
   powprm = lamlib__new_powder_params(2, POWDER_INCONEL, 2.6, 4, 0.95, 1.27)
-  tstlam__init(lsrprm, powprm)
+  tstlam__init(lsrprm, 2, powprm, FALSE)
 
   tstlam__set_registers
 
