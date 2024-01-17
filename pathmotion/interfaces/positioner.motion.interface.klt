@@ -160,8 +160,8 @@ ROUTINE new_cart(x,y,z,w,p,r : REAL; cnfg : CONFIG) : MOTION_DATA_TYPE
     ENDIF
     IF (`PATH_OBJECT_NAME`__get_idod = 1) THEN deg = (deg-180) ; ENDIF
     nde.pose = POS(x,y,z,w,p,r, cnfg) 
-    nde.pose.x = -1*nde.pose.x
-    nde.pose.r = -1*nde.pose.r
+    nde.pose.x = (Z_AXIS_DIR)*(-1)*nde.pose.x
+    nde.pose.r = (Z_AXIS_DIR)*(-1)*nde.pose.r
 
     arr[POSITION_JNT] = DEFAULT_POS_JNT
     arr[ROTARY_JNT] = ROT_DIRECTION*deg
@@ -224,10 +224,10 @@ ROUTINE tpath2pos(nde : t_TOOLPATH) : MOTION_DATA_TYPE
     p : MOTION_DATA_TYPE
   BEGIN
     deg = ATAN2(nde.v.y, nde.v.x)
-    IF (`PATH_OBJECT_NAME`__get_idod = 1) THEN deg = (deg-180) ; ENDIF
+    -- IF (`PATH_OBJECT_NAME`__get_idod = 1) THEN deg = (deg-180) ; ENDIF
     p.pose = nde.v
-    p.pose.x = -1*p.pose.x
-    p.pose.r = -1*p.pose.r
+    p.pose.x = (Z_AXIS_DIR)*(-1)*p.pose.x
+    p.pose.r = (Z_AXIS_DIR)*(-1)*p.pose.r
 
     arr[POSITION_JNT] = DEFAULT_POS_JNT
     arr[ROTARY_JNT] = ROT_DIRECTION*deg
@@ -415,7 +415,8 @@ ROUTINE approachPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : I
 %endif
 
     --get tangent from raster angle
-    tngt = VEC((-1*COS(rast.dir*rast.angle)),(SIN(rast.dir*rast.angle)),0)
+    -- tngt = VEC((-1*COS(rast.dir*rast.angle)),(SIN(rast.dir*rast.angle)),0)
+    tngt = VEC(-1,0,0)
 
     --move to offset -> to zero poisition
     `PATH_OBJECT_NAME`__makeline(spos, spos2, (ZEROPOS(1)), PTH_LINKING, PTH_LINETO, stepSize, speed, 1, tngt)
@@ -486,7 +487,8 @@ ROUTINE retractPath(speed : REAL; stepSize : REAL; coordSys : INTEGER; idod : IN
 %endif
 
     --get tangent from raster angle
-    tngt = VEC((-1*COS(rast.dir*rast.angle)),(SIN(rast.dir*rast.angle)),0)
+    -- tngt = VEC((-1*COS(rast.dir*rast.angle)),(SIN(rast.dir*rast.angle)),0)
+    tngt = VEC(-1,0,0)
 
     --move up from lpos to the retract height
     `PATH_OBJECT_NAME`__makeline(vpos1, vpos2, origin, PTH_LINKING, PTH_LINETO, stepSize, speed, 1, tngt)
