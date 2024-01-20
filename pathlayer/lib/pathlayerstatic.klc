@@ -432,9 +432,6 @@ ROUTINE run
     --open layout file & load starting layer
     open_layout
 
-    --start extruder and enable laser
-    lam_start
-
     --loop layers
     REPEAT
       --set next layer
@@ -445,7 +442,9 @@ ROUTINE run
 
       --interlayer start logic
       --(i.e. pause, cool, rotate part)
-      interStartLayer
+      lam_start
+
+      DELAY(2000)
 
       --approach point
       `MOTION_OBJECT_NAME`__moveApproach
