@@ -5,15 +5,18 @@ PROGRAM class_name
 %NOPAUSE = COMMAND + TPENABLE + ERROR
 
 %include lam.klt
+%include errors.klt
 
 VAR
   lsrprm : t_LASER
   powprm : t_POWDER
+  hopper : INTEGER
   powder_names : ARRAY[NUMBER_OF_POWDERS] OF STRING[20]
   depth_maps   : ARRAY[NUMBER_OF_POWDERS] OF t_DEPTHREGR
 
 %from registers.klh %import set_real, set_int
 %include lam.klh
+%include errors.klh
 
 --private
   -- user macro
@@ -40,10 +43,17 @@ ROUTINE init
     lsrprm = laserprm_
 
     --powder parameters reference
-    powprm = powderprm_
+    hopper = hopprsprm_.slected_hppr
+    SELECT hopper OF
+      CASE(1):
+        powprm = hopprsprm_.hopper1
+      CASE(2):
+        powprm = hopprsprm_.hopper2
+      ELSE:
+    ENDSELECT
 
     --update
-    initPowParam(powder_type, override)
+    initPowParam(hopper, override)
 
   END init
 
@@ -65,7 +75,8 @@ ROUTINE getSpeedFromDepth
       powder = powprm.powder
     ENDIF
 
-    speed = depth_maps[powder].slope*depth + depth_maps[powder].intercept
+    -- Quadratic regression
+    speed = depth_maps[powder].a*depth*depth + depth_maps[powder].b*depth + depth_maps[powder].c
 
     --clip speed on testing bounds
     IF speed > depth_maps[powder].high_limit THEN
@@ -85,7 +96,7 @@ ROUTINE set_laser_power
 
 ROUTINE set_powder_params
   BEGIN
-    powprm.hopper = hopper ; powprm.powder = powder ; 
+    powprm.powder = powder ; 
     powprm.rpm = rpm ; powprm.lpm = lpm ; powprm.flow_rate = flow_rate ;
     powprm.height = height ;
   END set_powder_params
@@ -95,15 +106,15 @@ ROUTINE set_registers
     --laser params
     registers__set_int(LASER_POWER_REG, (lsrprm.power))
     --powder params: 1 - Hopper 1, 2 - Hopper 2, 3 - Hopper 1/2 blend
-    registers__set_int(POWDER_HOPPER_REG, (powprm.hopper))
+    registers__set_int(POWDER_HOPPER_REG, (hopper))
 
-    IF powprm.hopper = 1 THEN
+    IF hopper = 1 THEN
       --hopper 1 parameters
       registers__set_real(POWDER1_SPEED_REG,     (powprm.rpm))
       registers__set_real(POWDER1_GASF_REG,      (powprm.lpm))
       registers__set_real(POWDER1_FLOW_RATE_REG, (powprm.flow_rate))
       registers__set_real(POWDER1_THICKNESS_REG, (powprm.height))
-    ELSE IF powprm.hopper = 2 THEN
+    ELSE IF hopper = 2 THEN
       --hopper 2 parameters
       registers__set_real(POWDER2_SPEED_REG,     (powprm.rpm))
       registers__set_real(POWDER2_GASF_REG,      (powprm.lpm))

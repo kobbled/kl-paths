@@ -10,7 +10,7 @@ header_def -- define class
 declare_member(class_name,new,class_name,new)
 ROUTINE new FROM class_name
 declare_member(class_name,init,class_name,init)
-ROUTINE init(laserprm_ : t_LASER; powder_type : INTEGER; powderprm_ : t_POWDER; override : BOOLEAN) FROM class_name
+ROUTINE init(laserprm_ : t_LASER; hopprsprm_ : t_HOPPERS; override : BOOLEAN) FROM class_name
 declare_member(class_name,delete,class_name,del)
 ROUTINE delete FROM class_name
 
@@ -22,7 +22,7 @@ ROUTINE getSpeedFromDepth(powder : INTEGER; depth : REAL) : REAL FROM class_name
 declare_member(class_name,set_laser_power,class_name,stlp)
 ROUTINE set_laser_power(power : INTEGER) FROM class_name
 declare_member(class_name,set_powder_params,class_name,stpp)
-ROUTINE set_powder_params(hopper : INTEGER; powder : INTEGER; rpm : REAL; lpm : REAL; flow_rate : REAL; height : REAL) FROM class_name
+ROUTINE set_powder_params(powder : INTEGER; rpm : REAL; lpm : REAL; flow_rate : REAL; height : REAL) FROM class_name
 
 --clear functions
 declare_member(class_name,set_registers,class_name,streg)

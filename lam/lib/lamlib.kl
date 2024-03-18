@@ -21,7 +21,6 @@ ROUTINE lamlib__new_powder_params
   VAR
     prm : t_POWDER
   BEGIN
-    prm.hopper = hopper ; 
     prm.powder = powder ; 
     prm.rpm = rpm ; 
     prm.lpm = lpm ; 
