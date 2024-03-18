@@ -79,12 +79,12 @@ $
         --pause for inspection
         --PAUSE
         DELAY 2000
+      ENDIF
         --start extruder and enable laser
         lam_start
 %ifdef DEBUG_BUILD
         usrdis__print(INFO, 'hit layer interrupt!')
 %endif        
-      ENDIF
 
     END interStartLayer
 
