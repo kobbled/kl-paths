@@ -3,6 +3,10 @@
 -- define file type (i.e. csv, gcode, etc...)
 %defeval LAYOUT_FILE_TYPE CSV_TYPE
 
+
+-- define type for storing instances
+%define INSTANCE_TYPE t_INTEGER
+
 --csv object
 ------------------
 %define CSV_OBJECT_NAME tstcsv
@@ -16,6 +20,10 @@
 $
 
 %define header_includes $
+
+$
+
+%define var_includes $
 
 $
 %mode pop

@@ -154,7 +154,7 @@ ROUTINE new
     prm : t_PATH_PARAM
   BEGIN
     --initialize lam
-    `LAM_NAME`__init(lsrprm_, powprm_.powder, powprm_, overrideLAM)
+    `LAM_NAME`__init(lsrprm_, hpprsprm_, overrideLAM)
 
     --set params
     --make copy
@@ -442,9 +442,7 @@ ROUTINE run
 
       --interlayer start logic
       --(i.e. pause, cool, rotate part)
-      lam_start
-
-      DELAY(2000)
+      interStartLayer
 
       --approach point
       `MOTION_OBJECT_NAME`__moveApproach

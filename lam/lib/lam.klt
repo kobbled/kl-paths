@@ -8,17 +8,24 @@ TYPE
   ENDSTRUCTURE
 
   t_POWDER FROM lamlib = STRUCTURE
-    hopper : INTEGER
-    powder : INTEGER
-    rpm : REAL
-    lpm : REAL
-    flow_rate : REAL
-    height : REAL
+    wps_no      : INTEGER
+    rpm         : REAL
+    lpm         : REAL
+    flow_rate   : REAL
+    height      : REAL
+    powder      : INTEGER
+  ENDSTRUCTURE
+
+  t_HOPPERS FROM lamlib = STRUCTURE
+    slected_hppr    : INTEGER
+    hopper1         : t_POWDER
+    hopper2         : t_POWDER
   ENDSTRUCTURE
 
   t_DEPTHREGR FROM lamlib = STRUCTURE
-    slope : REAL
-    intercept : REAL
+    a : REAL
+    b : REAL
+    c : REAL
     low_limit : REAL
     high_limit : REAL
   ENDSTRUCTURE
