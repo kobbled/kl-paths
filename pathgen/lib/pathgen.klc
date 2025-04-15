@@ -1,0 +1,150 @@
+PROGRAM class_name
+%NOBUSYLAMP
+%COMMENT = 'pathgen'
+%NOLOCKGROUP
+
+%ifdef motion_type
+motion_type(MOTION_DATA_FILE)
+%endif
+
+%defeval BASE_CLASSNAME class_name
+
+%ifdef PATHGEN_STRUCT
+--define custom struct if supplied
+PATHGEN_STRUCT
+%endif
+
+CONST
+  --tp functions
+  FUNC_APPEND  = 1
+  FUNC_CLEAR   = 2
+  FUNC_LEN     = 3
+
+VAR
+  --tpp arguments
+  func_ : INTEGER
+  prnum_: INTEGER
+  outreg_: INTEGER
+  --object vars
+  idx : INTEGER
+  reverse : BOOLEAN
+  this : PATH nodedata = PTHGEN_TYPE
+
+%from pose.klh %import get_posreg_joint, get_posreg_xyz, get_posreg_rep
+%from registers.klh %import get_int, set_int
+%from tpe.vars.klh %import get_int_arg, get_real_arg, get_string_arg, get_boolean_arg
+
+%defeval class_name BASE_CLASSNAME
+
+--robot implementation
+impl_motion_head(MOTION_DATA_FILE)
+
+%include pathgen.klh
+
+ROUTINE clear
+  VAR
+    i : INTEGER
+    status : INTEGER
+  BEGIN
+    i = PATH_LEN(this)
+    WHILE PATH_LEN(this) > 0 DO
+		  DELETE_NODE(this,i,status)
+      CHK_STAT(status)
+      i = i - 1
+	  ENDWHILE
+    --reset traverse index
+    idx = 1
+    reverse = FALSE
+  END clear
+
+ROUTINE append
+  VAR
+    status : INTEGER
+  BEGIN
+    APPEND_NODE(this,status)
+    CHK_STAT(status)
+    this[PATH_LEN(this)] = nd
+  END append
+
+ROUTINE append_pr
+  VAR
+    status : INTEGER
+    pos_type : INTEGER
+  BEGIN
+  
+    PATHGENSET
+
+    APPEND_NODE(this,status)
+    CHK_STAT(status)
+    this[PATH_LEN(this)] = nd
+  END append_pr
+
+ROUTINE pop
+  VAR
+    nd : PTHGEN_TYPE
+    status : INTEGER
+  BEGIN
+    nd = this[PATH_LEN(this)]
+
+    DELETE_NODE(this, PATH_LEN(this), status)
+    CHK_STAT(status)
+
+    RETURN(nd)
+  END pop
+
+ROUTINE remove_node
+  VAR
+    status : INTEGER
+  BEGIN
+    DELETE_NODE(this, i, status)
+    CHK_STAT(status)
+  END remove_node
+
+
+ROUTINE start_front
+  BEGIN
+    idx = 1
+  END start_front
+
+ROUTINE start_back
+  BEGIN
+    idx = PATH_LEN(this)
+    reverse = TRUE
+  END start_back
+
+ROUTINE traverse
+  VAR
+    nd : PTHGEN_TYPE
+  BEGIN
+    nd = this[idx]
+
+    IF reverse THEN
+      idx = idx - 1
+    ELSE
+      idx = idx + 1
+    ENDIF
+
+    RETURN(nd)
+  END traverse
+
+
+BEGIN
+  --tpe class function
+  func_ = tpe__get_int_arg(1)
+  --tpe AR[2] prnum_
+  prnum_ = tpe__get_int_arg(2)
+  --tpe AR[3] outreg_
+  outreg_ = tpe__get_int_arg(3)
+
+  SELECT func_ OF
+    CASE(FUNC_APPEND):
+      append_pr(prnum_)
+    CASE(FUNC_CLEAR):
+      clear
+    CASE(FUNC_LEN):
+      registers__set_int(outreg_, PATH_LEN(this))
+    ELSE:
+  ENDSELECT
+
+END class_name
+

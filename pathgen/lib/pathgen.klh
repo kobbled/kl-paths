@@ -1,0 +1,24 @@
+--header
+%include header_guard.m
+--oop
+%include namespace.m
+
+--start header file
+header_if -- ifndef class
+header_def -- define class
+
+declare_member(class_name,clear,class_name,clear)
+ROUTINE clear FROM class_name
+declare_member(class_name,append,class_name,append)
+ROUTINE append(nd : PTHGEN_TYPE) FROM class_name
+declare_member(class_name,append_pr,class_name,appdpr)
+ROUTINE append_pr(pr_idx : INTEGER) FROM class_name
+declare_member(class_name,pop,class_name,pop)
+ROUTINE pop : PTHGEN_TYPE FROM class_name
+declare_member(class_name,remove_node,class_name,remove)
+ROUTINE remove_node(idx : INTEGER) FROM class_name
+declare_member(class_name,traverse,class_name,trvrse)
+ROUTINE traverse : PTHGEN_TYPE FROM class_name
+
+
+%endif --end header

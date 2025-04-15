@@ -73,8 +73,11 @@ $
 
 %define impl_motion_getters_head(parent) $declare_member(parent,get_cart,parent,gtcrt)
 ROUTINE get_cart(nde : MOTION_DATA_TYPE) : XYZWPR FROM parent
+declare_member(parent,get_posereg,parent,gtpr)
+ROUTINE get_posereg(reg_no : INTEGER) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,get_component,parent,gtcmp)
-ROUTINE get_component(nde : MOTION_DATA_TYPE; grp_no : INTEGER; comp_no : INTEGER) : REAL FROM parent$
+ROUTINE get_component(nde : MOTION_DATA_TYPE; grp_no : INTEGER; comp_no : INTEGER) : REAL FROM parent
+$
 
 %define impl_motion_operation_head(parent) $declare_member(parent,poseMul,parent,psmul)
 ROUTINE poseMul(nde1 : MOTION_DATA_TYPE; nde2 : MOTION_DATA_TYPE) : MOTION_DATA_TYPE FROM parent
@@ -226,6 +229,12 @@ ROUTINE get_cart(nde : MOTION_DATA_TYPE) : XYZWPR
   BEGIN
     RETURN(nde)
   END get_cart
+
+declare_member(parent,get_posereg,parent,gtpr)
+ROUTINE get_posereg(reg_no : INTEGER) : MOTION_DATA_TYPE
+  BEGIN
+    RETURN(pose__get_posreg_xyz(reg_no, RBT_GRP))
+  END get_posereg
 
 declare_member(parent,get_component,parent,gtcmp)
 ROUTINE get_component(nde : MOTION_DATA_TYPE; grp_no : INTEGER; comp_no : INTEGER) : REAL

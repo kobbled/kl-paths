@@ -1,0 +1,11 @@
+%include robot.motion.interface.klt
+
+%define PTHGEN_TYPE MOTION_DATA_TYPE
+
+%define PATHGENSET `
+
+`
+
+%define PATHGENPRSET `
+  get_posereg()
+`

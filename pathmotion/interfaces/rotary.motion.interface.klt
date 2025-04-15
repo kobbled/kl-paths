@@ -95,6 +95,8 @@ $
 ROUTINE get_cart(nde : MOTION_DATA_TYPE) : XYZWPR FROM parent
 declare_member(parent,get_rot,parent,gtrot)
 ROUTINE get_rot(nde : MOTION_DATA_TYPE) : JOINTPOS`ROT_AXES` FROM parent
+declare_member(parent,get_posereg,parent,gtpr)
+ROUTINE get_posereg(reg_no : INTEGER) : MOTION_DATA_TYPE FROM parent
 declare_member(parent,get_component,parent,gtcmp)
 ROUTINE get_component(nde : MOTION_DATA_TYPE; grp_no : INTEGER; comp_no : INTEGER) : REAL FROM parent
 $
@@ -306,6 +308,16 @@ ROUTINE get_rot(nde : MOTION_DATA_TYPE) : JOINTPOS`ROT_AXES`
   BEGIN
     RETURN(nde.rot)
   END get_rot
+
+declare_member(parent,get_posereg,parent,gtpr)
+ROUTINE get_posereg(reg_no : INTEGER) : MOTION_DATA_TYPE
+  VAR
+    nde : MOTION_DATA_TYPE
+  BEGIN
+
+    nde.pose = pose__get_posreg_xyz(reg_no, RBT_GRP)
+    nde.rot = pose__get_posreg_joint(reg_no, ROT_GRP)
+  END get_posereg
 
 declare_member(parent,get_component,parent,gtcmp)
 ROUTINE get_component(nde : MOTION_DATA_TYPE; grp_no : INTEGER; comp_no : INTEGER) : REAL
